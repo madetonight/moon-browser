@@ -1,98 +1,69 @@
-# Moon
+# Moon Browser
 
-A native, open-source WebKit browser for macOS 26 and later.
+A native WebKit browser for macOS 26 and later. Moon now derives its browsing
+implementation directly from [Search 1.0.7](https://github.com/driceroland/Search/releases/tag/v1.0.7),
+under MIT, following the request to use the complete Search interface and features.
+It keeps Moon's app identity, icon, welcome page, optional glass and local Ollama AI.
 
-Moon is an independent Swift 6 codebase inspired by
-[Search](https://github.com/driceroland/Search). It uses SwiftUI, focused AppKit
-bridges, and Apple's system WebKit. Sidebar tabs and multiple windows are the
-default. There are no runtime package dependencies, accounts, or analytics. Selectively adapted
-Search motion is credited in [third-party notices](THIRD_PARTY_NOTICES.md).
+The source includes Search's sidebar, icon rail and horizontal tabs; groups,
+pins, spaces and profiles; multiple windows and splits; native settings and data
+pages; translation; reader and Markdown; content blocking including YouTube;
+media/call handling; extension APIs and installation; imports; and Mac menus,
+keyboard shortcuts, notifications, printing, sharing and read-only AppleScript.
 
-The current UI uses flat neutral chrome, compact pinned sites and system typography.
-The welcome screen and Cmd-L share a centered Search-inspired search interface, with
-local suggestions, arrow-key selection and restrained motion. Light, Dark and System
-appearances are available in Browser Actions and Settings. [Design direction](Docs/UI-DIRECTION.md) and
-[development skills](Docs/DEVELOPMENT-SKILLS.md) document the Search reference,
-AutoSkills selection and Taste Skill workflow.
+Source inclusion is distinct from runtime validation. Some integrations need
+an OS permission, Apple's browser entitlement, helper pairing, or a published
+signed release. Chrome compatibility depends on each extension's API needs.
 
-**Early development:** this is a runnable foundation, not a completed
-Search-equivalent browser. See [the feature checklist](Docs/FEATURES.md) for
-implemented behavior, limitations, and remaining work.
+## Download
 
-## Build
+[Moon 0.3.2 beta for Apple silicon](https://github.com/madetonight/moon-browser/releases/tag/v0.3.2-beta) requires macOS 26 or later. Open the DMG and drag Moon to Applications. The beta uses Apple Development signing and is not notarized by Apple. Install this connected version manually once; subsequent signed releases can be offered in Settings → About → Check now.
 
-Requires macOS 26+, full Xcode 26 or later, and its Swift toolchain.
+## Build and validate
 
-```sh
-./build.sh release
-open build/Moon.app
-```
-
-`./build.sh debug` makes a development build. The script uses a separate build
-directory at `/private/tmp/MoonBuild` and ad-hoc signs the app. This signature is
-for local testing; distributed builds still need Developer ID signing and
-notarization. Moon uses only public WebKit APIs.
-
-## What works in the foundation
-
-- Multiple native windows, sidebar/horizontal tabs, pins, tab switching and reopening.
-- Lazy session restoration, private tabs, and spaces with optionally separate sign-ins.
-- On-demand address/search editor with local suggestions and eight search engine choices.
-- History and bookmarks, searchable panels, bookmark HTML import/export.
-- Two-page split view; native page navigation, gestures, zoom, Find and Web Inspector support.
-- Basic network content blocking with site exceptions; element hiding and a text-focused reader.
-- Picture in Picture for main-frame videos that support WebKit presentation mode.
-- Downloads with a native destination panel; Share, printing and PDF export.
-- Explicit password save/fill through an app-specific Keychain service, gated by system authentication.
-- Unpacked WebExtensions through WebKit, with permission prompts and action popovers.
-- Native Settings, appearance, URL/file handling and a default-browser request.
-
-Private tabs use a nonpersistent WebKit store and are excluded from history,
-saved sessions and recently closed tabs. Password operations and extensions are
-disabled there. Files explicitly downloaded by the user are still ordinary files.
-The current prototype does not promise disk-forensic anonymity.
-
-## Keyboard
-
-| Action | Shortcut |
-| --- | --- |
-| Location / new tab / new window | ⌘L / ⌘T / ⌘N |
-| Private tab / close tab / close window | ⇧⌘N / ⌘W / ⇧⌘W |
-| Search tabs / next / previous | ⌘K / ⌃Tab / ⌃⇧Tab |
-| Jump to tab / reopen / duplicate | ⌘1–9 / ⇧⌘T / ⇧⌘D |
-| Back / forward / reload | ⌘[ / ⌘] / ⌘R |
-| Find / bookmark / show bookmarks | ⌘F / ⌘D / ⇧⌘B |
-| Reader / Picture in Picture / element picker | ⇧⌘R / ⇧⌘P / ⇧⌘H |
-| History / downloads / passwords | ⌘Y / ⇧⌘J / ⌥⌘L |
-| Split / tab layout / sidebar | ⌥⌘N / ⇧⌘S / ⌃⌘S |
-| Settings | ⌘, |
-
-## Data
-
-`~/Library/Application Support/Moon/Library.json` holds the library and normal
-sessions. Website data belongs to WebKit. Installed extension folders live under
-`~/Library/Application Support/Moon/Extensions/`. Passwords use the Keychain
-service `org.moonbrowser.Moon.Passwords`, not the JSON library. There is no sync
-or telemetry service. Search suggestions are local; pressing Return sends the
-submitted query to the selected search engine.
-
-## Test
+Requires Xcode with the macOS 26 SDK or newer. SwiftPM resolves the pinned Sparkle 2.10.1 framework; no web runtime is bundled.
 
 ```sh
-DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test
-./test.sh
+MOON_ALLOW_SIGNING=1 ./build.sh release
+MOON_ALLOW_SIGNING=1 ./test.sh
 ```
 
-`test.sh` runs core tests, builds the app, and launches an isolated WebKit smoke
-test. GUI tests need an active macOS login session. Results are written to a
-temporary directory printed by the script. See [validation](Docs/VALIDATION.md)
-for the current evidence and remaining manual checks.
+The local app is `build/Moon.app`. Normal launches use your sandboxed profile.
+Signing requires the explicit flag above. Without it, the build leaves the existing
+app unchanged and never requests the developer key. Verified signed Sparkle helpers
+are reused for the same dependency bytes and certificate, reducing repeated prompts.
+Explicit native fixtures use `MOON_TEST_DIRECTORY` and separate WebKit/defaults
+stores. The test runner never uses the normal library.
 
-## Contributing
+## Moon differences
 
-Start with a concrete issue and a small change. Keep browser data and private
-state isolated; validate navigation policy, origin checks, and all file/credential
-operations. New dependencies are considered on their merits. Architecture and
-design are Moon's own; Search's repository conventions are not inherited.
+- Moon's new-tab welcome, bookmarks and shortcuts remain; the address field
+  floats over a page with ⌘L. No permanent address toolbar.
+- Appearance → Liquid Glass adds an optional translucent frame, off by default
+  and following Reduce Transparency. Source light, dark and system modes remain.
+- AI is off until enabled. Only Ollama on this Mac is available; no cloud
+  provider is selectable or allowed to make requests.
+- Existing Moon `Library.json` is preserved. Compatible tabs, windows, spaces,
+  pins, bookmarks and history migrate once into the new files when absent.
+  Older credential and extension records are retained for explicit conversion.
+- Moon retains bounded extension downloads/extraction and all-frame draft protection.
+- App Sandbox restricts files to Downloads, the container and user-selected resources.
+- Signed updates use Sparkle's sandbox installer. Release builds enable checks and installations through
+  Moon's signed feed. Development builds keep checks disabled unless explicitly enabled. Search's update service and signing
+  identity are never used. See [release setup](Docs/RELEASING.md).
+- The Levels-style beta release path uses the existing Apple Development
+  certificate and Sparkle key without requiring notarization. Preview it with
+  `Scripts/prepare-beta-update.sh --plan`; publication and one initial connected
+  install are required when bootstrapping an older build.
 
-MIT licensed. No Search code or branding has been copied into this initial implementation.
+See [release verification](Docs/RELEASE-VALIDATION.md) and [release setup](Docs/RELEASING.md). Earlier performance figures describe an earlier implementation and do not benchmark this release.
+
+## License and attribution
+
+MIT. The native application source is derived from Search, copyright © 2026
+Office Commun, pinned at `27bd91eb74ca5adaea7824f8708137a71514e146`.
+See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and the complete upstream
+[license](Support/Search-1.0.7-LICENSE). Moon's original core and additions remain
+under this repository's MIT license.
+
+Release artifacts contain the application and license notices, with a separate source archive. Local profiles, browsing data, signing keys and development backups are excluded.

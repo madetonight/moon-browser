@@ -1,0 +1,21 @@
+name: Publish signed Moon release
+on:
+  push:
+    branches: [main]
+    paths: [.github/releases/current.json]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: moon-release
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Publish verified release assets, then the signed feed
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 Scripts/publish-release.py .github/releases/current.json

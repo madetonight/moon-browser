@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDisplayName</key>
+	<string>Moon</string>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Web documents</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Alternate</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>public.html</string>
+				<string>public.xhtml</string>
+				<string>com.adobe.pdf</string>
+				<string>public.image</string>
+				<string>public.plain-text</string>
+				<string>public.json</string>
+			</array>
+		</dict>
+	</array>
+	<key>CFBundleExecutable</key>
+	<string>Moon</string>
+	<key>CFBundleIconFile</key>
+	<string>Moon</string>
+	<key>CFBundleIdentifier</key>
+	<string>org.moonbrowser.Moon</string>
+	<key>CFBundleName</key>
+	<string>Moon</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+  <string>0.3.2</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>Web addresses</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>http</string>
+				<string>https</string>
+			</array>
+		</dict>
+	</array>
+	<key>CFBundleVersion</key>
+  <string>2026110201</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.productivity</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>26.0</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoadsInWebContent</key>
+		<true/>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+	<key>NSAppleScriptEnabled</key>
+	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Allow websites you choose to use your camera.</string>
+	<key>NSDownloadsFolderUsageDescription</key>
+	<string>Save downloads you choose in your Downloads folder.</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSHumanReadableCopyright</key>
+	<string>Moon contributors. Includes Search © 2026 Office Commun.</string>
+	<key>NSLocationUsageDescription</key>
+	<string>Allow websites you choose to request your location.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Allow websites you choose to request your location.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Allow websites you choose to use your microphone.</string>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
+	<key>OSAScriptingDefinition</key>
+	<string>Moon.sdef</string>
+	<key>SUAutomaticallyUpdate</key>
+	<true/>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<key>SUFeedURL</key>
+	<string>https://raw.githubusercontent.com/madetonight/moon-browser/main/appcast.xml</string>
+	<key>SUAllowsAutomaticUpdates</key>
+	<true/>
+	<key>SUEnableInstallerLauncherService</key>
+	<true/>
+	<key>SUEnableDownloaderService</key>
+	<false/>
+	<key>SUEnableSystemProfiling</key>
+	<false/>
+	<key>SUEnableJavaScript</key>
+	<false/>
+	<key>SURequireSignedFeed</key>
+	<true/>
+	<key>SUVerifyUpdateBeforeExtraction</key>
+	<true/>
+	<key>SUSignedFeedFailureExpirationInterval</key>
+	<integer>0</integer>
+	<key>SUScheduledCheckInterval</key>
+	<integer>3600</integer>
+	<key>MoonUpdateFeedReady</key>
+	<false/>
+	<key>SUPublicEDKey</key>
+	<string>et0mVmdWvQuiWMhCa71KL1XjTcdRRltiQ5ijwiMwlwA=</string>
+	<key>LSFileQuarantineEnabled</key>
+	<true/>
+</dict>
+</plist>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+  <channel>
+    <title>Moon updates</title>
+    <link>https://github.com/madetonight/moon-browser/releases</link>
+    <description>Signed Moon browser releases. No public binary release is published yet.</description>
+    <language>en</language>
+  </channel>
+</rss>

@@ -1,0 +1,45 @@
+{
+  "repository": "madetonight/moon-browser",
+  "tag": "v0.3.2-beta",
+  "build": "2026110201",
+  "title": "Moon 0.3.2 beta",
+  "notes": "# Moon 0.3.2 beta\n\nThe current Moon design, with signed in-app updates and a drag-to-Applications installer.\n\n- Minimal native sidebar, multiple windows, light/dark modes and optional Liquid Glass.\n- Full-gradient Moon icon and a subtle 70 ms hover highlight. Tab titles and close controls stay responsive during quick pointer movements.\n- Built-in website translation and Downloads beside Bookmarks in the sidebar.\n- Native WebKit browsing adapted from Search 1.0.7, with the Moon welcome page and local Ollama integration.\n- App Sandbox, hardened-runtime library validation, signed update feeds and archive verification remain enabled.\n- Signed update checks run hourly; automatic download/install-on-quit follows Settings → About.\n\nApple silicon; macOS 26 or later. This beta is Apple Development signed and **not Apple-notarized**. macOS may require its first-launch approval. Sparkle authenticates updates; it does not confer Gatekeeper trust.\n\nInstall this connected beta manually once if your older Moon build says updates are not published. Later signed releases can arrive through the in-app updater. A complete old-to-new installation is verified separately from feed and archive authentication.\n\nMoon includes MIT-licensed code from Search. Source and license notices accompany this release. Chrome extension compatibility depends on the APIs each extension uses; restricted Apple Passwords integrations require separate setup.\n",
+  "assets": [
+    {
+      "name": "Moon-0.3.2-arm64.zip",
+      "size": 7942534,
+      "sha256": "3ef727c01cf85d3428a368a6cac092ed1540e5206f1b04acdf80edda016ef320",
+      "blob": "11fc44405c9e2e0e78058ea854f0f04dc157f4a4"
+    },
+    {
+      "name": "Moon-0.3.2-arm64.dmg",
+      "size": 7924755,
+      "sha256": "158d226a774bde83ae6d2a10e5bd12ebd264ac09200f74bb799fbbe4e212039d",
+      "blob": "c70105f68b5f82222d07b6cd68353a7568b9317d"
+    },
+    {
+      "name": "Moon-0.3.2-source.tar.gz",
+      "size": 2770882,
+      "sha256": "55d7faa7432c35f7aa40c1455d4a9ebb72a30edf82c93ac1f515c157e631dd7c",
+      "blob": "d838910ce15cc2eb31e7d601d93005f633fe46bf"
+    },
+    {
+      "name": "appcast.xml",
+      "size": 3119,
+      "sha256": "1398240eb1b827862b530d744f68171e524d5b6a15017808a8fd008249e05059",
+      "blob": "ecdc80393b1b38bf585781465cec0d4c2a619011"
+    },
+    {
+      "name": "Install-ReadMe.txt",
+      "size": 829,
+      "sha256": "364c51e8d2371ff4442b96a85129934d426adc8e91111335f7f514c10edcdfd1",
+      "blob": "ae012ad37cb705e71373e9abe843bed1a2580703"
+    },
+    {
+      "name": "SHA256SUMS.txt",
+      "size": 428,
+      "sha256": "fd903ac295752b3b3958af0507e03c7ef40c304da3b8df2cc5810d61a03fc342",
+      "blob": "d017c858d52bc59944ab4de1f767fa0af66fcabb"
+    }
+  ]
+}
