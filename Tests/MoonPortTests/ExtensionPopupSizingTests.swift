@@ -48,16 +48,33 @@ final class ExtensionPopupSizingTests: XCTestCase {
     }
 
     func testFlexibleDelayedAndOversizedContent() async throws {
-        let (web, window) = try await page("#content { display:flex; }", "<div id=content><div style='width:240px;flex:none;height:80px'>Loading</div></div>")
-        defer { window.close() }
-        var size = try await measure(web)
-        XCTAssertEqual(size, [240, 80])
-        _ = try await web.evaluateJavaScript("document.querySelector('#content').innerHTML = '<div style=\"width:460px;flex:none;height:200px\">Ready</div>'")
-        size = try await measure(web)
-        XCTAssertEqual(size, [460, 200])
-        _ = try await web.evaluateJavaScript("document.querySelector('#content').innerHTML = '<div style=\"width:1000px;flex:none;height:900px\">Large</div>'")
-        size = try await measure(web)
-        XCTAssertEqual(size, [800, 600])
+        // Model both scrollbar modes in the page, without depending on or
+        // changing the host's "Show scroll bars" preference. Classic gutters
+        // are part of the popup's required size, not an extra content margin.
+        for gutter in [0, 15] {
+            let (web, window) = try await page("""
+                html { overflow: scroll; }
+                ::-webkit-scrollbar { width: \(gutter)px; height: \(gutter)px; }
+                #content { display:flex; }
+                """, "<div id=content><div style='width:240px;flex:none;height:80px'>Loading</div></div>")
+            defer { window.close() }
+            let reserved = try await web.evaluateJavaScript("[innerWidth - document.documentElement.clientWidth, innerHeight - document.documentElement.clientHeight]") as? [Double]
+            XCTAssertEqual(reserved, [Double(gutter), Double(gutter)], "the fixture must reserve the requested scrollbar space")
+            for _ in 0..<2 {
+                let size = try await measure(web)
+                XCTAssertEqual(size, [Double(240 + gutter), Double(80 + gutter)])
+            }
+            _ = try await web.evaluateJavaScript("document.querySelector('#content').innerHTML = '<div style=\"width:460px;flex:none;height:200px\">Ready</div>'")
+            for _ in 0..<2 {
+                let size = try await measure(web)
+                XCTAssertEqual(size, [Double(460 + gutter), Double(200 + gutter)])
+            }
+            _ = try await web.evaluateJavaScript("document.querySelector('#content').innerHTML = '<div style=\"width:1000px;flex:none;height:900px\">Large</div>'")
+            for _ in 0..<2 {
+                let size = try await measure(web)
+                XCTAssertEqual(size, [800, 600])
+            }
+        }
     }
 
     private func page(_ css: String, _ body: String, doctype: Bool = true) async throws -> (WKWebView, NSWindow) {
