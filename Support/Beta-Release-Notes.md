@@ -1,16 +1,16 @@
-# Moon 0.3.2 beta
+# Moon 0.3.3 beta
 
-The current Moon design, with signed in-app updates and a drag-to-Applications installer.
+A more convenient website translator, beside its sidebar button.
 
-- Minimal native sidebar, multiple windows, light/dark modes and optional Liquid Glass.
-- Full-gradient Moon icon and a subtle 70 ms hover highlight. Tab titles and close controls stay responsive during quick pointer movements.
-- Built-in website translation and Downloads beside Bookmarks in the sidebar.
-- Native WebKit browsing adapted from Search 1.0.7, with the Moon welcome page and local Ollama integration.
-- App Sandbox, hardened-runtime library validation, signed update feeds and archive verification remain enabled.
-- Signed update checks run hourly; automatic download/install-on-quit follows Settings → About.
+- A compact language menu opens beside the Translate icon instead of the far top-right corner.
+- One-click English, French, Italian, German, Spanish, Chinese, Japanese, Korean and Portuguese, with more supported languages available.
+- Show Original, Cancel and automatic-translation controls remain available.
+- The menu keeps an auto-hidden sidebar visible, follows left/right placement, and is also available from View → Translate Website and the horizontal toolbar.
+- Translation stays on-device; macOS may ask to download a language first.
+- The extension-popup regression test now covers both scrollbar modes without relying on the host Mac's scrollbar preference.
 
-Apple silicon; macOS 26 or later. This beta is Apple Development signed and **not Apple-notarized**. macOS may require its first-launch approval. Sparkle authenticates updates; it does not confer Gatekeeper trust.
+Includes the existing gradient icon, subtle sidebar hover, optional Liquid Glass and signed in-app updates.
 
-Install this connected beta manually once if your older Moon build says updates are not published. Later signed releases can arrive through the in-app updater. A complete old-to-new installation is verified separately from feed and archive authentication.
+Apple silicon; macOS 26 or later. This beta uses Apple Development signing and is **not Apple-notarized**. Sparkle authenticates updates; it does not confer Gatekeeper trust. Apple Passwords pairing and restricted browser entitlements remain separate integrations.
 
-Moon includes MIT-licensed code from Search. Source and license notices accompany this release. Chrome extension compatibility depends on the APIs each extension uses; restricted Apple Passwords integrations require separate setup.
+Users of connected Moon 0.3.2 builds can check Settings → About → Check now. Older builds with updates disabled need a one-time manual installation. Source and MIT attribution notices accompany this release.

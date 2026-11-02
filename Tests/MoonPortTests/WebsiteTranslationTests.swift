@@ -87,6 +87,31 @@ final class WebsiteTranslationTests: XCTestCase {
         XCTAssertFalse(browser.closePanel())
     }
 
+    func testTranslateCommandRevealsItsAnchorWithoutUnfoldingTheSidebar() throws {
+        let browser = Browser(record: WindowRecord())
+        let tab = try XCTUnwrap(browser.active)
+        _ = tab.web
+        tab.restore(url: URL(string: "https://translation.invalid")!, title: "Website")
+        browser.folded = true
+        browser.peeking = false
+        browser.openTranslation()
+        XCTAssertTrue(browser.translationOpen)
+        XCTAssertTrue(browser.peeking)
+        XCTAssertTrue(browser.folded, "The command reveals its anchor without changing the folding preference")
+        XCTAssertTrue(browser.closePanel())
+        XCTAssertFalse(browser.translationOpen)
+    }
+
+    func testUnavailableTranslationDoesNotRevealTheSidebar() {
+        let browser = Browser(record: WindowRecord())
+        browser.folded = true
+        browser.peeking = false
+        browser.openTranslation()
+        XCTAssertFalse(browser.translationOpen)
+        XCTAssertFalse(browser.peeking)
+        XCTAssertTrue(browser.folded)
+    }
+
     private func wait(_ predicate: () -> Bool) async throws {
         let deadline = Date().addingTimeInterval(15)
         while !predicate() {

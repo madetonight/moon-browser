@@ -853,7 +853,7 @@ private struct SideFoot: View {
                 ExtensionSlot(edge: prefs.sidePosition == .right ? .leading : .trailing, room: 0)
                 BookmarkDoor(browser: browser, arrowEdge: prefs.sidePosition == .right ? .leading : .trailing)
                 FetchDoor(browser: browser, fetches: fetches, persistent: true)
-                TranslationDoor(browser: browser)
+                TranslationDoor(browser: browser, arrowEdge: prefs.sidePosition == .right ? .leading : .trailing)
                 if prefs.usesSpaces { SpaceDot(browser: browser) }
                 if Profiles.shared.several { ProfileBadge(browser: browser) }
             }
@@ -866,7 +866,7 @@ private struct SideFoot: View {
                 ExtensionSlot(edge: .trailing, room: room)
                 BookmarkDoor(browser: browser, arrowEdge: .trailing)
                 FetchDoor(browser: browser, fetches: fetches, persistent: true)
-                TranslationDoor(browser: browser)
+                TranslationDoor(browser: browser, arrowEdge: prefs.sidePosition == .right ? .leading : .trailing)
                 Spacer(minLength: 0)
             }
             .padding(.horizontal, 10)

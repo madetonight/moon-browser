@@ -215,6 +215,9 @@ struct Fold: View {
         .onChange(of: browser.bookmarksOpen) { _, open in
             if !open, !inside, browser.peeking { peek(false) }
         }
+        .onChange(of: browser.translationOpen) { _, open in
+            if !open, !inside, browser.peeking { peek(false) }
+        }
     }
 
     /// A popover opened from a button in the column, still open: the
@@ -222,7 +225,7 @@ struct Fold: View {
     /// it along, so it holds the column out wherever the pointer has gone,
     /// on the way to a bookmark over the page included (#88).
     private var holding: Bool {
-        if browser.bookmarksOpen { return true }
+        if browser.bookmarksOpen || browser.translationOpen { return true }
         if #available(macOS 15.4, *), Extensions.shared.menuOpen { return true }
         return false
     }

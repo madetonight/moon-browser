@@ -1,33 +1,33 @@
 {
   "repository": "madetonight/moon-browser",
-  "tag": "v0.3.2-beta",
-  "build": "2026110201",
-  "title": "Moon 0.3.2 beta",
-  "notes": "# Moon 0.3.2 beta\n\nThe current Moon design, with signed in-app updates and a drag-to-Applications installer.\n\n- Minimal native sidebar, multiple windows, light/dark modes and optional Liquid Glass.\n- Full-gradient Moon icon and a subtle 70 ms hover highlight. Tab titles and close controls stay responsive during quick pointer movements.\n- Built-in website translation and Downloads beside Bookmarks in the sidebar.\n- Native WebKit browsing adapted from Search 1.0.7, with the Moon welcome page and local Ollama integration.\n- App Sandbox, hardened-runtime library validation, signed update feeds and archive verification remain enabled.\n- Signed update checks run hourly; automatic download/install-on-quit follows Settings → About.\n\nApple silicon; macOS 26 or later. This beta is Apple Development signed and **not Apple-notarized**. macOS may require its first-launch approval. Sparkle authenticates updates; it does not confer Gatekeeper trust.\n\nInstall this connected beta manually once if your older Moon build says updates are not published. Later signed releases can arrive through the in-app updater. A complete old-to-new installation is verified separately from feed and archive authentication.\n\nMoon includes MIT-licensed code from Search. Source and license notices accompany this release. Chrome extension compatibility depends on the APIs each extension uses; restricted Apple Passwords integrations require separate setup.\n",
+  "tag": "v0.3.3-beta",
+  "build": "2026110202",
+  "title": "Moon 0.3.3 beta",
+  "notes": "# Moon 0.3.3 beta\n\nA more convenient website translator, beside its sidebar button.\n\n- A compact language menu opens beside the Translate icon instead of the far top-right corner.\n- One-click English, French, Italian, German, Spanish, Chinese, Japanese, Korean and Portuguese, with more supported languages available.\n- Show Original, Cancel and automatic-translation controls remain available.\n- The menu keeps an auto-hidden sidebar visible, follows left/right placement, and is also available from View → Translate Website and the horizontal toolbar.\n- Translation stays on-device; macOS may ask to download a language first.\n- The extension-popup regression test now covers both scrollbar modes without relying on the host Mac's scrollbar preference.\n\nIncludes the existing gradient icon, subtle sidebar hover, optional Liquid Glass and signed in-app updates.\n\nApple silicon; macOS 26 or later. This beta uses Apple Development signing and is **not Apple-notarized**. Sparkle authenticates updates; it does not confer Gatekeeper trust. Apple Passwords pairing and restricted browser entitlements remain separate integrations.\n\nUsers of connected Moon 0.3.2 builds can check Settings → About → Check now. Older builds with updates disabled need a one-time manual installation. Source and MIT attribution notices accompany this release.\n",
   "assets": [
     {
-      "name": "Moon-0.3.2-arm64.zip",
-      "size": 7942534,
-      "sha256": "3ef727c01cf85d3428a368a6cac092ed1540e5206f1b04acdf80edda016ef320",
-      "blob": "11fc44405c9e2e0e78058ea854f0f04dc157f4a4"
+      "name": "Moon-0.3.3-arm64.zip",
+      "size": 7946564,
+      "sha256": "bffe9d6acce31d049bc7fe01796d118c229ca0eb419d13282141463736ef01c2",
+      "blob": "f06cf2c4c7d17b1699f296297dc5e131cc0cac83"
     },
     {
-      "name": "Moon-0.3.2-arm64.dmg",
-      "size": 7924755,
-      "sha256": "158d226a774bde83ae6d2a10e5bd12ebd264ac09200f74bb799fbbe4e212039d",
-      "blob": "c70105f68b5f82222d07b6cd68353a7568b9317d"
+      "name": "Moon-0.3.3-arm64.dmg",
+      "size": 7929430,
+      "sha256": "9056f661352376494127f50741c4aef24fbc23264021593d34cd4dd88caaae2c",
+      "blob": "ca8e6b0067a3933701b355df94a98ff52b334638"
     },
     {
-      "name": "Moon-0.3.2-source.tar.gz",
-      "size": 2770882,
-      "sha256": "55d7faa7432c35f7aa40c1455d4a9ebb72a30edf82c93ac1f515c157e631dd7c",
-      "blob": "d838910ce15cc2eb31e7d601d93005f633fe46bf"
+      "name": "Moon-0.3.3-source.tar.gz",
+      "size": 2772277,
+      "sha256": "af72a9f620c19762d28dc6f06486c62ab7291cdee7e062c225647637dc862d3e",
+      "blob": "da5e9dbd71b531d3192221808e4d5981c6904993"
     },
     {
       "name": "appcast.xml",
-      "size": 3119,
-      "sha256": "1398240eb1b827862b530d744f68171e524d5b6a15017808a8fd008249e05059",
-      "blob": "ecdc80393b1b38bf585781465cec0d4c2a619011"
+      "size": 5282,
+      "sha256": "cb56caa272d47f98469fcefeeed7e22eaa2dffd86704a1a834eea4ef5b427d99",
+      "blob": "845aaf80e6a957c02e24697bbf10fe93db897b89"
     },
     {
       "name": "Install-ReadMe.txt",
@@ -38,8 +38,8 @@
     {
       "name": "SHA256SUMS.txt",
       "size": 428,
-      "sha256": "fd903ac295752b3b3958af0507e03c7ef40c304da3b8df2cc5810d61a03fc342",
-      "blob": "d017c858d52bc59944ab4de1f767fa0af66fcabb"
+      "sha256": "e53083cc7a2d9076d8cad48c0bb78a4f9686c0e6868a15e5e2a546f4ffa57a1f",
+      "blob": "053aabc29a6498ca9092aef659a67e49144790a7"
     }
   ]
 }

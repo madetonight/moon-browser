@@ -738,20 +738,6 @@ struct ContentView: View {
     /// and goes (What's New).
     @ViewBuilder
     private var panels: some View {
-        if browser.translationOpen, let tab = browser.active, tab.canTranslate {
-            ZStack(alignment: .topTrailing) {
-                Color.clear
-                    .contentShape(Rectangle())
-                    .onTapGesture { browser.translationOpen = false }
-                WebsiteTranslationPanel(tab: tab) { browser.translationOpen = false }
-                    .id(tab.id)
-                    .padding(.top, Metrics.strip + 8)
-                    .padding(.trailing, 14)
-                    .transition(.opacity)
-            }
-            .ignoresSafeArea()
-            .onExitCommand { browser.translationOpen = false }
-        }
         if browser.welcoming {
             WelcomePanel(browser: browser, prefs: browser.prefs)
                 .ignoresSafeArea()

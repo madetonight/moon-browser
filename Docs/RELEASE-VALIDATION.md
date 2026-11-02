@@ -1,8 +1,10 @@
-# Moon 0.3.2 beta verification
+# Moon 0.3.3 beta verification
 
-Requires Apple silicon and macOS 26 or later. This release preserves the tested native executable and packages the latest gradient icon and sidebar hover refinement.
+Requires Apple silicon and macOS 26 or later. This release packages the tested translator menu beside the sidebar icon, together with the existing gradient icon and sidebar hover refinement.
 
-- All 15 focused SidebarPressTests passed on the current executable, including rapid hover switching, closing, selection and drag interactions.
+- Five focused WebsiteTranslationTests passed, covering exact original restoration, protected fields, translation availability and folded-sidebar command guards.
+- Live UI review confirmed all nine default languages beside the bottom-left icon, Escape dismissal and View-menu reopening with a folded sidebar.
+- Three popup sizing tests passed with explicit zero-width and reserved scrollbar fixtures.
 - Five offline release-publisher checks passed: upload order, altered-blob rejection, upload digest mismatch, repository restrictions and path restrictions.
 - The installer and update ZIP contain the same application. Release packaging verifies the application code signature, the signed feed and archive signature, version, length, download URL and minimum macOS, plus a tampered-byte rejection.
 - The current beta uses Apple Development signing, App Sandbox and hardened-runtime library validation. It is not Apple-notarized.

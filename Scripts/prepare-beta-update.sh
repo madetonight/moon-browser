@@ -42,6 +42,15 @@ codesign --verify --deep --strict "$release_dir/staging/Moon.app"
 archive="$release_dir/Moon-$version-arm64.zip"
 ditto -c -k --sequesterRsrc --keepParent "$release_dir/staging/Moon.app" "$archive"
 if [[ -f appcast.xml ]]; then cp appcast.xml "$release_dir/appcast.xml"; fi
+# Refresh the old bootstrap description before generate_appcast re-signs it.
+python3 - "$release_dir/appcast.xml" <<'PY'
+from pathlib import Path
+import sys
+p=Path(sys.argv[1])
+if p.exists():
+    p.write_text(p.read_text().replace('Signed Moon browser releases. No public binary release is published yet.',
+                                     'Signed Moon browser releases for macOS.'))
+PY
 cp Support/Beta-Release-Notes.md "$release_dir/Moon-$version-arm64.md"
 "$sparkle/generate_appcast" --account org.moonbrowser.Moon \
   --download-url-prefix "$prefix" --maximum-deltas 0 --maximum-versions 0 \
