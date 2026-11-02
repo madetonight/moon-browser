@@ -1,11 +1,40 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><!-- sparkle-sign-warning:
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<!-- sparkle-sign-warning:
 IMPORTANT: This file was signed by Sparkle. Any modifications to this file requires re-signing this file with generate_appcast or sign_update! The signed signature will be embedded at the end of this file.
---><rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+-->
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
     <channel>
         <title>Moon updates</title>
         <link>https://github.com/madetonight/moon-browser/releases</link>
-        <description>Signed Moon browser releases. No public binary release is published yet.</description>
+        <description>Signed Moon browser releases for macOS.</description>
         <language>en</language>
+        <item>
+            <title>0.3.3</title>
+            <pubDate>Mon, 02 Nov 2026 12:25:57 -0500</pubDate>
+            <link>https://github.com/madetonight/moon-browser/releases</link>
+            <sparkle:version>2026110202</sparkle:version>
+            <sparkle:shortVersionString>0.3.3</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
+            <description sparkle:format="markdown"><![CDATA[# Moon 0.3.3 beta
+
+A more convenient website translator, beside its sidebar button.
+
+- A compact language menu opens beside the Translate icon instead of the far top-right corner.
+- One-click English, French, Italian, German, Spanish, Chinese, Japanese, Korean and Portuguese, with more supported languages available.
+- Show Original, Cancel and automatic-translation controls remain available.
+- The menu keeps an auto-hidden sidebar visible, follows left/right placement, and is also available from View → Translate Website and the horizontal toolbar.
+- Translation stays on-device; macOS may ask to download a language first.
+- The extension-popup regression test now covers both scrollbar modes without relying on the host Mac's scrollbar preference.
+
+Includes the existing gradient icon, subtle sidebar hover, optional Liquid Glass and signed in-app updates.
+
+Apple silicon; macOS 26 or later. This beta uses Apple Development signing and is **not Apple-notarized**. Sparkle authenticates updates; it does not confer Gatekeeper trust. Apple Passwords pairing and restricted browser entitlements remain separate integrations.
+
+Users of connected Moon 0.3.2 builds can check Settings → About → Check now. Older builds with updates disabled need a one-time manual installation. Source and MIT attribution notices accompany this release.
+]]></description>
+            <enclosure url="https://github.com/madetonight/moon-browser/releases/download/v0.3.3-beta/Moon-0.3.3-arm64.zip" length="7946564" type="application/octet-stream" sparkle:edSignature="PEFkeuhSMliBZ6MF1hsURmRhNXlzwDfJxfFSXsNmn8C1be/Cjk/2oZRjNj8N2oRpbREu14ltcr2g4K3DLNQ8BA=="/>
+        </item>
         <item>
             <title>0.3.2</title>
             <pubDate>Mon, 02 Nov 2026 09:34:22 -0500</pubDate>
@@ -31,10 +60,11 @@ Install this connected beta manually once if your older Moon build says updates 
 
 Moon includes MIT-licensed code from Search. Source and license notices accompany this release. Chrome extension compatibility depends on the APIs each extension uses; restricted Apple Passwords integrations require separate setup.
 ]]></description>
-            <enclosure url="https://github.com/madetonight/moon-browser/releases/download/v0.3.2-beta/Moon-0.3.2-arm64.zip" length="7942534" type="application/octet-stream" sparkle:edSignature="8S0gelhgBO10u7MxLwkrGECmaXAxpqj+1YoPDItSDSLFdgnu3Nj2N6C1fSh/fkiFHNrDy/1OFxmEkNAsZUNtDA=="></enclosure>
+            <enclosure url="https://github.com/madetonight/moon-browser/releases/download/v0.3.2-beta/Moon-0.3.2-arm64.zip" length="7942534" type="application/octet-stream" sparkle:edSignature="8S0gelhgBO10u7MxLwkrGECmaXAxpqj+1YoPDItSDSLFdgnu3Nj2N6C1fSh/fkiFHNrDy/1OFxmEkNAsZUNtDA=="/>
         </item>
     </channel>
-</rss><!-- sparkle-signatures:
-edSignature: qvmeXBsxD7rxjIS3LyllT1hEnsjIHfbaAwxvaDHga9+GlcOw4n+OoHxe9NQuVXkgLDh+v7B58Zy+BeUZZ5z9AA==
-length: 2975
+</rss>
+<!-- sparkle-signatures:
+edSignature: zrFgDgQnZyFGcFDEZW7CANddNpiTAztDlGyPyP2DE9U7+c0jYJwnbp6UOhkTy1ha4wKG1+4MDKOxf+VSaq5qBQ==
+length: 5138
 -->
