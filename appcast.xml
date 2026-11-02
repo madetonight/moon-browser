@@ -1,9 +1,40 @@
-<?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
-  <channel>
-    <title>Moon updates</title>
-    <link>https://github.com/madetonight/moon-browser/releases</link>
-    <description>Signed Moon browser releases. No public binary release is published yet.</description>
-    <language>en</language>
-  </channel>
-</rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><!-- sparkle-sign-warning:
+IMPORTANT: This file was signed by Sparkle. Any modifications to this file requires re-signing this file with generate_appcast or sign_update! The signed signature will be embedded at the end of this file.
+--><rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+    <channel>
+        <title>Moon updates</title>
+        <link>https://github.com/madetonight/moon-browser/releases</link>
+        <description>Signed Moon browser releases. No public binary release is published yet.</description>
+        <language>en</language>
+        <item>
+            <title>0.3.2</title>
+            <pubDate>Mon, 02 Nov 2026 09:34:22 -0500</pubDate>
+            <link>https://github.com/madetonight/moon-browser/releases</link>
+            <sparkle:version>2026110201</sparkle:version>
+            <sparkle:shortVersionString>0.3.2</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
+            <description sparkle:format="markdown"><![CDATA[# Moon 0.3.2 beta
+
+The current Moon design, with signed in-app updates and a drag-to-Applications installer.
+
+- Minimal native sidebar, multiple windows, light/dark modes and optional Liquid Glass.
+- Full-gradient Moon icon and a subtle 70 ms hover highlight. Tab titles and close controls stay responsive during quick pointer movements.
+- Built-in website translation and Downloads beside Bookmarks in the sidebar.
+- Native WebKit browsing adapted from Search 1.0.7, with the Moon welcome page and local Ollama integration.
+- App Sandbox, hardened-runtime library validation, signed update feeds and archive verification remain enabled.
+- Signed update checks run hourly; automatic download/install-on-quit follows Settings → About.
+
+Apple silicon; macOS 26 or later. This beta is Apple Development signed and **not Apple-notarized**. macOS may require its first-launch approval. Sparkle authenticates updates; it does not confer Gatekeeper trust.
+
+Install this connected beta manually once if your older Moon build says updates are not published. Later signed releases can arrive through the in-app updater. A complete old-to-new installation is verified separately from feed and archive authentication.
+
+Moon includes MIT-licensed code from Search. Source and license notices accompany this release. Chrome extension compatibility depends on the APIs each extension uses; restricted Apple Passwords integrations require separate setup.
+]]></description>
+            <enclosure url="https://github.com/madetonight/moon-browser/releases/download/v0.3.2-beta/Moon-0.3.2-arm64.zip" length="7942534" type="application/octet-stream" sparkle:edSignature="8S0gelhgBO10u7MxLwkrGECmaXAxpqj+1YoPDItSDSLFdgnu3Nj2N6C1fSh/fkiFHNrDy/1OFxmEkNAsZUNtDA=="></enclosure>
+        </item>
+    </channel>
+</rss><!-- sparkle-signatures:
+edSignature: qvmeXBsxD7rxjIS3LyllT1hEnsjIHfbaAwxvaDHga9+GlcOw4n+OoHxe9NQuVXkgLDh+v7B58Zy+BeUZZ5z9AA==
+length: 2975
+-->
