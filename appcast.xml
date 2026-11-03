@@ -9,6 +9,30 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
         <description>Signed Moon browser releases for macOS.</description>
         <language>en</language>
         <item>
+            <title>0.3.5</title>
+            <pubDate>Mon, 02 Nov 2026 19:56:35 -0500</pubDate>
+            <link>https://github.com/madetonight/moon-browser/releases</link>
+            <sparkle:version>2026110204</sparkle:version>
+            <sparkle:shortVersionString>0.3.5</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
+            <description sparkle:format="markdown"><![CDATA[# Moon 0.3.5 beta
+
+Smoother sidebar hover, in both directions.
+
+- Tab hover backgrounds now use a short 100 ms ease-in/ease-out on entry and exit, rather than fading in and disappearing immediately.
+- Rapid crossings retarget the highlight while tab titles, close targets and selection stay immediate.
+- Reduce Motion keeps hover changes instant.
+- Native high-resolution icon compression reduces installed size to around 11 MB while keeping the approved Fluid Dusk artwork and small icon representations.
+- Moon's current browser features remain included.
+
+Apple silicon; macOS 26 or later. This beta is Apple Development signed and **not Apple-notarized**. Sparkle authenticates updates; it does not confer Gatekeeper trust.
+
+Connected Moon builds can use Settings → About → Check now. Older builds with updates disabled need a one-time manual installation. Source and MIT attribution notices accompany this release.
+]]></description>
+            <enclosure url="https://github.com/madetonight/moon-browser/releases/download/v0.3.5-beta/Moon-0.3.5-arm64.zip" length="4941604" type="application/octet-stream" sparkle:edSignature="fGY+FRKF4zzR0MAgfTMYXVmvBjt4FS3kOou6rx6uz8QZux8k905OlSDQ95wudbxo+KYqWwcTOwH9FSXqusFuBA=="/>
+        </item>
+        <item>
             <title>0.3.4</title>
             <pubDate>Mon, 02 Nov 2026 19:19:00 -0500</pubDate>
             <link>https://github.com/madetonight/moon-browser/releases</link>
@@ -92,6 +116,6 @@ Moon includes MIT-licensed code from Search. Source and license notices accompan
     </channel>
 </rss>
 <!-- sparkle-signatures:
-edSignature: EKUvyldkY9CZwTQ7JoCnNn8l3a7YJ24Xq2OaNBWvA3rPlFacKANUtBnr9oOnRmL9Rv68Gc2QHl/pnIGulEC3AQ==
-length: 7665
+edSignature: TJ2R1XyNYQxIxOQ9G8X/QS3DbUOwAushQ6clYLkvQJSkwh1s70dhOzqwGW3pR/pf07+nevt0YEIr169cmPIKDA==
+length: 9447
 -->
