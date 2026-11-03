@@ -3727,7 +3727,7 @@ enum ExtensionShims {
 
     static func answer(_ message: Any, from context: WKWebExtensionContext, owner: Extensions) async throws -> Any? {
         guard let body = message as? [String: Any], let api = body["api"] as? String else {
-            return ["error": "Not a Search message"]
+            return ["error": "Not a Moon message"]
         }
         let args = body["args"] as? [Any] ?? []
         do {
@@ -4977,7 +4977,7 @@ enum ExtensionAuth {
         static let longest: TimeInterval = 60
 
         static func failure(_ why: String) -> Error {
-            NSError(domain: "Search", code: 1, userInfo: [NSLocalizedDescriptionKey: why])
+            NSError(domain: "Moon", code: 1, userInfo: [NSLocalizedDescriptionKey: why])
         }
 
         let extensionID: String

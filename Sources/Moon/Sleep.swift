@@ -104,14 +104,30 @@ extension Browser {
     /// Every tab that has gone long enough without being looked at, the one
     /// left longest first.
     func sleepIdle(within given: TimeInterval? = nil) {
-        guard prefs.sleepsTabs else { return }
+        guard prefs.sleepsTabs, !sleepingIdle else { return }
         let wait = given ?? Browser.sleepAfter
         let now = Date()
         // The rows of the other spaces too: parked is not the same as used.
         let idle = (tabs + parkedTabs)
             .filter { now.timeIntervalSince($0.touched) >= wait && awake(because: $0) == nil }
             .sorted { $0.touched < $1.touched }
-        for tab in idle { self.sleep(tab) }
+        guard !idle.isEmpty else { return }
+        sleepingIdle = true
+        sleepNext(idle, at: 0)
+    }
+
+    /// Do not ask dozens of WebKit processes to render and encode full-window
+    /// snapshots simultaneously, especially during a memory-pressure event.
+    /// Each step rechecks all protection rules in sleep(_:done:).
+    private func sleepNext(_ tabs: [Tab], at index: Int) {
+        guard prefs.sleepsTabs, index < tabs.count else {
+            sleepingIdle = false
+            return
+        }
+        sleep(tabs[index]) { [weak self] _ in
+            // Yield between pages, including ones whose protection changed.
+            DispatchQueue.main.async { self?.sleepNext(tabs, at: index + 1) }
+        }
     }
 
     /// Why a tab has to stay awake — nil when nothing keeps it. The clock is

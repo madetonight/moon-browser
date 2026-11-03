@@ -2004,6 +2004,7 @@ final class Browser: NSObject, ObservableObject {
     /// The minute-by-minute look for tabs to put to sleep, and the ear for
     /// macOS saying memory is short. See Sleep.swift.
     var dozing: Timer?
+    var sleepingIdle = false
     var pressure: DispatchSourceMemoryPressure?
     /// Downloads still under way. See `keep(_:)`.
     var downloading: [WKDownload] = []

@@ -944,7 +944,7 @@ final class Extensions: NSObject, ObservableObject {
         defer { try? FileManager.default.removeItem(at: folder) }
         do {
             try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-            try Data(#"{"manifest_version": 3, "name": "Search", "version": "1"}"#.utf8).write(to: folder.appendingPathComponent("manifest.json"))
+            try Data(#"{"manifest_version": 3, "name": "Moon", "version": "1"}"#.utf8).write(to: folder.appendingPathComponent("manifest.json"))
             let standIn = WKWebExtensionContext(for: try await WKWebExtension(resourceBaseURL: folder))
             standIn.uniqueIdentifier = id
             standIn.baseURL = base
@@ -1565,7 +1565,7 @@ extension Extensions: WKWebExtensionControllerDelegate {
     static func mayOpen(_ url: URL) throws {
         let scheme = url.scheme?.lowercased() ?? ""
         guard scheme != "javascript", scheme != "file" else {
-            throw NSError(domain: "Search", code: 1, userInfo: [NSLocalizedDescriptionKey: "Cannot navigate to a \(scheme): URL."])
+            throw NSError(domain: "Moon", code: 1, userInfo: [NSLocalizedDescriptionKey: "Cannot navigate to a \(scheme): URL."])
         }
     }
 
@@ -1589,7 +1589,7 @@ extension Extensions: WKWebExtensionControllerDelegate {
         // and History while the extension believed them private. Refused,
         // as Chrome refuses when incognito isn't allowed (Security).
         if configuration.shouldBePrivate {
-            throw NSError(domain: "Search", code: 2, userInfo: [NSLocalizedDescriptionKey: "Private windows can't be opened by extensions."])
+            throw NSError(domain: "Moon", code: 2, userInfo: [NSLocalizedDescriptionKey: "Private windows can't be opened by extensions."])
         }
         for url in configuration.tabURLs { try Extensions.mayOpen(url) }
         // Tabs to move in, each as moveToWindow takes one: in a window's
@@ -1599,10 +1599,10 @@ extension Extensions: WKWebExtensionControllerDelegate {
         var moving: [(tab: Tab, from: Browser)] = []
         for asked in configuration.tabs {
             guard let tab = (asked as? ExtensionTab)?.tab, seen(tab, for: extensionContext), let from = browser(of: tab) else {
-                throw NSError(domain: "Search", code: 1, userInfo: [NSLocalizedDescriptionKey: "No tab with that id."])
+                throw NSError(domain: "Moon", code: 1, userInfo: [NSLocalizedDescriptionKey: "No tab with that id."])
             }
             guard tab.pin == nil, !tab.bench, moving.first.map({ $0.from.profileID == from.profileID }) ?? true else {
-                throw NSError(domain: "Search", code: 4, userInfo: [NSLocalizedDescriptionKey: "That tab can't be moved to another window."])
+                throw NSError(domain: "Moon", code: 4, userInfo: [NSLocalizedDescriptionKey: "That tab can't be moved to another window."])
             }
             moving.append((tab, from))
         }
@@ -1620,7 +1620,7 @@ extension Extensions: WKWebExtensionControllerDelegate {
                 let own = [Extensions.scheme, Extensions.formerScheme].contains(scheme)
                     && url.host()?.lowercased() == extensionContext.uniqueIdentifier.lowercased()
                 guard scheme == "https" || scheme == "http" || own || url.absoluteString == "about:blank" else {
-                    throw NSError(domain: "Search", code: 3, userInfo: [NSLocalizedDescriptionKey: "A popup window shows a website or the extension's own page."])
+                    throw NSError(domain: "Moon", code: 3, userInfo: [NSLocalizedDescriptionKey: "A popup window shows a website or the extension's own page."])
                 }
             }
         }
@@ -1832,7 +1832,7 @@ final class ExtensionTab: NSObject, WKWebExtensionTab {
 
     private func checkAccess(_ context: WKWebExtensionContext) throws {
         guard !hidden(context) else {
-            throw NSError(domain: "Search", code: 1, userInfo: [NSLocalizedDescriptionKey: "No tab with that id."])
+            throw NSError(domain: "Moon", code: 1, userInfo: [NSLocalizedDescriptionKey: "No tab with that id."])
         }
     }
 
@@ -1948,7 +1948,7 @@ final class ExtensionWindow: NSObject, WKWebExtensionWindow {
     /// windows.remove.
     func close(for context: WKWebExtensionContext) async throws {
         guard context.hasAccessToPrivateData || browser?.tabs.contains(where: { $0.shy }) != true else {
-            throw NSError(domain: "Search", code: 1, userInfo: [NSLocalizedDescriptionKey: "The window contains private tabs this extension cannot access."])
+            throw NSError(domain: "Moon", code: 1, userInfo: [NSLocalizedDescriptionKey: "The window contains private tabs this extension cannot access."])
         }
         browser?.window?.performClose(nil)
     }

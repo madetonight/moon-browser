@@ -1,16 +1,16 @@
-# Moon 0.3.3 beta
+# Moon 0.3.4 beta
 
-A more convenient website translator, beside its sidebar button.
+Fluid Dusk: a new liquid-glass gradient icon, a simpler Moon welcome and a smaller native app.
 
-- A compact language menu opens beside the Translate icon instead of the far top-right corner.
-- One-click English, French, Italian, German, Spanish, Chinese, Japanese, Korean and Portuguese, with more supported languages available.
-- Show Original, Cancel and automatic-translation controls remain available.
-- The menu keeps an auto-hidden sidebar visible, follows left/right placement, and is also available from View → Translate Website and the horizontal toolbar.
-- Translation stays on-device; macOS may ask to download a language first.
-- The extension-popup regression test now covers both scrollbar modes without relying on the host Mac's scrollbar preference.
+- The new Fluid Dusk icon keeps Moon's pearl, blue and midnight palette, with soft curved light fields and subtle glass depth.
+- Moon branding in About, onboarding and other product surfaces, with “Built by heyjoseluna” and “Inspired by Office Commun”. Required third-party license notices remain included.
+- Three-step onboarding with layout choices, optional import and optional default-browser setup. Browse now skips setup. Password import starts disabled, and browser discovery waits for your choice.
+- The production executable is optimized for size; Apple-silicon releases omit Intel slices from the update framework while preserving signatures.
+- Idle-tab snapshots run one at a time, with protection checks retained for active pages, media, downloads and unsaved forms.
+- Onboarding keeps keyboard focus and accessibility navigation within its controls.
 
-Includes the existing gradient icon, subtle sidebar hover, optional Liquid Glass and signed in-app updates.
+Includes the existing anchored website translator, sidebar hover refinements, optional Liquid Glass appearance and signed in-app updates. AI remains local Ollama.
 
-Apple silicon; macOS 26 or later. This beta uses Apple Development signing and is **not Apple-notarized**. Sparkle authenticates updates; it does not confer Gatekeeper trust. Apple Passwords pairing and restricted browser entitlements remain separate integrations.
+Apple silicon; macOS 26 or later. This beta is Apple Development signed and **not Apple-notarized**. Sparkle authenticates updates; it does not confer Gatekeeper trust. Apple Passwords pairing, restricted browser entitlements, third-party extensions and protected streaming require separate verification.
 
-Users of connected Moon 0.3.2 builds can check Settings → About → Check now. Older builds with updates disabled need a one-time manual installation. Source and MIT attribution notices accompany this release.
+Connected Moon 0.3.2 and 0.3.3 builds can use Settings → About → Check now. Older builds with updates disabled need a one-time manual installation. Source and MIT attribution notices accompany this release.

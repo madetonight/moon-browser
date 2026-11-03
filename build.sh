@@ -35,7 +35,7 @@ cleanup() {
 trap cleanup EXIT
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources" "$app/Contents/Frameworks"
 cp "$binary_dir/Moon" "$app/Contents/MacOS/Moon"
-strip -x "$app/Contents/MacOS/Moon"
+strip -u -r "$app/Contents/MacOS/Moon"
 for resource in Search-1.0.7-LICENSE Sparkle-LICENSE Moon.sdef; do cp "Support/$resource" "$app/Contents/Resources/$resource"; done
 cp LICENSE THIRD_PARTY_NOTICES.md "$app/Contents/Resources/"
 cp Support/Info.plist "$app/Contents/Info.plist"
@@ -116,6 +116,22 @@ else
     ditto "$app/Contents/Frameworks/Sparkle.framework" "$framework_cache"
   fi
 fi
+# The app is arm64. Thin cached, already signed helpers without invoking a
+# private key: Mach-O slices retain their own signatures. Verify before signing
+# the outer bundle so an SDK/toolchain change cannot silently invalidate them.
+python3 - "$app/Contents/Frameworks/Sparkle.framework" <<'PY'
+from pathlib import Path
+import subprocess,sys
+for binary in Path(sys.argv[1]).rglob('*'):
+    if not binary.is_file() or binary.is_symlink(): continue
+    info=subprocess.run(['lipo','-info',str(binary)],capture_output=True,text=True)
+    if info.returncode == 0 and 'x86_64' in info.stdout:
+        output=Path(str(binary)+'.thin')
+        subprocess.run(['lipo',str(binary),'-thin','arm64','-output',str(output)],check=True)
+        output.chmod(binary.stat().st_mode)
+        output.replace(binary)
+PY
+codesign --verify --deep --strict "$app/Contents/Frameworks/Sparkle.framework"
 codesign "${sign_args[@]}" --entitlements "$entitlements" "$app"
 codesign --verify --deep --strict "$app"
 if [[ -e "$final_app" ]]; then

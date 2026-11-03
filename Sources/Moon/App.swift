@@ -807,7 +807,9 @@ struct ContentView: View {
                     // the title bar's band is page too.
                     .ignoresSafeArea()
             }
-            .overlay { field }
+            .overlay { if !browser.welcoming { field } }
+            .allowsHitTesting(!browser.welcoming)
+            .accessibilityHidden(browser.welcoming)
             .overlay { panels }
             .overlay { switcherOverlay }
             .overlay(alignment: .topTrailing) {

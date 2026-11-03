@@ -70,11 +70,12 @@ beta release first. Then publish appcast.xml at the configured feed address.
 Moon uses the existing raw GitHub HTTPS URL rather than requiring GitHub Pages;
 both serve the same signed appcast architecture. Never edit generated signed XML.
 
-Older builds with `MoonUpdateFeedReady=false` need the first connected beta installed manually, once.
-The current build's updater is disabled, so publishing a feed alone cannot turn
-that installed build on. After publication, install the connected candidate and
-verify its native Check now flow; test a later higher build through download,
-installation and relaunch before claiming the entire upgrade path works.
+Older builds with `MoonUpdateFeedReady=false` need one manual installation of a
+connected beta. Publishing a feed cannot enable an updater in an old disconnected
+build. Published 0.3.2 and 0.3.3 betas include the connected updater; a real
+0.3.2-to-0.3.3 download, installation and relaunch was verified. For a new release,
+verify the exact signed archive/feed and check the offered version separately
+from any claim about that release's complete installed upgrade.
 
 This beta is not Apple-notarized. Sparkle authenticates updates but does not confer
 Gatekeeper trust. macOS may require per-app approval for a first internet download.

@@ -9,8 +9,12 @@ guard let source = NSImage(contentsOf: artwork) else {
 }
 // Sample the gradient tile inside the artwork's presentation margins. The
 // native icon mask supplies clean, transparent corners at every size.
-let sourceRect = NSRect(origin: .zero, size: source.size)
-    .insetBy(dx: source.size.width * 0.11, dy: source.size.height * 0.11)
+// The selected Fluid Dusk artwork includes a presentation margin. Retain the
+// tile's thin glass edge; NSImage source coordinates start at the lower-left.
+let sourceRect = NSRect(x: source.size.width * 0.10,
+                        y: source.size.height * 0.11,
+                        width: source.size.width * 0.80,
+                        height: source.size.height * 0.80)
 try FileManager.default.createDirectory(at: destination, withIntermediateDirectories: true)
 for size in [16, 32, 64, 128, 256, 512, 1024] {
     let bitmap = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: size, pixelsHigh: size, bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: size * 4, bitsPerPixel: 32)!

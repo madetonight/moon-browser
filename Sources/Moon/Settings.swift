@@ -884,15 +884,16 @@ struct SettingsPanel: View {
 
     private var aboutHeader: some View {
         HStack(spacing: 14) {
-            Logomark()
-                .fill(Palette.ink, style: FillStyle(eoFill: true))
-                .aspectRatio(Logomark.canvas.width / Logomark.canvas.height, contentMode: .fit)
-                .frame(height: 34)
+            MoonBrandIcon()
+                .frame(width: 48, height: 48)
             VStack(alignment: .leading, spacing: 3) {
                 Text("Moon")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(Palette.ink)
-                Text("Moon contributors · version \(Updater.version)")
+                Text("Built by heyjoseluna · \(Updater.version)")
+                    .font(.system(size: 12))
+                    .foregroundStyle(Palette.muted)
+                Text("Inspired by Office Commun")
                     .font(.system(size: 12))
                     .foregroundStyle(Palette.muted)
             }

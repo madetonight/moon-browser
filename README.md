@@ -1,11 +1,9 @@
 # Moon Browser
 
-A native WebKit browser for macOS 26 and later. Moon now derives its browsing
-implementation directly from [Search 1.0.7](https://github.com/driceroland/Search/releases/tag/v1.0.7),
-under MIT, following the request to use the complete Search interface and features.
-It keeps Moon's app identity, icon, welcome page, optional glass and local Ollama AI.
+A native WebKit browser for macOS 26 and later, with a minimal interface, a
+personal welcome page, optional Liquid Glass and local Ollama AI.
 
-The source includes Search's sidebar, icon rail and horizontal tabs; groups,
+Moon includes sidebar, icon rail and horizontal tabs; groups,
 pins, spaces and profiles; multiple windows and splits; native settings and data
 pages; translation; reader and Markdown; content blocking including YouTube;
 media/call handling; extension APIs and installation; imports; and Mac menus,
@@ -17,7 +15,7 @@ signed release. Chrome compatibility depends on each extension's API needs.
 
 ## Download
 
-[Moon 0.3.3 beta for Apple silicon](https://github.com/madetonight/moon-browser/releases/tag/v0.3.3-beta) requires macOS 26 or later. Open the DMG and drag Moon to Applications. The beta uses Apple Development signing and is not notarized by Apple. Install this connected version manually once; subsequent signed releases can be offered in Settings → About → Check now.
+[Moon 0.3.4 beta for Apple silicon](https://github.com/madetonight/moon-browser/releases/tag/v0.3.4-beta) requires macOS 26 or later. Open the DMG and drag Moon to Applications. The beta uses Apple Development signing and is not notarized by Apple. Install this connected version manually once; subsequent signed releases can be offered in Settings → About → Check now.
 
 ## Build and validate
 

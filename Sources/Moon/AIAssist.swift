@@ -165,7 +165,7 @@ enum AIAssist {
     /// What a provider off this Mac is sent, said once, the first time it is
     /// used — and a word on what it does with it where that matters.
     static func notice(for provider: AIProvider) -> String {
-        var text = "When you ask, Search sends this page's text, its address and your question to \(provider.host)"
+        var text = "When you ask, Moon sends this page's text, its address and your question to \(provider.host)"
         text += provider == .openRouter ? ", which passes them to the model's provider." : "."
         text += " Their terms and privacy policy apply. Nothing is sent until you ask, never from a private tab, and Moon keeps no copy."
         switch provider {
@@ -460,7 +460,7 @@ struct AISettings: View {
     private var onThisMac: some View {
         let size = ByteCountFormatter.string(fromByteCount: engine.downloadSize, countStyle: .file)
         if AIEngine.translated {
-            Line("Model", "Needs the Apple Silicon version of Search — this copy runs translated") { EmptyView() }
+            Line("Model", "Needs the Apple Silicon version of Moon — this copy runs translated") { EmptyView() }
         } else {
             switch engine.state {
             case .absent:

@@ -104,4 +104,30 @@ final class PinSleepTests: XCTestCase {
         XCTAssertEqual(said, "asleep")
         XCTAssertTrue(away.asleep)
     }
+
+    func testIdleQueueFinishesAndProtectsPlayingPages() async throws {
+        let first = pin(site + "/first")
+        let playing = pin(site + "/playing")
+        let last = pin(site + "/last")
+        playing.noisy = true
+        for tab in [first, last] {
+            await withCheckedContinuation { continuation in
+                tab.web.evaluateInSearch("window.__officeForms = {unsaved: () => false}") { _ in continuation.resume() }
+            }
+        }
+        park([first, playing, last])
+        browser.prefs.sleepsTabs = true
+        browser.sleepIdle(within: 0)
+        XCTAssertTrue(browser.sleepingIdle)
+        // A timer/pressure event must not start another snapshot batch.
+        browser.sleepIdle(within: 0)
+        let deadline = Date().addingTimeInterval(5)
+        while browser.sleepingIdle, Date() < deadline {
+            try await Task.sleep(for: .milliseconds(20))
+        }
+        XCTAssertFalse(browser.sleepingIdle)
+        XCTAssertTrue(first.asleep)
+        XCTAssertTrue(last.asleep)
+        XCTAssertFalse(playing.asleep)
+    }
 }

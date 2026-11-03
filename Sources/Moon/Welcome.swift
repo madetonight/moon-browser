@@ -1,22 +1,24 @@
 import SwiftUI
 
-/// The first time. Four short pages over the window, in the app's own
-/// language: what this is, what to bring over, how to hold it, and whether
-/// links from other apps should come here. Nothing is asked twice, and every
-/// page can be skipped.
+/// A short, optional introduction. Browser discovery and protected imports
+/// only happen after the person chooses them; browsing needs no setup grant.
 struct WelcomePanel: View {
     @ObservedObject var browser: Browser
     @ObservedObject var prefs: Preferences
 
     @State private var page = 0
     @State private var forward = true
+    @FocusState private var continuesFocused: Bool
 
     // Bringing things over. Nil until one is picked, which means the first:
     // finding them looks through each browser's folders, and as an initial
     // value that ran every time the panel was made, the first window's
     // included, for a page that isn't showing yet.
     @State private var source: ImportSource?
-    @State private var wantsPasswords = true
+    @State private var wantsPasswords = false
+    @State private var sources: [ImportSource] = []
+    @State private var unreadable: [Chromium.Unavailable] = []
+    @State private var discovered = false
     @State private var wantsHistory = true
     @State private var wantsBookmarks = true
     @State private var bringing = false
@@ -26,65 +28,95 @@ struct WelcomePanel: View {
     @State private var isDefault = Links.isDefault
     @State private var asked = false
 
-    private var importsPasswords: Bool { (source ?? ImportSource.installed().first)?.importsPasswords ?? false }
+    private var importsPasswords: Bool { (source ?? sources.first)?.importsPasswords ?? false }
 
-    private let pages = 4
+    private let pages = 3
 
     var body: some View {
         ZStack {
             Palette.ground.ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                Spacer(minLength: 0)
-                ZStack {
-                    switch page {
-                    case 0: welcome
-                    case 1: bring
-                    case 2: hold
-                    default: links
-                    }
+            VStack(spacing: 24) {
+                HStack {
+                    Text("MOON")
+                        .font(.system(size: 11, weight: .semibold))
+                        .tracking(2)
+                    Spacer()
+                    Text("Step \(page + 1) of \(pages)")
+                        .font(.system(size: 12))
                 }
+                .foregroundStyle(Palette.muted)
                 .frame(maxWidth: 520)
-                .id(page)
-                .transition(.asymmetric(
-                    insertion: .offset(x: forward ? 40 : -40).combined(with: .opacity),
-                    removal: .offset(x: forward ? -40 : 40).combined(with: .opacity)
-                ))
-                Spacer(minLength: 0)
+
+                ScrollView {
+                    VStack(spacing: 28) {
+                        switch page {
+                        case 0: welcome; hold
+                        case 1: bring
+                        default: links
+                        }
+                    }
+                    .frame(maxWidth: 520)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 20)
+                    .id(page)
+                    .transition(.asymmetric(
+                        insertion: .offset(x: forward ? 16 : -16).combined(with: .opacity),
+                        removal: .offset(x: forward ? -16 : 16).combined(with: .opacity)
+                    ))
+                }
+                .scrollIndicators(.hidden)
+                .frame(maxWidth: 560)
                 foot
             }
-            .padding(40)
+            .padding(32)
         }
         .animation(Motion.glide, value: page)
+        .onAppear { continuesFocused = true }
+        .onChange(of: page) { continuesFocused = true }
         .transition(.opacity)
     }
 
     // MARK: - the pages
 
     private var welcome: some View {
-        VStack(spacing: 22) {
-            Plate(size: 72)
-            VStack(spacing: 10) {
-                Text("Moon")
-                    .font(.system(size: 34, weight: .medium))
-                    .foregroundStyle(Palette.ink)
-                Text("A browser with nothing in the way. The engine already in your Mac, and as little around the page as we could manage.")
-                    .font(.system(size: 14.5))
-                    .foregroundStyle(Palette.muted)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(3)
-                    .frame(maxWidth: 400)
+        VStack(alignment: .leading, spacing: 18) {
+            Plate(size: 76)
+            Text("A little space.\nA wider web.")
+                .font(.system(size: 36, weight: .medium, design: .rounded))
+                .tracking(-1)
+                .foregroundStyle(Palette.ink)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
+            Text("Welcome to Moon. Native to your Mac, with room for whatever comes next.")
+                .font(.system(size: 14))
+                .foregroundStyle(Palette.muted)
+                .lineSpacing(3)
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Built by heyjoseluna")
+                Text("Inspired by Office Commun")
             }
+            .font(.system(size: 11))
+            .foregroundStyle(Palette.faint)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var bring: some View {
         VStack(alignment: .leading, spacing: 22) {
-            heading("Bring things over.", "Passwords go into your keychain, bookmarks into the menu, and history means the address field already knows where you go. Nothing in the other browser changes.")
+            heading("Make yourself at home.", "Bring your bookmarks and history along, or start fresh. You can import later in Settings.")
 
-            let sources = ImportSource.installed()
-            let unreadable = Chromium.unreadable()
-            if sources.isEmpty {
+            if !discovered {
+                Big("Choose a browser", filled: false) {
+                    sources = ImportSource.installed()
+                    unreadable = Chromium.unreadable()
+                    discovered = true
+                }
+                Text("Moon only looks for other browser data when you ask. Passwords are optional and may require your approval in macOS.")
+                    .font(.system(size: 12))
+                    .foregroundStyle(Palette.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else if sources.isEmpty {
                 if unreadable.isEmpty {
                     Text("No other browser found on this Mac — nothing to bring.")
                         .font(.system(size: 13))
@@ -142,7 +174,7 @@ struct WelcomePanel: View {
 
     private var hold: some View {
         VStack(alignment: .leading, spacing: 22) {
-            heading("Two ways to hold it.", "Titles across the top, or down the side. The grey slides to the tab you pick either way, and you can change your mind with ⇧⌘S.")
+            heading("Your view of the web.", "Keep tabs beside the page or across the top. Change it anytime in Settings.")
             HStack(spacing: 12) {
                 Way(title: "Tab strip", sidebar: false, chosen: !prefs.sidebar) {
                     withAnimation(Motion.glide) { prefs.sidebar = false }
@@ -162,7 +194,7 @@ struct WelcomePanel: View {
 
     private var links: some View {
         VStack(alignment: .leading, spacing: 22) {
-            heading("Links from other apps.", "A click in Mail, in Slack, in a PDF — macOS sends it to whichever browser is the default. It can be this one.")
+            heading("Ready when you are.", "Browse right away. If you want links from Mail and other apps to open here, make Moon your default.")
             HStack(spacing: 12) {
                 if isDefault {
                     HStack(spacing: 8) {
@@ -186,33 +218,16 @@ struct WelcomePanel: View {
             }
             .animation(Motion.settle, value: isDefault)
 
-            VStack(alignment: .leading, spacing: 8) {
-                Text("A few things worth knowing")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(Palette.faint)
-                    .textCase(.uppercase)
-                    .tracking(0.6)
-                    .padding(.top, 6)
-                Key("⌘T", "A new tab. Type a place, or words to search.")
-                Key("⌘K", "Every open tab, by name.")
-                Key("⌘,", "Settings, including passwords and updates. ⌘F there finds any setting.")
-                Key("⌃1", "Spaces: separate tabs and sign-ins. Turn them on in Settings › Spaces & Pins, or Set Up Like Arc there.")
-                Key("⌥⌘N", "Split a page in two, or drag a tab onto a page; ⌃⌘← and ⌃⌘→ go from one page to the other.")
-                Key("⌘O", "Links from other apps can open in a small window. Settings › Browsing.")
-                Key("⌘L", "Suggestions from your search engine as you type — off until you turn them on in Settings › Browsing.")
-                Key("⌘", "Held, it can show each tab's number for ⌘1–9. Settings › Tabs.")
-                Key("⌘1", "Pressed again on its pin, back to where you were.")
-                Key("⇧⌘P", "Float a video in Moon's window, or in macOS's picture in picture. Settings › Browsing.")
-                Key("⌃-click", "Claude or ChatGPT in a side panel beside the page: right-click a tab › Open in Side Panel, or View › Side Panel.")
-                Key("⌘Q", "Moon can ask before it quits. Settings › General.")
-                Key("⌘,", "Your Apple passwords, under the sign-in field — Settings › Passwords.")
-                if PageTranslator.available {
-                    Key("Translate", "Use the translate button beside Downloads, or View › Translate Website. Page text stays on this Mac.")
-                }
-                if AI.shipped {
-                    Key("⌘,", "AI summaries and questions about a page — off until you turn it on in Settings › AI.")
-                }
+            Divider().padding(.vertical, 4)
+            VStack(alignment: .leading, spacing: 14) {
+                Key("⌘T", "Start a new tab.")
+                Key("⌘L", "Go somewhere new.")
+                Key("⌘,", "Make Moon yours in Settings.")
             }
+            Text("Camera, microphone, location and notifications stay under your control. Moon asks when a website needs them, rather than during setup.")
+                .font(.system(size: 12))
+                .foregroundStyle(Palette.muted)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
@@ -235,7 +250,7 @@ struct WelcomePanel: View {
                     .foregroundStyle(Palette.muted)
             }
             if page < pages - 1 {
-                Button("Skip") { finish() }
+                Button("Browse now") { finish() }
                     .buttonStyle(.plain)
                     .font(.system(size: 13))
                     .foregroundStyle(Palette.muted)
@@ -244,14 +259,16 @@ struct WelcomePanel: View {
                 if page < pages - 1 { forward = true; page += 1 } else { finish() }
             }
             .keyboardShortcut(.defaultAction)
+            .focused($continuesFocused)
         }
         .frame(maxWidth: 520)
+        .disabled(bringing)
     }
 
     // MARK: - doing
 
     private func bringAll() {
-        guard let source = source ?? ImportSource.installed().first else { return }
+        guard let source = source ?? sources.first else { return }
         // The profile used most recently, without asking: the sheet in
         // Settings › Passwords is where another is chosen.
         let profile = source.usual
@@ -297,6 +314,7 @@ struct WelcomePanel: View {
     }
 
     private func finish() {
+        guard !bringing else { return }
         prefs.welcomed = true
         withAnimation(Motion.settle) { browser.welcoming = false }
     }
@@ -316,15 +334,12 @@ struct WelcomePanel: View {
 
     // MARK: - pieces
 
-    /// The mark alone, at whatever height the page wants — no plate behind
-    /// it, the same as everywhere else it's drawn.
+    /// Moon's installed app icon, matching the About page and the Dock.
     private struct Plate: View {
         let size: CGFloat
         var body: some View {
-            Logomark()
-                .fill(Palette.ink, style: FillStyle(eoFill: true))
-                .aspectRatio(Logomark.canvas.width / Logomark.canvas.height, contentMode: .fit)
-                .frame(height: size * 0.56)
+            MoonBrandIcon()
+                .frame(width: size, height: size)
         }
     }
 

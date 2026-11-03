@@ -18,7 +18,8 @@ import Foundation
 
 @MainActor
 enum AISignIn {
-    static let callback = URL(string: "https://officecommun.com/search/ai/callback")!
+    // Reserved test callback; Moon's production AI uses local Ollama only.
+    static let callback = URL(string: "https://moon.invalid/ai/callback")!
 
     /// openrouter.ai itself, where you sign in — in a test run, the stand-in.
     static var site: URL {
@@ -42,6 +43,10 @@ enum AISignIn {
     static var waiting: Bool { flow.map { Date().timeIntervalSince($0.started) < 600 } ?? false }
 
     static func start(in browser: Browser) {
+        guard Store.testing else {
+            ended?(false, "Moon uses local Ollama; cloud sign-in is unavailable.")
+            return
+        }
         var bytes = [UInt8](repeating: 0, count: 32)
         guard SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes) == errSecSuccess else { return }
         let verifier = Passkeys.text(Data(bytes))
@@ -51,7 +56,7 @@ enum AISignIn {
             URLQueryItem(name: "callback_url", value: callback.absoluteString),
             URLQueryItem(name: "code_challenge", value: challenge),
             URLQueryItem(name: "code_challenge_method", value: "S256"),
-            URLQueryItem(name: "key_label", value: "Search"),
+            URLQueryItem(name: "key_label", value: "Moon"),
         ]
         guard let url = parts?.url else { return }
         let tab = browser.open(url, foreground: true)
