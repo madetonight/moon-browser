@@ -1,11 +1,13 @@
-# Moon 0.3.7 beta
+# Moon 0.4.0 beta
 
-Pearl Current, with a more responsive sidebar.
+Personal interface colors, consistent sidebar titles and smoother hover feedback.
 
 - The new Pearl Current app icon blends white, icy blue and cobalt with subtle glass depth.
-- Tab hover highlights now animate on a native layer, with an 85 ms arrival and a shorter 65 ms departure.
+- Settings → Appearance → Colors adds separate light and dark palettes for background, foreground surfaces and text, an optional accent, and a reset to Moon defaults. Website colors are unchanged.
+- Sidebar highlights, title brightness, close buttons and text-edge masks now ease in over 160 ms and ease out over 140 ms.
 - Interrupted fades continue from their visible opacity, and unrelated title/theme updates do not restart them. Tab titles, close targets and selection stay immediate.
-- The selected sidebar tab no longer swaps its domain and page title on hover. The address-display preference and security warnings remain respected.
+- Sidebar tabs always show their page or custom title, including the selected tab. The address-display option now applies to horizontal tabs; connection warnings retain a separate indicator.
+- The decorative native highlight ignores pointer input at both framework levels, preserving row tracking and immediate close-button targets.
 - Reduce Motion keeps hover changes instant.
 - Native high-resolution icon compression keeps the installed app around 11 MB while preserving the small icon representations.
 - Moon's current browser features remain included.

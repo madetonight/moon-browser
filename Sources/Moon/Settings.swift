@@ -480,6 +480,7 @@ struct SettingsPanel: View {
     @ViewBuilder
     private func appearanceControl(_ id: String) -> some View {
         switch id {
+        case "appearance.colors": ChromeColorsEditor(prefs: prefs)
         case "look":
             Pictures(options: Look.allCases.map { look in
                 (look, look == .system ? "Auto" : look.title, AnyView(LookPicture(look: look)))
@@ -1322,7 +1323,7 @@ struct Switch: View {
 
     var body: some View {
         Capsule()
-            .fill(on ? Palette.ink : Palette.faint)
+            .fill(on ? Palette.accent : Palette.faint)
             .frame(width: 30, height: 18)
             .overlay(alignment: on ? .trailing : .leading) {
                 Circle()
@@ -1418,7 +1419,7 @@ struct Pill: View {
                 .foregroundStyle(filled ? Palette.ground : tint)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 5)
-                .background(filled ? Palette.ink : (hovering ? Palette.hover : Palette.ground), in: Capsule())
+                .background(filled ? Palette.accent : (hovering ? Palette.hover : Palette.ground), in: Capsule())
                 .overlay(Capsule().strokeBorder(filled ? .clear : Palette.hairline, lineWidth: 1))
                 .contentShape(Capsule())
         }

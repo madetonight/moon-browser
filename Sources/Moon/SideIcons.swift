@@ -119,6 +119,7 @@ struct IconTile: View {
             } else {
                 Mark(icon: tab.icon, letter: tab.monogram, size: 16, dim: tab.asleep)
                     .opacity(live || hovering ? 1 : 0.85)
+                    .modifier(TabHoverFade(hovering: hovering))
             }
         }
         .frame(width: Metrics.iconTile, height: Metrics.iconTile)

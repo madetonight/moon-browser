@@ -1,5 +1,6 @@
 import AppKit
 import QuartzCore
+import SwiftUI
 import XCTest
 @testable import Moon
 
@@ -62,5 +63,51 @@ final class TabHoverHighlightTests: XCTestCase {
         window.contentView = nil
         XCTAssertNil(view.highlight.animationKeys())
         window.close()
+    }
+
+    func testVisualFadeRendersIntermediateFramesDespiteRowTransaction() async throws {
+        _ = NSApplication.shared
+        let state = HoverVisualFixtureState()
+        let host = NSHostingView(rootView: HoverVisualFixture(state: state))
+        let window = NSWindow(contentRect: NSRect(x: -20_000, y: -20_000, width: 80, height: 30),
+                              styleMask: .borderless, backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
+        window.contentView = host
+        window.orderFrontRegardless()
+        defer { window.contentView = nil; window.close() }
+        try await Task.sleep(for: .milliseconds(100))
+        func brightness() throws -> Double {
+            let bitmap = try XCTUnwrap(host.bitmapImageRepForCachingDisplay(in: host.bounds))
+            host.cacheDisplay(in: host.bounds, to: bitmap)
+            let colour = try XCTUnwrap(bitmap.colorAt(x: bitmap.pixelsWide / 2, y: bitmap.pixelsHigh / 2)?.usingColorSpace(.deviceRGB))
+            return Double(colour.redComponent)
+        }
+        for over in [true, false] {
+            var transaction = Transaction(animation: nil)
+            transaction.disablesAnimations = true
+            withTransaction(transaction) { state.over = over }
+            var frames: [Double] = []
+            for _ in 0..<22 {
+                try await Task.sleep(for: .milliseconds(10))
+                frames.append(try brightness())
+            }
+            XCTAssertTrue(frames.contains { $0 > 0.01 && $0 < 0.99 }, "Entry and exit must visibly fade, not snap despite a passing state-only test")
+            XCTAssertEqual(try brightness(), over ? 1 : 0, accuracy: 0.02)
+        }
+    }
+}
+
+@MainActor private final class HoverVisualFixtureState: ObservableObject {
+    @Published var over = false
+}
+
+private struct HoverVisualFixture: View {
+    @ObservedObject var state: HoverVisualFixtureState
+    var body: some View {
+        Color.white.opacity(state.over ? 1 : 0)
+            .modifier(TabHoverFade(hovering: state.over))
+            .frame(width: 80, height: 30)
+            .background(Color.black)
+            .animation(nil, value: state.over)
     }
 }

@@ -218,6 +218,27 @@ final class SidebarPressTests: XCTestCase {
         XCTAssertEqual(first.name, "Renamed")
     }
 
+    func testSelectedSidebarTitleDoesNotDependOnAddressDisplayPreference() async throws {
+        let browser = makeBrowser()
+        let tab = try XCTUnwrap(browser.active)
+        tab.restore(url: URL(string: "https://example.test/article")!, title: "A distinctive article title")
+        let old = browser.prefs.showsAddress
+        defer { browser.prefs.showsAddress = old }
+        browser.prefs.showsAddress = false
+        let window = makeWindow(browser)
+        try await settle()
+        let view = try XCTUnwrap(window.contentView)
+        func snapshot() throws -> Data {
+            let bitmap = try XCTUnwrap(view.bitmapImageRepForCachingDisplay(in: view.bounds))
+            view.cacheDisplay(in: view.bounds, to: bitmap)
+            return try XCTUnwrap(bitmap.representation(using: .png, properties: [:]))
+        }
+        let title = try snapshot()
+        browser.prefs.showsAddress = true
+        try await settle()
+        XCTAssertEqual(try snapshot(), title, "The sidebar must keep its page title even with the legacy address preference enabled")
+    }
+
     func testOtherButtonsDoNotSelectOnPress() async throws {
         _ = NSApplication.shared
         var selected = 0

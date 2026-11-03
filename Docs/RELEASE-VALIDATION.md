@@ -1,3 +1,27 @@
+## Moon 0.4.0 beta — personal interface colors
+
+49 focused checks passed: five palette validation/persistence, per-appearance,
+accent/reset/cache and settings-discovery checks, plus all 44 preceding sidebar,
+rendered-hover, settings and address-security checks. Custom colors are stored in
+local preferences as opaque sRGB hex values; invalid data falls back to defaults.
+Separate light/dark banks affect browser chrome only, with no website CSS
+injection or page reload. Reset restores the existing palette and optional accent
+defaults to off. Color values and runtime profiles are not build inputs.
+
+## Moon 0.3.9 beta — complete hover visuals and sidebar titles
+
+44 focused checks passed: sidebar press/close/title behavior, native highlight
+behavior, rendered intermediate fade frames, address-security labels and settings.
+The title snapshot regression verifies that the legacy address preference cannot
+replace sidebar page titles. The rendered fade regression covers the row's
+otherwise disabled-animation transaction. A final hosted-render probe confirmed
+partial values on both entry and exit after excluding the native decoration from
+SwiftUI hit testing. Entry/exit are 160/140 ms, scoped to visual changes. The
+selected Apple row was verified in the running local app as its page title.
+Production build and strict signature verification passed; Pearl Current retained.
+Release archives are prepared from the app bundle and a source-code allowlist,
+with runtime browser data and private import backups excluded.
+
 ## Moon 0.3.7 beta — Pearl Current and responsive hover
 
 Pearl Current is the selected icon. Sidebar hover uses an isolated native layer

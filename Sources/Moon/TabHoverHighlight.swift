@@ -2,9 +2,37 @@ import AppKit
 import QuartzCore
 import SwiftUI
 
+/// Re-enable motion only for visual properties. The row still changes its
+/// hover state and close-button hit target immediately, without animating layout.
+struct TabHoverFade: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    let hovering: Bool
+
+    func body(content: Content) -> some View {
+        content
+            .animation(reduceMotion ? nil : .easeInOut(duration: hovering ? 0.160 : 0.140), value: hovering)
+            .transaction {
+                $0.disablesAnimations = false
+                $0.animation = nil
+            }
+    }
+}
+
 /// Isolate decorative motion from the row's immediate selection/close state.
 /// Core Animation keeps rapid reversals continuous without per-frame SwiftUI work.
-struct TabHoverHighlight: NSViewRepresentable {
+struct TabHoverHighlight: View {
+    let hovering: Bool
+    let colour: Color
+    var radius: CGFloat = 9
+
+    var body: some View {
+        NativeTabHoverHighlight(hovering: hovering, colour: colour, radius: radius)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+    }
+}
+
+private struct NativeTabHoverHighlight: NSViewRepresentable {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let hovering: Bool
     let colour: Color
@@ -63,7 +91,7 @@ final class TabHoverLayerView: NSView {
         hovering = over
         CATransaction.begin()
         CATransaction.setDisableActions(true)
-        highlight.backgroundColor = colour.cgColor
+        effectiveAppearance.performAsCurrentDrawingAppearance { highlight.backgroundColor = colour.cgColor }
         highlight.cornerRadius = radius
         highlight.opacity = target
         CATransaction.commit()
@@ -79,11 +107,9 @@ final class TabHoverLayerView: NSView {
         let fade = CABasicAnimation(keyPath: "opacity")
         fade.fromValue = visible
         fade.toValue = target
-        // A responsive arrival and a shorter departure avoid dim trails across rows.
-        fade.duration = over ? 0.085 : 0.065
-        fade.timingFunction = over
-            ? CAMediaTimingFunction(controlPoints: 0.16, 0.72, 0.28, 1)
-            : CAMediaTimingFunction(controlPoints: 0.32, 0, 0.68, 1)
+        // A gentler arrival and departure; reversals still start at visible opacity.
+        fade.duration = over ? 0.160 : 0.140
+        fade.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
         highlight.add(fade, forKey: Self.animationKey)
     }
 }

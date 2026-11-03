@@ -1051,10 +1051,8 @@ private struct SideRow: View {
     /// A pinned row with a peek opened from it: the peek's icon at its end,
     /// as on a square's corner.
     private var peeking: Bool { !editing && tab.pin != nil && browser.peekFrom == tab.id && browser.peekTab != nil }
-    /// Where the page is, said on the row you're on (Settings › Tabs › Show
-    /// the address on the tab you're on).
-    private var rest: AtRest? { live && !editing ? AtRest.said(tab.restAddress, always: prefs.showsAddress) : nil }
-    private var atRest: Bool { rest != nil }
+    /// Keep the title visible; connection warnings get a separate indicator.
+    private var warning: AtRest? { live && !editing ? AtRest.said(tab.restAddress, always: false) : nil }
 
     var body: some View {
         let _ = Bench.count("row")
@@ -1089,16 +1087,25 @@ private struct SideRow: View {
                     PopupSign(browser: browser, tab: tab, colour: colour)
                     // The page is translated (Translate.swift).
                     TranslateSign(tab: tab, colour: colour)
-                    // Keep the chosen address/title stable while the pointer
-                    // crosses sidebar rows. Hover only changes row controls.
-                    TitleAtRest(label: tab.label, rest: rest, shown: atRest, hovering: false,
-                                size: prefs.sideTitle, colour: colour, roomy: true)
+                    if let warning {
+                        Image(systemName: warning.kind == .notSecure ? "lock.open" : "exclamationmark.triangle")
+                            .font(.system(size: 10))
+                            .foregroundStyle(Palette.unsafe)
+                            .help(warning.text)
+                            .accessibilityLabel(warning.text)
+                    }
+                    Text(tab.label)
+                        .font(.system(size: prefs.sideTitle))
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .foregroundStyle(colour)
                 }
                 Spacer(minLength: 0)
             }
             .padding(.leading, 10)
             .padding(.trailing, status || peeking ? 0 : 10)
             .frame(height: prefs.sideRow)
+            .modifier(TabHoverFade(hovering: hovering))
             .contentShape(Rectangle())
             .modifier(TabPress(enabled: interactive && !editing, active: live, selected: $selectedOnPress, pressing: $pressed) {
                 browser.clearTabSelection()
@@ -1141,6 +1148,7 @@ private struct SideRow: View {
         .mask {
             ZStack {
                 Rectangle().opacity(hovering && !editing && !status ? 0 : 1)
+                    .modifier(TabHoverFade(hovering: hovering))
                 HStack(spacing: 0) {
                     Rectangle()
                     LinearGradient(colors: [.black, .clear], startPoint: .leading, endPoint: .trailing)
@@ -1162,6 +1170,7 @@ private struct SideRow: View {
                         .frame(width: 15, height: 15)
                         .background(Palette.ink.opacity(0.07), in: Circle())
                         .opacity(hovering ? 1 : 0)
+                        .modifier(TabHoverFade(hovering: hovering))
                         .frame(width: 30, height: prefs.sideRow)
                         .contentShape(Rectangle())
                 }

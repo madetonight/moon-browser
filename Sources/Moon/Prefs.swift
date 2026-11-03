@@ -87,6 +87,13 @@ enum SidebarPosition: String, CaseIterable, Identifiable {
 final class Preferences: ObservableObject {
     private let store = Store.settings
 
+    @Published var chromeColors = ChromeColors.load(from: Store.settings) {
+        didSet {
+            if let data = try? JSONEncoder().encode(chromeColors) { store.set(data, forKey: ChromeColors.key) }
+            ChromePalette.install(chromeColors)
+        }
+    }
+
     /// Back, forward and reload before the tabs rather than after them, with
     /// the tabs across the top. Off unless asked for.
     @Published var liquidGlass = Store.settings.bool(forKey: "liquidGlass") {
@@ -634,6 +641,7 @@ final class Preferences: ObservableObject {
     }
 
     init() {
+        ChromePalette.install(ChromeColors.load(from: Store.settings))
         navigationLeft = store.bool(forKey: "toolbar.left")
         // Carried over from when there were four ways of holding the browser
         // and this was one of them.

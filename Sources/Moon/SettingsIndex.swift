@@ -71,6 +71,8 @@ enum SettingsIndex {
               blurb: "The look of Moon, and of the pages in it."),
         .init(id: "window", page: .appearance, title: "Window", icon: "macwindow",
               blurb: "Where the tabs sit, and how the page fits around them."),
+        .init(id: "colors", page: .appearance, title: "Colors", icon: "paintpalette",
+              blurb: "Personalize Moon’s interface. Websites keep their own colors."),
         .init(id: "tablook", page: .appearance, title: "Tabs", icon: "textformat.size",
               blurb: "What each tab shows, and how it feels to press."),
         .init(id: "motion", page: .appearance, title: "Motion", icon: "wind",
@@ -153,6 +155,9 @@ enum SettingsIndex {
               keys: ["downloads.button"]),
 
         // Appearance
+        .init(id: "appearance.colors", group: "colors", icon: "paintpalette",
+              title: "Interface colors", detail: "Background, foreground, text and an optional accent, for light and dark",
+              keys: [ChromeColors.key], words: ["colors", "colour", "accent", "background", "foreground", "text", "palette"], kind: .wide),
         .init(id: "look", group: "theme", icon: "circle.lefthalf.filled",
               title: "Appearance", detail: "Light, dark, or whatever the Mac is doing. Pages follow it too",
               keys: ["look"], words: ["dark mode", "light mode", "theme", "system"], kind: .wide),
@@ -224,8 +229,8 @@ enum SettingsIndex {
               title: "Show tab numbers while ⌘ is held", detail: "Which tab each ⌘1–9 selects",
               keys: ["tabs.shortcuts"], words: ["numbers", "shortcut"]),
         .init(id: "tabs.address", group: "tabbar", icon: "lock",
-              title: "Show the address on the tab you're on", detail: "Its site in place of its title; the title comes back under the pointer",
-              more: "Look-alike names in other alphabets show as they really are, and plain http says Not secure. Off, the tab you're on still says so for those two.",
+              title: "Show the address in horizontal tabs", detail: "The top tab strip can show the site; sidebar tabs always show page titles",
+              more: "Look-alike names in other alphabets show as they really are, and plain http says Not secure. Sidebar tabs keep a separate warning indicator with connection details.",
               keys: ["tabs.address"], words: ["url", "domain", "security", "address bar"]),
 
         // Browsing

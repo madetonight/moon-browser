@@ -831,6 +831,9 @@ struct ContentView: View {
             .onChange(of: browser.prefs.liquidGlass) { _, _ in
                 if let window { updateWindowGround(window) }
             }
+            .onChange(of: browser.prefs.chromeColors) { _, _ in
+                if let window { updateWindowGround(window) }
+            }
             .onChange(of: reduceTransparency) { _, _ in
                 if let window { updateWindowGround(window) }
             }

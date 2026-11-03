@@ -11,52 +11,54 @@ import AppKit
 // light, dark, or whatever the Mac is doing. Nothing else in the code knows
 // which it is.
 enum Palette {
-    static let ground = Color(nsColor: NS.ground)
-    static let ink = Color(nsColor: NS.ink)             // neutral-900 · neutral-100
-    static let muted = Color(nsColor: NS.muted)         // neutral-500
-    static let faint = Color(nsColor: NS.faint)         // neutral-300 · neutral-700
-    static let hairline = Color(nsColor: NS.hairline)   // neutral-200 · neutral-800
-    static let wash = Color(nsColor: NS.wash)           // the live tab
+    static var ground: Color { Color(nsColor: NS.ground) }
+    static var ink: Color { Color(nsColor: NS.ink) }             // neutral-900 · neutral-100
+    static var muted: Color { Color(nsColor: NS.muted) }         // neutral-500
+    static var faint: Color { Color(nsColor: NS.faint) }         // neutral-300 · neutral-700
+    static var hairline: Color { Color(nsColor: NS.hairline) }   // neutral-200 · neutral-800
+    static var wash: Color { Color(nsColor: NS.wash) }           // the live tab
     /// The live pin: among squares that already wear a faint grey, the one
     /// you are on stands out from them as a live row does from the white.
-    static let pinLive = Color(nsColor: NS.pinLive)
-    static let hover = Color(nsColor: NS.hover)         // the one under the pointer
+    static var pinLive: Color { Color(nsColor: NS.pinLive) }
+    static var hover: Color { Color(nsColor: NS.hover) }         // the one under the pointer
     /// Around the page's card, with the tabs down the side: the column, the
     /// bookmarks bar and the gaps share it, a touch off the page's white, so
     /// the card reads as one (see CardEdge).
-    static let frame = Color(nsColor: NS.frame)
+    static var frame: Color { Color(nsColor: NS.frame) }
     /// The column's own greys, on that ground: the live tab, the one under the
     /// pointer, the resting pin squares and the live pin. The white column's
     /// wash, hover and pinLive all but vanished on it (Drice: the pins' squares
     /// and the open tab no longer showed), so these keep the same steps of
     /// contrast from the frame that those kept from the white.
-    static let sideWash = Color(nsColor: NS.sideWash)
-    static let sideHover = Color(nsColor: NS.sideHover)
-    static let sideTile = Color(nsColor: NS.sideTile)
-    static let sidePinLive = Color(nsColor: NS.sidePinLive)
+    static var sideWash: Color { Color(nsColor: NS.sideWash) }
+    static var sideHover: Color { Color(nsColor: NS.sideHover) }
+    static var sideTile: Color { Color(nsColor: NS.sideTile) }
+    static var sidePinLive: Color { Color(nsColor: NS.sidePinLive) }
     /// The only two that aren't grey: a connection nobody can read on the
     /// way, and one anybody can (see SiteCard.swift).
+    static var accent: Color { Color(nsColor: NS.accent) }
     static let safe = Color(nsColor: NS.safe)           // green-700 · green-400
     static let unsafe = Color(nsColor: NS.unsafe)       // amber-700 · amber-400
 
     /// The same colours for the AppKit corners of the app — a text field's
     /// ink, a window's background — which want an NSColor and keep it.
     enum NS {
-        static let ground = pair(1.0, 0.11)
-        static let ink = pair(0.09, 0.93)
-        static let muted = pair(0.55, 0.58)
-        static let faint = pair(0.83, 0.32)
-        static let hairline = pair(0.91, 0.20)
-        static let wash = pair(0.937, 0.175)
-        static let pinLive = pair(0.90, 0.21)
-        static let hover = pair(0.965, 0.15)
-        static let frame = pair(0.955, 0.075)
-        static let sideWash = pair(0.895, 0.155)
-        static let sideHover = pair(0.915, 0.13)
-        static let sideTile = pair(0.925, 0.115)
-        static let sidePinLive = pair(0.86, 0.19)
+        static var ground: NSColor { ChromePalette.color(.ground, light: 1.0, dark: 0.11) }
+        static var ink: NSColor { ChromePalette.color(.ink, light: 0.09, dark: 0.93) }
+        static var muted: NSColor { ChromePalette.color(.muted, light: 0.55, dark: 0.58) }
+        static var faint: NSColor { ChromePalette.color(.faint, light: 0.83, dark: 0.32) }
+        static var hairline: NSColor { ChromePalette.color(.hairline, light: 0.91, dark: 0.20) }
+        static var wash: NSColor { ChromePalette.color(.wash, light: 0.937, dark: 0.175) }
+        static var pinLive: NSColor { ChromePalette.color(.pinLive, light: 0.90, dark: 0.21) }
+        static var hover: NSColor { ChromePalette.color(.hover, light: 0.965, dark: 0.15) }
+        static var frame: NSColor { ChromePalette.color(.frame, light: 0.955, dark: 0.075) }
+        static var sideWash: NSColor { ChromePalette.color(.sideWash, light: 0.895, dark: 0.155) }
+        static var sideHover: NSColor { ChromePalette.color(.sideHover, light: 0.915, dark: 0.13) }
+        static var sideTile: NSColor { ChromePalette.color(.sideTile, light: 0.925, dark: 0.115) }
+        static var sidePinLive: NSColor { ChromePalette.color(.sidePinLive, light: 0.86, dark: 0.19) }
         /// The resting traffic lights, drawn by hand when the app is behind.
-        static let resting = pair(0.80, 0.30)
+        static var resting: NSColor { ChromePalette.color(.resting, light: 0.80, dark: 0.30) }
+        static var accent: NSColor { ChromePalette.color(.accent, light: 0.09, dark: 0.93) }
         static let safe = tint(light: (0.08, 0.50, 0.24), dark: (0.29, 0.87, 0.50))
         static let unsafe = tint(light: (0.71, 0.33, 0.04), dark: (0.98, 0.75, 0.14))
 
