@@ -1,33 +1,26 @@
 {
   "repository": "madetonight/moon-browser",
-  "tag": "v0.3.7-beta",
-  "build": "2026110206",
-  "title": "Moon 0.3.7 beta",
-  "notes": "# Moon 0.3.7 beta\n\nPearl Current, with a more responsive sidebar.\n\n- The new Pearl Current app icon blends white, icy blue and cobalt with subtle glass depth.\n- Tab hover highlights now animate on a native layer, with an 85 ms arrival and a shorter 65 ms departure.\n- Interrupted fades continue from their visible opacity, and unrelated title/theme updates do not restart them. Tab titles, close targets and selection stay immediate.\n- The selected sidebar tab no longer swaps its domain and page title on hover. The address-display preference and security warnings remain respected.\n- Reduce Motion keeps hover changes instant.\n- Native high-resolution icon compression keeps the installed app around 11 MB while preserving the small icon representations.\n- Moon's current browser features remain included.\n\nApple silicon; macOS 26 or later. This beta is Apple Development signed and **not Apple-notarized**. Sparkle authenticates updates; it does not confer Gatekeeper trust.\n\nConnected Moon builds can use Settings → About → Check now. Older builds with updates disabled need a one-time manual installation. Source and MIT attribution notices accompany this release.\n",
+  "tag": "v0.4.0-beta",
+  "build": "2026110301",
+  "title": "Moon 0.4.0 beta",
   "assets": [
     {
-      "name": "Moon-0.3.7-arm64.zip",
-      "size": 4936277,
-      "sha256": "35d3386cbd0a436617d657b128f50d247c6378cd2cb1ec2c774a3e8d937fbb99",
-      "blob": "4140be79d707678cd4c3fca04709b05c74999ee3"
+      "name": "Moon-0.4.0-arm64.zip",
+      "size": 4855076,
+      "sha256": "6f1f9a63206b9109adcd06238b9818770cfe839d7dfd0ad60483ac45d93005b6",
+      "blob": "52d927f9fdbebe0d07011e60e23aeca514179467"
     },
     {
-      "name": "Moon-0.3.7-arm64.dmg",
-      "size": 4948334,
-      "sha256": "e9735a645f0aa795df7806d318b1d3ea9a238c92068054c56445e03595e5a7f0",
-      "blob": "64b8d0ff6eba9d46a4517a97063e5a39cada72a3"
-    },
-    {
-      "name": "Moon-0.3.7-source.tar.gz",
-      "size": 2577980,
-      "sha256": "26517e3cba9b2129f3c4f64744fa1c4e6c3e9fe6e5f97fcc6b5e2fbd659fc8ae",
-      "blob": "bbe29ec16577d0d8ae74353032b2ac6d70bab4bf"
+      "name": "Moon-0.4.0-arm64.dmg",
+      "size": 4969893,
+      "sha256": "2b8bd5172173e681dbb9aa34d638a5b91ac4b6b6ae399fa499e2ea39b60b8fb5",
+      "blob": "cf86058fd538f9664701b22d4be0587d4ab2cb42"
     },
     {
       "name": "appcast.xml",
-      "size": 11625,
-      "sha256": "4cc80ac33fd54c3f97691a0536f7a6fd4adb1c38c0e7b6aae4d78a21bc05cde8",
-      "blob": "160282d90340803906c9dcab57fc9af76566d22d"
+      "size": 14094,
+      "sha256": "1086afa87efe21ba6db0ec13aae0f8610cd5814a9592125b85bda3e01a413fec",
+      "blob": "be1ea62785dfd3613fae421b5721ed80c0c26837"
     },
     {
       "name": "Install-ReadMe.txt",
@@ -36,10 +29,17 @@
       "blob": "ae012ad37cb705e71373e9abe843bed1a2580703"
     },
     {
+      "name": "Moon-0.4.0-source.tar.gz",
+      "size": 2550823,
+      "sha256": "7586f9dcd3590deb3257313b056a573ee6dd5204201bcc425c9ca0a6a92f9004",
+      "blob": "b06ccecea069bd2f57215ef11726fbc196086925"
+    },
+    {
       "name": "SHA256SUMS.txt",
       "size": 428,
-      "sha256": "adee3d3161217994c3ee63ec20fda8cb0f28aa27515033d2ccee01fd0adf36b0",
-      "blob": "1af80dd685bc87d734c4ce31ce138a1aaee5383e"
+      "sha256": "0249ccec7aa22dbbf39c96b287771a62fb48403bcfcbda6ce64378838c656a98",
+      "blob": "06ba0e403c20b6bbfd6d33b315e7b28b1f48e74e"
     }
-  ]
+  ],
+  "notes": "# Moon 0.4.0 beta\n\nPersonal interface colors, consistent sidebar titles and smoother hover feedback.\n\n- The new Pearl Current app icon blends white, icy blue and cobalt with subtle glass depth.\n- Settings → Appearance → Colors adds separate light and dark palettes for background, foreground surfaces and text, an optional accent, and a reset to Moon defaults. Website colors are unchanged.\n- Sidebar highlights, title brightness, close buttons and text-edge masks now ease in over 160 ms and ease out over 140 ms.\n- Interrupted fades continue from their visible opacity, and unrelated title/theme updates do not restart them. Tab titles, close targets and selection stay immediate.\n- Sidebar tabs always show their page or custom title, including the selected tab. The address-display option now applies to horizontal tabs; connection warnings retain a separate indicator.\n- The decorative native highlight ignores pointer input at both framework levels, preserving row tracking and immediate close-button targets.\n- Reduce Motion keeps hover changes instant.\n- Native high-resolution icon compression keeps the installed app around 11 MB while preserving the small icon representations.\n- Moon's current browser features remain included.\n\nApple silicon; macOS 26 or later. This beta is Apple Development signed and **not Apple-notarized**. Sparkle authenticates updates; it does not confer Gatekeeper trust.\n\nConnected Moon builds can use Settings → About → Check now. Older builds with updates disabled need a one-time manual installation. Source and MIT attribution notices accompany this release.\n"
 }
