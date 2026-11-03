@@ -1089,7 +1089,9 @@ private struct SideRow: View {
                     PopupSign(browser: browser, tab: tab, colour: colour)
                     // The page is translated (Translate.swift).
                     TranslateSign(tab: tab, colour: colour)
-                    TitleAtRest(label: tab.label, rest: rest, shown: atRest, hovering: hovering,
+                    // Keep the chosen address/title stable while the pointer
+                    // crosses sidebar rows. Hover only changes row controls.
+                    TitleAtRest(label: tab.label, rest: rest, shown: atRest, hovering: false,
                                 size: prefs.sideTitle, colour: colour, roomy: true)
                 }
                 Spacer(minLength: 0)
@@ -1213,8 +1215,8 @@ private struct SideRow: View {
 
     private func hover(_ over: Bool) {
         guard hovering != over else { return }
-        // TitleAtRest and the trailing mask also react to hover. Suppress
-        // their animations in this event, including any inherited animation.
+        // Keep the trailing mask and controls immediate, including when this
+        // event occurs inside an inherited selection animation.
         var transaction = Transaction(animation: nil)
         transaction.disablesAnimations = true
         withTransaction(transaction) { hovering = over }

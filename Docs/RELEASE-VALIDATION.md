@@ -4,6 +4,8 @@ Pearl Current is the selected icon. Sidebar hover uses an isolated native layer
 with an 85 ms arrival and 65 ms departure, retargeting from presentation opacity.
 Unrelated view updates do not restart fades; detached rows clear animation and
 Reduce Motion changes immediately. No timers or per-frame SwiftUI state updates.
+Selected sidebar labels retain the configured domain/title on hover; existing
+address-display preferences and security warnings remain respected.
 Selection and the fixed close target remain immediate. Production build and all
 18 focused checks passed (15 sidebar press/rapid-crossing tests and three native
 highlight tests). Five release-publisher checks passed. These checks do not claim
