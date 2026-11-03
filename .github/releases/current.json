@@ -1,33 +1,33 @@
 {
   "repository": "madetonight/moon-browser",
-  "tag": "v0.3.5-beta",
-  "build": "2026110204",
-  "title": "Moon 0.3.5 beta",
-  "notes": "# Moon 0.3.5 beta\n\nSmoother sidebar hover, in both directions.\n\n- Tab hover backgrounds now use a short 100 ms ease-in/ease-out on entry and exit, rather than fading in and disappearing immediately.\n- Rapid crossings retarget the highlight while tab titles, close targets and selection stay immediate.\n- Reduce Motion keeps hover changes instant.\n- Native high-resolution icon compression reduces installed size to around 11 MB while keeping the approved Fluid Dusk artwork and small icon representations.\n- Moon's current browser features remain included.\n\nApple silicon; macOS 26 or later. This beta is Apple Development signed and **not Apple-notarized**. Sparkle authenticates updates; it does not confer Gatekeeper trust.\n\nConnected Moon builds can use Settings → About → Check now. Older builds with updates disabled need a one-time manual installation. Source and MIT attribution notices accompany this release.\n",
+  "tag": "v0.3.7-beta",
+  "build": "2026110206",
+  "title": "Moon 0.3.7 beta",
+  "notes": "# Moon 0.3.7 beta\n\nPearl Current, with a more responsive sidebar.\n\n- The new Pearl Current app icon blends white, icy blue and cobalt with subtle glass depth.\n- Tab hover highlights now animate on a native layer, with an 85 ms arrival and a shorter 65 ms departure.\n- Interrupted fades continue from their visible opacity, and unrelated title/theme updates do not restart them. Tab titles, close targets and selection stay immediate.\n- The selected sidebar tab no longer swaps its domain and page title on hover. The address-display preference and security warnings remain respected.\n- Reduce Motion keeps hover changes instant.\n- Native high-resolution icon compression keeps the installed app around 11 MB while preserving the small icon representations.\n- Moon's current browser features remain included.\n\nApple silicon; macOS 26 or later. This beta is Apple Development signed and **not Apple-notarized**. Sparkle authenticates updates; it does not confer Gatekeeper trust.\n\nConnected Moon builds can use Settings → About → Check now. Older builds with updates disabled need a one-time manual installation. Source and MIT attribution notices accompany this release.\n",
   "assets": [
     {
-      "name": "Moon-0.3.5-arm64.zip",
-      "size": 4941604,
-      "sha256": "426966ec8628596c5f8556b370b73566f06dcb96412fc7bc1a22b0769e8f6e58",
-      "blob": "1aa427f9c26f396b218aabb269c246ddf5bfdfdb"
+      "name": "Moon-0.3.7-arm64.zip",
+      "size": 4936277,
+      "sha256": "35d3386cbd0a436617d657b128f50d247c6378cd2cb1ec2c774a3e8d937fbb99",
+      "blob": "4140be79d707678cd4c3fca04709b05c74999ee3"
     },
     {
-      "name": "Moon-0.3.5-arm64.dmg",
-      "size": 4954279,
-      "sha256": "8bd99484cd481a3f3915b33ce0538858ed925436c8db1a52b1eaebb984682c24",
-      "blob": "6300d63390f5e60f1b11056a2df6c5f37865a9d2"
+      "name": "Moon-0.3.7-arm64.dmg",
+      "size": 4948334,
+      "sha256": "e9735a645f0aa795df7806d318b1d3ea9a238c92068054c56445e03595e5a7f0",
+      "blob": "64b8d0ff6eba9d46a4517a97063e5a39cada72a3"
     },
     {
-      "name": "Moon-0.3.5-source.tar.gz",
-      "size": 2712086,
-      "sha256": "fae6f0386c7f71c5d119c0d8d2d84fd4697d7552b2080cdb9e9ce7eefa3d7fe4",
-      "blob": "20741b1fdca5deaa64e9defee2ebd6412f43d974"
+      "name": "Moon-0.3.7-source.tar.gz",
+      "size": 2577980,
+      "sha256": "26517e3cba9b2129f3c4f64744fa1c4e6c3e9fe6e5f97fcc6b5e2fbd659fc8ae",
+      "blob": "bbe29ec16577d0d8ae74353032b2ac6d70bab4bf"
     },
     {
       "name": "appcast.xml",
-      "size": 9591,
-      "sha256": "565d0964664de83ec1fcdcee78d533a1206544c6daf14651a0e3a0ea0e09aa86",
-      "blob": "719836efc6fa41b6fdd8f68aa57d55c4efb04534"
+      "size": 11625,
+      "sha256": "4cc80ac33fd54c3f97691a0536f7a6fd4adb1c38c0e7b6aae4d78a21bc05cde8",
+      "blob": "160282d90340803906c9dcab57fc9af76566d22d"
     },
     {
       "name": "Install-ReadMe.txt",
@@ -38,8 +38,8 @@
     {
       "name": "SHA256SUMS.txt",
       "size": 428,
-      "sha256": "fe08a0536122821959d5d8e9234981b8ddf917ba5f3c9345e0f2293889c612de",
-      "blob": "1a904d1668e7b88599e2e9eb248b3e41bf583bf9"
+      "sha256": "adee3d3161217994c3ee63ec20fda8cb0f28aa27515033d2ccee01fd0adf36b0",
+      "blob": "1af80dd685bc87d734c4ce31ce138a1aaee5383e"
     }
   ]
 }
