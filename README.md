@@ -15,7 +15,7 @@ signed release. Chrome compatibility depends on each extension's API needs.
 
 ## Download
 
-[Moon 0.3.4 beta for Apple silicon](https://github.com/madetonight/moon-browser/releases/tag/v0.3.4-beta) requires macOS 26 or later. Open the DMG and drag Moon to Applications. The beta uses Apple Development signing and is not notarized by Apple. Install this connected version manually once; subsequent signed releases can be offered in Settings → About → Check now.
+[Moon 0.3.5 beta for Apple silicon](https://github.com/madetonight/moon-browser/releases/tag/v0.3.5-beta) requires macOS 26 or later. Open the DMG and drag Moon to Applications. The beta uses Apple Development signing and is not notarized by Apple. Install this connected version manually once; subsequent signed releases can be offered in Settings → About → Check now.
 
 ## Build and validate
 

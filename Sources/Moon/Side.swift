@@ -1022,8 +1022,8 @@ private struct PinSquare: View {
     }
 }
 
-/// Only the highlight eases in. Leaving a tab clears it immediately, so fast
-/// crossings cannot leave a trail or animate the title and close control.
+/// Ease only the decorative highlight in both directions. SwiftUI retargets
+/// interrupted fades from their current opacity; row controls stay immediate.
 struct TabHoverHighlight: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let hovering: Bool
@@ -1034,7 +1034,7 @@ struct TabHoverHighlight: View {
         RoundedRectangle(cornerRadius: radius, style: .continuous)
             .fill(colour)
             .opacity(hovering ? 1 : 0)
-            .animation(hovering && !reduceMotion ? .easeIn(duration: 0.07) : nil, value: hovering)
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.10), value: hovering)
             .transaction {
                 // The row disables hover animations for its controls. Re-enable
                 // animation only inside this decorative background.

@@ -1,46 +1,33 @@
-# Moon 0.3.4 beta verification
+# Moon 0.3.5 beta verification
 
-Requires Apple silicon and macOS 26 or later. This release includes the original
-approved Fluid Dusk gradient icon, Moon branding and creator credits, the
-three-step onboarding, smaller production packaging and queued idle-tab snapshots.
+A focused sidebar-motion and installed-size update for macOS 26+ / Apple silicon.
 
-## Automated checks
+- Reviewed the supplied hover recording. The old highlight eased in for 70 ms
+  but cleared instantly on exit; 0.3.5 uses a 100 ms ease-in/ease-out in both
+  directions. Animation stays inside the decorative background. Titles, close
+  hit targets and selection keep their immediate hover transactions. Reduce
+  Motion disables the highlight transition.
+- All 15 SidebarPressTests passed, including rapid interrupted crossings, close
+  targeting, press-to-select and editing behavior. Five release-publisher tests
+  passed. Full GitHub Build Moon checks run independently on the source commit;
+  no pending result is represented as a completed full-suite pass.
+- High-resolution ICNS representations use native high-quality JPEG 2000
+  payloads; small PNG representations and the original source artwork are
+  preserved. The icon file shrinks from 1,640,113 to approximately 264,982 bytes.
+  The 1024px native render comparison measured 53.52 dB overall PSNR and 72.71 dB
+  alpha PSNR. This is high-fidelity compression, not a claim of lossless pixels.
+- Native icon decoding and package checks are separate from the release Swift
+  compile. Installed app contents target approximately 11 MB, not the DMG size.
+- Release packaging verifies signatures, version/build, archive length and URL,
+  minimum macOS and altered-byte rejection. The installer and update ZIP use
+  the same signed candidate; publication checks each uploaded file's digest
+  before updating the signed feed.
 
-The local release run exercised 452 XCTest cases (one platform skip) and 21
-Swift Testing cases. One branding assertion still expected the old upstream app
-name in an import-permission message; the expectation was updated to Moon and
-the complete BrowserDiscoveryTests suite was rerun. No browser behavior was
-changed for that test correction. GitHub's Build Moon run on the source commit
-provides a fresh full-suite check before release publication.
+Shipping this version means publication to GitHub. The user's running Moon
+installation is not replaced or restarted by this pass. Verification uses
+isolated tests and a separate candidate; browser profiles and preview files do
+not enter source or release archives.
 
-Five offline release-publisher checks cover asset ordering, altered-blob
-rejection, upload-digest mismatch, repository restrictions and path restrictions.
-The idle-snapshot queue has a regression check for batch completion, repeated
-event suppression and preserving a playing page.
-
-## Packaging and live validation
-
-Release preparation verifies the application signature, signed feed and archive,
-version/build, length, update URL and minimum macOS, with tampered-byte rejection.
-The DMG and updater ZIP must contain the exact same signed application. Fluid
-Dusk is exported through the native icon-size pipeline, preserving its glass edge.
-Live About, Dock artwork and update-check behavior are reviewed separately from
-compilation. The release manifest pins artifact lengths and SHA-256 digests.
-
-The candidate remains Apple Development signed, sandboxed and hardened, with
-library validation enabled. It is not Apple-notarized. Only verified cached
-Sparkle helpers are reused, and private signing keys stay on the developer Mac.
-
-The 9 MB installed-size target remains unmet. An earlier controlled 38-document
-run of the same idle-tab implementation on an M1 Pro / 16 GiB Mac recorded
-approximately 1.28 GB physical footprint with all pages loaded and 174 MB after
-37 inactive pages slept. This is not a benchmark of arbitrary websites, video,
-or sustained user interaction, and is not a new measurement of this release.
-
-A complete 0.3.2-to-0.3.3 in-app upgrade was verified previously. A new release's
-signed feed and an offered version alone do not prove installation/relaunch.
-Apple Passwords helper pairing, restricted browser entitlements, every third-party
-extension and protected streaming services require separate verification.
-
-Browser profiles, browsing data, signing keys, local backups, unused preview
-drafts and generated test artifacts are excluded from source and release assets.
+The beta remains Apple Development signed and not Apple-notarized. App Sandbox,
+hardened runtime and library validation remain enabled. A future in-app upgrade
+is distinct from this release's feed/archive authentication checks.

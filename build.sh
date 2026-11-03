@@ -44,9 +44,10 @@ if [[ "$bundle_id" == org.moonbrowser.Moon ]]; then
 else
   rm -f "$app/Contents/Resources/container-migration.plist"
 fi
-if [[ ! -f build/Moon.icns || Support/MakeIcon.swift -nt build/Moon.icns || Support/MoonIconArtwork.png -nt build/Moon.icns ]]; then
+if [[ ! -f build/Moon.icns || Support/MakeIcon.swift -nt build/Moon.icns || Support/MoonIconArtwork.png -nt build/Moon.icns || Scripts/optimize-icon.swift -nt build/Moon.icns ]]; then
   swift Support/MakeIcon.swift /private/tmp/Moon107Build/Moon.iconset
   iconutil -c icns /private/tmp/Moon107Build/Moon.iconset -o build/Moon.icns
+  swift Scripts/optimize-icon.swift build/Moon.icns
 fi
 cp build/Moon.icns "$app/Contents/Resources/Moon.icns"
 ditto "$framework_source" "$app/Contents/Frameworks/Sparkle.framework"

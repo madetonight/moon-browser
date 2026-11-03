@@ -140,6 +140,13 @@ enum WhatsNew {
 
     /// Newest first.
     static let notes: [Notes] = [
+        Notes(version: "0.3.5", date: "2 November 2026",
+              headline: "Smoother hover, and a smaller Moon.",
+              new: [],
+              better: ["Tab hover highlights ease in and out with a short, interruption-friendly transition.",
+                       "Native icon compression reduces installed app size while keeping the Fluid Dusk design."],
+              fixed: ["Leaving a tab no longer clears its hover highlight abruptly.",
+                      "Close controls and tab selection remain immediate during rapid crossings."]),
         Notes(version: "0.3.4", date: "2 November 2026",
               headline: "Fluid Dusk, a new Moon icon and a simpler welcome.",
               new: ["A liquid-glass gradient app icon in Moon's blue and midnight palette.",
