@@ -1022,30 +1022,6 @@ private struct PinSquare: View {
     }
 }
 
-/// Ease only the decorative highlight in both directions. SwiftUI retargets
-/// interrupted fades from their current opacity; row controls stay immediate.
-struct TabHoverHighlight: View {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    let hovering: Bool
-    let colour: Color
-    var radius: CGFloat = 9
-
-    var body: some View {
-        RoundedRectangle(cornerRadius: radius, style: .continuous)
-            .fill(colour)
-            .opacity(hovering ? 1 : 0)
-            .animation(reduceMotion ? nil : .easeInOut(duration: 0.10), value: hovering)
-            .transaction {
-                // The row disables hover animations for its controls. Re-enable
-                // animation only inside this decorative background.
-                $0.disablesAnimations = false
-                $0.animation = nil
-            }
-            .allowsHitTesting(false)
-            .accessibilityHidden(true)
-    }
-}
-
 /// One tab, as a line in the column.
 private struct SideRow: View {
     @Environment(\.greys) private var greys

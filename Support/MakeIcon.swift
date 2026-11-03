@@ -9,7 +9,7 @@ guard let source = NSImage(contentsOf: artwork) else {
 }
 // Sample the gradient tile inside the artwork's presentation margins. The
 // native icon mask supplies clean, transparent corners at every size.
-// The selected Fluid Dusk artwork includes a presentation margin. Retain the
+// The selected Pearl Current artwork includes a presentation margin. Retain the
 // tile's thin glass edge; NSImage source coordinates start at the lower-left.
 let sourceRect = NSRect(x: source.size.width * 0.10,
                         y: source.size.height * 0.11,

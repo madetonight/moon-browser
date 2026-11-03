@@ -1,3 +1,16 @@
+## Moon 0.3.7 beta — Pearl Current and responsive hover
+
+Pearl Current is the selected icon. Sidebar hover uses an isolated native layer
+with an 85 ms arrival and 65 ms departure, retargeting from presentation opacity.
+Unrelated view updates do not restart fades; detached rows clear animation and
+Reduce Motion changes immediately. No timers or per-frame SwiftUI state updates.
+Selection and the fixed close target remain immediate. Production build and all
+18 focused checks passed (15 sidebar press/rapid-crossing tests and three native
+highlight tests). Five release-publisher checks passed. These checks do not claim
+a subjective physical-pointer review. Exact signature, package, live publication
+and installation evidence is retained separately in dist/Moon-0.3.7-beta.
+The beta uses Apple Development signing and is not notarized.
+
 # Moon 0.3.5 beta verification
 
 A focused sidebar-motion and installed-size update for macOS 26+ / Apple silicon.
