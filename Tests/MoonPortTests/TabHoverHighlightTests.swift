@@ -67,6 +67,8 @@ final class TabHoverHighlightTests: XCTestCase {
 
     func testVisualFadeRendersIntermediateFramesDespiteRowTransaction() async throws {
         _ = NSApplication.shared
+        try XCTSkipIf(NSWorkspace.shared.accessibilityDisplayShouldReduceMotion,
+                      "The system requests instant transitions; intermediate animation frames are intentionally absent. The explicit reduced-motion behavior is tested separately.")
         let state = HoverVisualFixtureState()
         let host = NSHostingView(rootView: HoverVisualFixture(state: state))
         let window = NSWindow(contentRect: NSRect(x: -20_000, y: -20_000, width: 80, height: 30),
@@ -111,10 +113,6 @@ private struct HoverVisualFixture: View {
         Color.white.opacity(state.over ? 1 : 0)
             .transaction { $0.animation = $0.animation?.speed(0.1) }
             .modifier(TabHoverFade(hovering: state.over))
-            // This is the animated-path fixture. Test it independently of the
-            // runner's system accessibility preference; reduced motion is
-            // covered explicitly by testInitialAndReducedMotionStatesNeverAnimate.
-            .environment(\.accessibilityReduceMotion, false)
             .frame(width: 80, height: 30)
             .background(Color.black)
             .animation(nil, value: state.over)

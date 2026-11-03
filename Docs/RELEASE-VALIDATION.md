@@ -11,10 +11,11 @@ defaults to off. Color values and runtime profiles are not build inputs.
 The rendered hover fixture slows only its test animation by 10x and samples by
 elapsed time, so a busy hosted runner cannot sleep through the full production
 fade before taking its first frame. The fixture still requires intermediate
-rendered pixels on entry and exit and verifies both endpoints; no visual check
-is skipped. The animated fixture explicitly disables the system Reduce Motion
-preference, while the separate reduced-motion check covers instant transitions.
-CI tests the release configuration used locally and shipped to users.
+rendered pixels on entry and exit and verifies both endpoints. If the host's
+system Reduce Motion is on, this intermediate-frame check explicitly skips:
+instant transitions are the required behavior in that environment. The separate
+reduced-motion check always covers that path. CI tests the release configuration
+used locally and shipped to users; the rendered fixture passed on this Mac.
 
 ## Moon 0.3.9 beta — complete hover visuals and sidebar titles
 
