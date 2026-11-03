@@ -111,6 +111,10 @@ private struct HoverVisualFixture: View {
         Color.white.opacity(state.over ? 1 : 0)
             .transaction { $0.animation = $0.animation?.speed(0.1) }
             .modifier(TabHoverFade(hovering: state.over))
+            // This is the animated-path fixture. Test it independently of the
+            // runner's system accessibility preference; reduced motion is
+            // covered explicitly by testInitialAndReducedMotionStatesNeverAnimate.
+            .environment(\.accessibilityReduceMotion, false)
             .frame(width: 80, height: 30)
             .background(Color.black)
             .animation(nil, value: state.over)

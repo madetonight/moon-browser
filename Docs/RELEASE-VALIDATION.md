@@ -12,7 +12,9 @@ The rendered hover fixture slows only its test animation by 10x and samples by
 elapsed time, so a busy hosted runner cannot sleep through the full production
 fade before taking its first frame. The fixture still requires intermediate
 rendered pixels on entry and exit and verifies both endpoints; no visual check
-is skipped. Its four focused checks passed locally after this timing adjustment.
+is skipped. The animated fixture explicitly disables the system Reduce Motion
+preference, while the separate reduced-motion check covers instant transitions.
+CI tests the release configuration used locally and shipped to users.
 
 ## Moon 0.3.9 beta — complete hover visuals and sidebar titles
 
