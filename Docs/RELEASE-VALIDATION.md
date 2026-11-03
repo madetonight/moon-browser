@@ -8,6 +8,12 @@ Separate light/dark banks affect browser chrome only, with no website CSS
 injection or page reload. Reset restores the existing palette and optional accent
 defaults to off. Color values and runtime profiles are not build inputs.
 
+The rendered hover fixture slows only its test animation by 10x and samples by
+elapsed time, so a busy hosted runner cannot sleep through the full production
+fade before taking its first frame. The fixture still requires intermediate
+rendered pixels on entry and exit and verifies both endpoints; no visual check
+is skipped. Its four focused checks passed locally after this timing adjustment.
+
 ## Moon 0.3.9 beta — complete hover visuals and sidebar titles
 
 44 focused checks passed: sidebar press/close/title behavior, native highlight

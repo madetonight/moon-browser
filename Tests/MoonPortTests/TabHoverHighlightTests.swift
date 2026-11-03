@@ -87,11 +87,15 @@ final class TabHoverHighlightTests: XCTestCase {
             transaction.disablesAnimations = true
             withTransaction(transaction) { state.over = over }
             var frames: [Double] = []
-            for _ in 0..<22 {
+            // Hosted runners can resume a 10 ms sleep after the entire 160 ms
+            // production fade. Slow only this fixture so a busy scheduler can
+            // still observe real intermediate pixels in both directions.
+            let deadline = ContinuousClock.now.advanced(by: .seconds(2))
+            while ContinuousClock.now < deadline {
                 try await Task.sleep(for: .milliseconds(10))
                 frames.append(try brightness())
             }
-            XCTAssertTrue(frames.contains { $0 > 0.01 && $0 < 0.99 }, "Entry and exit must visibly fade, not snap despite a passing state-only test")
+            XCTAssertTrue(frames.contains { $0 > 0.01 && $0 < 0.99 }, "Entry and exit must visibly fade, not snap despite a passing state-only test; observed \(frames)")
             XCTAssertEqual(try brightness(), over ? 1 : 0, accuracy: 0.02)
         }
     }
@@ -105,6 +109,7 @@ private struct HoverVisualFixture: View {
     @ObservedObject var state: HoverVisualFixtureState
     var body: some View {
         Color.white.opacity(state.over ? 1 : 0)
+            .transaction { $0.animation = $0.animation?.speed(0.1) }
             .modifier(TabHoverFade(hovering: state.over))
             .frame(width: 80, height: 30)
             .background(Color.black)
