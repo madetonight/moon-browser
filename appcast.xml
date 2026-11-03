@@ -9,6 +9,32 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
         <description>Signed Moon browser releases for macOS.</description>
         <language>en</language>
         <item>
+            <title>0.3.7</title>
+            <pubDate>Mon, 02 Nov 2026 20:43:59 -0500</pubDate>
+            <link>https://github.com/madetonight/moon-browser/releases</link>
+            <sparkle:version>2026110206</sparkle:version>
+            <sparkle:shortVersionString>0.3.7</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
+            <description sparkle:format="markdown"><![CDATA[# Moon 0.3.7 beta
+
+Pearl Current, with a more responsive sidebar.
+
+- The new Pearl Current app icon blends white, icy blue and cobalt with subtle glass depth.
+- Tab hover highlights now animate on a native layer, with an 85 ms arrival and a shorter 65 ms departure.
+- Interrupted fades continue from their visible opacity, and unrelated title/theme updates do not restart them. Tab titles, close targets and selection stay immediate.
+- The selected sidebar tab no longer swaps its domain and page title on hover. The address-display preference and security warnings remain respected.
+- Reduce Motion keeps hover changes instant.
+- Native high-resolution icon compression keeps the installed app around 11 MB while preserving the small icon representations.
+- Moon's current browser features remain included.
+
+Apple silicon; macOS 26 or later. This beta is Apple Development signed and **not Apple-notarized**. Sparkle authenticates updates; it does not confer Gatekeeper trust.
+
+Connected Moon builds can use Settings → About → Check now. Older builds with updates disabled need a one-time manual installation. Source and MIT attribution notices accompany this release.
+]]></description>
+            <enclosure url="https://github.com/madetonight/moon-browser/releases/download/v0.3.7-beta/Moon-0.3.7-arm64.zip" length="4936277" type="application/octet-stream" sparkle:edSignature="4Rmz04nNo+7qSXh595mkFdCGFVOwIb+bhovAhMbcVpEH2MTdyXXOBtgJX/2qUIrJhxQVndTrhg1VMT/+2WfeBQ=="/>
+        </item>
+        <item>
             <title>0.3.5</title>
             <pubDate>Mon, 02 Nov 2026 19:56:35 -0500</pubDate>
             <link>https://github.com/madetonight/moon-browser/releases</link>
@@ -116,6 +142,6 @@ Moon includes MIT-licensed code from Search. Source and license notices accompan
     </channel>
 </rss>
 <!-- sparkle-signatures:
-edSignature: TJ2R1XyNYQxIxOQ9G8X/QS3DbUOwAushQ6clYLkvQJSkwh1s70dhOzqwGW3pR/pf07+nevt0YEIr169cmPIKDA==
-length: 9447
+edSignature: hql/4rpxFOe2fSlIV1f/eR0DW1jcwUdYpz8aMTiTpStU9Qfxri2kPdCewmVttTjrc17YzLx2/AgvvPjeLIokBA==
+length: 11480
 -->
