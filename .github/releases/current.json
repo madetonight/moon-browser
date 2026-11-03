@@ -1,33 +1,33 @@
 {
   "repository": "madetonight/moon-browser",
-  "tag": "v0.3.4-beta",
-  "build": "2026110203",
-  "title": "Moon 0.3.4 beta",
-  "notes": "# Moon 0.3.4 beta\n\nFluid Dusk: a new liquid-glass gradient icon, a simpler Moon welcome and a smaller native app.\n\n- The new Fluid Dusk icon keeps Moon's pearl, blue and midnight palette, with soft curved light fields and subtle glass depth.\n- Moon branding in About, onboarding and other product surfaces, with “Built by heyjoseluna” and “Inspired by Office Commun”. Required third-party license notices remain included.\n- Three-step onboarding with layout choices, optional import and optional default-browser setup. Browse now skips setup. Password import starts disabled, and browser discovery waits for your choice.\n- The production executable is optimized for size; Apple-silicon releases omit Intel slices from the update framework while preserving signatures.\n- Idle-tab snapshots run one at a time, with protection checks retained for active pages, media, downloads and unsaved forms.\n- Onboarding keeps keyboard focus and accessibility navigation within its controls.\n\nIncludes the existing anchored website translator, sidebar hover refinements, optional Liquid Glass appearance and signed in-app updates. AI remains local Ollama.\n\nApple silicon; macOS 26 or later. This beta is Apple Development signed and **not Apple-notarized**. Sparkle authenticates updates; it does not confer Gatekeeper trust. Apple Passwords pairing, restricted browser entitlements, third-party extensions and protected streaming require separate verification.\n\nConnected Moon 0.3.2 and 0.3.3 builds can use Settings → About → Check now. Older builds with updates disabled need a one-time manual installation. Source and MIT attribution notices accompany this release.\n",
+  "tag": "v0.3.5-beta",
+  "build": "2026110204",
+  "title": "Moon 0.3.5 beta",
+  "notes": "# Moon 0.3.5 beta\n\nSmoother sidebar hover, in both directions.\n\n- Tab hover backgrounds now use a short 100 ms ease-in/ease-out on entry and exit, rather than fading in and disappearing immediately.\n- Rapid crossings retarget the highlight while tab titles, close targets and selection stay immediate.\n- Reduce Motion keeps hover changes instant.\n- Native high-resolution icon compression reduces installed size to around 11 MB while keeping the approved Fluid Dusk artwork and small icon representations.\n- Moon's current browser features remain included.\n\nApple silicon; macOS 26 or later. This beta is Apple Development signed and **not Apple-notarized**. Sparkle authenticates updates; it does not confer Gatekeeper trust.\n\nConnected Moon builds can use Settings → About → Check now. Older builds with updates disabled need a one-time manual installation. Source and MIT attribution notices accompany this release.\n",
   "assets": [
     {
-      "name": "Moon-0.3.4-arm64.zip",
-      "size": 6341029,
-      "sha256": "c5cb464d8c63254684cc9dca8036f851de6949284e7ec36305b634eb0f3d03a6",
-      "blob": "f5fdf6fe54b9cba47a6fccf50c32fbe0fba2dff8"
+      "name": "Moon-0.3.5-arm64.zip",
+      "size": 4941604,
+      "sha256": "426966ec8628596c5f8556b370b73566f06dcb96412fc7bc1a22b0769e8f6e58",
+      "blob": "1aa427f9c26f396b218aabb269c246ddf5bfdfdb"
     },
     {
-      "name": "Moon-0.3.4-arm64.dmg",
-      "size": 6353733,
-      "sha256": "bb26bb52bda14984e2aee56f05e3cace4c57b44cea3b17fb6765b57e5d467317",
-      "blob": "f57183176f44853b9f2859c9539f07918d9121e4"
+      "name": "Moon-0.3.5-arm64.dmg",
+      "size": 4954279,
+      "sha256": "8bd99484cd481a3f3915b33ce0538858ed925436c8db1a52b1eaebb984682c24",
+      "blob": "6300d63390f5e60f1b11056a2df6c5f37865a9d2"
     },
     {
-      "name": "Moon-0.3.4-source.tar.gz",
-      "size": 2711296,
-      "sha256": "10d978d1189dfc5fb58b3c8aab18c37e7ec7b3980ccd892e00d5f1f55fa27c05",
-      "blob": "75ecb2334a11c86f9f6c3370ed8fbb76599a0a54"
+      "name": "Moon-0.3.5-source.tar.gz",
+      "size": 2712086,
+      "sha256": "fae6f0386c7f71c5d119c0d8d2d84fd4697d7552b2080cdb9e9ce7eefa3d7fe4",
+      "blob": "20741b1fdca5deaa64e9defee2ebd6412f43d974"
     },
     {
       "name": "appcast.xml",
-      "size": 7809,
-      "sha256": "0ced33bef43a76fa48c3dc22b98a7a27bcdca2b42c6944ae0954e4bf900829ff",
-      "blob": "4398baa591d691cd2ebf8275e105934ded43cf5d"
+      "size": 9591,
+      "sha256": "565d0964664de83ec1fcdcee78d533a1206544c6daf14651a0e3a0ea0e09aa86",
+      "blob": "719836efc6fa41b6fdd8f68aa57d55c4efb04534"
     },
     {
       "name": "Install-ReadMe.txt",
@@ -38,8 +38,8 @@
     {
       "name": "SHA256SUMS.txt",
       "size": 428,
-      "sha256": "22e6c13956fc39a47194be3104ddafa5a227b31fb8c760678058e4bda63442be",
-      "blob": "69b0745292eba034a3233c0124837ec1fc44b1dd"
+      "sha256": "fe08a0536122821959d5d8e9234981b8ddf917ba5f3c9345e0f2293889c612de",
+      "blob": "1a904d1668e7b88599e2e9eb248b3e41bf583bf9"
     }
   ]
 }
