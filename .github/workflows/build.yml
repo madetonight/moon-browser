@@ -1,7 +1,17 @@
 name: Build Moon
 on:
   push:
+    paths: &app-paths
+      - 'Sources/**'
+      - 'Tests/**'
+      - 'Support/**'
+      - 'Package.swift'
+      - 'Package.resolved'
+      - 'build.sh'
+      - 'test.sh'
+      - '.github/workflows/build.yml'
   pull_request:
+    paths: *app-paths
 permissions:
   contents: read
 jobs:

@@ -8,15 +8,24 @@ uses Sparkle's native update UI. Failed or unconfigured checks never mean “lat
 The feed is configured as
 `https://raw.githubusercontent.com/madetonight/moon-browser/main/appcast.xml`.
 Release preparation enables `MoonUpdateFeedReady` in the candidate. Development
-builds leave it false. Preparation creates a signed ZIP/feed, a DMG containing the
-same app, an allowlisted source archive and checksums; it does not publish.
+builds leave it false. Preparation creates one DMG for installation and updates,
+a signed feed and local verification checksums; it does not publish.
 
 The publish workflow accepts `.github/releases/current.json` on main. It retrieves
 the pre-signed artifact blobs, checks every length and SHA-256, uploads a draft
 GitHub release and publishes it only when all assets match. It then updates the
 signed appcast. Apple and Sparkle private signing keys stay on the developer Mac.
 The workflow uses only the temporary repository-scoped GitHub Actions token.
-Existing release assets cannot be overwritten with different bytes.
+Existing installers cannot be overwritten with different bytes. Exactly one DMG
+is attached to the newest release; appcast.xml is stored in the repository, and
+source is available through GitHub. Only after the DMG and feed are verified does
+the publisher remove extra assets and older releases. Newer or unrecognized
+releases, mismatching installer bytes or a changed branch stop cleanup.
+
+Swift tests run only for app/source/test/build inputs. Release scripts and
+manifests run the separate offline release checks; publishing a feed or changing
+release metadata does not repeat a full Mac build. Historical failed runs remain
+as an audit trail; current source and release jobs are the relevant status.
 
 ## Signing keys
 
@@ -60,13 +69,15 @@ MOON_ALLOW_SIGNING=1 Scripts/prepare-beta-update.sh
 The plan is read-only and does not contact Keychain. Preparation builds
 build/MoonReleaseCandidate.app with the configured feed enabled, leaving the
 normal build/Moon.app unchanged. It reuses verified signed helpers where possible,
-verifies the candidate, creates an app-only ZIP, generates the signed appcast with
-embedded notes, verifies signatures and version/length/URL/minimum macOS, includes
-an allowlisted source archive and creates checksums in dist-release.*. It neither
+verifies the candidate, creates the one DMG, generates the signed appcast with
+embedded notes and only the newest version, verifies signatures and
+version/length/URL/minimum macOS, and creates local checksums in dist-release.*. It neither
 uploads files nor changes Keychain permissions.
 
-Publish the exact app ZIP, source archive and checksums to the matching GitHub
-beta release first. Then publish appcast.xml at the configured feed address.
+Publish the exact DMG to the matching GitHub beta release first. Then publish
+appcast.xml at the configured feed address. Extra release attachments and older
+releases are retired after both are verified. Do not attach the feed, source
+archive, standalone readme or local checksums as additional downloads.
 Moon uses the existing raw GitHub HTTPS URL rather than requiring GitHub Pages;
 both serve the same signed appcast architecture. Never edit generated signed XML.
 

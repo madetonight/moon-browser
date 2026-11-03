@@ -1,0 +1,23 @@
+name: Release pipeline checks
+on:
+  push:
+    paths: &release-paths
+      - 'Scripts/**'
+      - '.github/releases/current.json'
+      - '.github/workflows/release-checks.yml'
+      - '.github/workflows/publish-release.yml'
+  pull_request:
+    paths: *release-paths
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Release safety checks
+        run: |
+          python3 Scripts/test-release-publisher.py
+          python3 -c 'import importlib.util,json; s=importlib.util.spec_from_file_location("publisher","Scripts/publish-release.py"); p=importlib.util.module_from_spec(s); s.loader.exec_module(p); p.validate_manifest(json.load(open(".github/releases/current.json")))'
+          bash -n Scripts/prepare-beta-update.sh

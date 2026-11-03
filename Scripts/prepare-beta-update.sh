@@ -17,7 +17,7 @@ prefix=os.environ.get('MOON_DOWNLOAD_URL_PREFIX',f'https://github.com/madetonigh
 u=urlsplit(prefix)
 if u.scheme!='https' or not u.hostname or u.username is not None or u.password is not None or u.query or u.fragment or not prefix.endswith('/'):
     raise SystemExit('Use a public HTTPS download directory ending in /, without credentials, query or fragment')
-print(json.dumps({'channel':'beta','version':version,'build':build,'archive':f'Moon-{version}-arm64.zip','download_prefix':prefix,'feed':i['SUFeedURL'],'candidate':'build/MoonReleaseCandidate.app','normal_app_untouched':True,'notarization_required':False,'signed_feed_required':True}))
+print(json.dumps({'channel':'beta','version':version,'build':build,'archive':f'Moon-{version}-arm64.dmg','download_prefix':prefix,'feed':i['SUFeedURL'],'candidate':'build/MoonReleaseCandidate.app','normal_app_untouched':True,'notarization_required':False,'signed_feed_required':True}))
 PY
 )"
 if [[ "$mode" == --plan ]]; then printf '%s\n' "$plan"; exit 0; fi
@@ -36,30 +36,8 @@ public_key="$("$sparkle/generate_keys" --account org.moonbrowser.Moon -p)"
 
 release_dir="$(mktemp -d "$PWD/dist-release.XXXXXX")"
 trap 'printf "Beta evidence retained at %s\n" "$release_dir"' EXIT
-mkdir "$release_dir/staging"
-ditto "$candidate" "$release_dir/staging/Moon.app"
-codesign --verify --deep --strict "$release_dir/staging/Moon.app"
-archive="$release_dir/Moon-$version-arm64.zip"
-ditto -c -k --sequesterRsrc --keepParent "$release_dir/staging/Moon.app" "$archive"
-if [[ -f appcast.xml ]]; then cp appcast.xml "$release_dir/appcast.xml"; fi
-# Refresh the old bootstrap description before generate_appcast re-signs it.
-python3 - "$release_dir/appcast.xml" <<'PY'
-from pathlib import Path
-import sys
-p=Path(sys.argv[1])
-if p.exists():
-    p.write_text(p.read_text().replace('Signed Moon browser releases. No public binary release is published yet.',
-                                     'Signed Moon browser releases for macOS.'))
-PY
-cp Support/Beta-Release-Notes.md "$release_dir/Moon-$version-arm64.md"
-"$sparkle/generate_appcast" --account org.moonbrowser.Moon \
-  --download-url-prefix "$prefix" --maximum-deltas 0 --maximum-versions 0 \
-  --embed-release-notes --link https://github.com/madetonight/moon-browser/releases "$release_dir"
-"$sparkle/sign_update" --account org.moonbrowser.Moon --verify "$release_dir/appcast.xml"
-xcrun swift Scripts/verify-update.swift "$archive" "$release_dir/appcast.xml" "$candidate/Contents/Info.plist" "$prefix"
-
-# The installer and updater contain the exact same signed application. Generate
-# the DMG after the feed so Sparkle offers the app ZIP rather than a disk image.
+# The one DMG serves both manual installation and Sparkle updates.
+archive="$release_dir/Moon-$version-arm64.dmg"
 disk_root="$(mktemp -d /private/tmp/Moon-dmg.XXXXXX)"
 cleanup() {
   rm -rf "$disk_root"
@@ -72,22 +50,20 @@ cp Support/Beta-Install-ReadMe.txt "$disk_root/Read Me.txt"
 hdiutil create -volname "Moon $version" -srcfolder "$disk_root" -format UDZO \
   -imagekey zlib-level=9 "$release_dir/Moon-$version-arm64.dmg"
 hdiutil verify "$release_dir/Moon-$version-arm64.dmg"
-
-# Deliberate allowlist: no user profile, backups, Keychain material, local
-# validation logs, editor state, or private workspace notes enter the source ZIP.
-COPYFILE_DISABLE=1 tar --no-xattrs --exclude=.DS_Store --exclude=__pycache__ \
-  -czf "$release_dir/Moon-$version-source.tar.gz" \
-  LICENSE THIRD_PARTY_NOTICES.md README.md SECURITY.md Package.swift Package.resolved \
-  build.sh test.sh Sources Tests Support Scripts Docs/RELEASING.md Docs/RELEASE-VALIDATION.md .github/workflows
-cp Support/Beta-Install-ReadMe.txt "$release_dir/Install-ReadMe.txt"
+cp Support/Beta-Release-Notes.md "$release_dir/Moon-$version-arm64.md"
+"$sparkle/generate_appcast" --account org.moonbrowser.Moon \
+  --download-url-prefix "$prefix" --maximum-deltas 0 --maximum-versions 1 \
+  --embed-release-notes --link "https://github.com/madetonight/moon-browser/releases/tag/v$version-beta" "$release_dir"
+"$sparkle/sign_update" --account org.moonbrowser.Moon --verify "$release_dir/appcast.xml"
+xcrun swift Scripts/verify-update.swift "$archive" "$release_dir/appcast.xml" "$candidate/Contents/Info.plist" "$prefix"
 python3 - "$release_dir" "$plan" <<'PY'
 from pathlib import Path
 import hashlib,json,sys
 folder=Path(sys.argv[1]); plan=json.loads(sys.argv[2])
-names=[plan['archive'],f"Moon-{plan['version']}-arm64.dmg",f"Moon-{plan['version']}-source.tar.gz",'appcast.xml','Install-ReadMe.txt']
+names=[plan['archive'],'appcast.xml']
 checksums={name:hashlib.sha256((folder/name).read_bytes()).hexdigest() for name in names}
 (folder/'SHA256SUMS.txt').write_text(''.join(f'{digest}  {name}\n' for name,digest in checksums.items()))
 plan['checksums']=checksums;plan['published']=False
 (folder/'release-plan.json').write_text(json.dumps(plan,indent=2)+'\n')
 PY
-printf '%s\n' 'Verified beta prepared locally; nothing was uploaded. Publish the exact app archive and source archive first, then the signed appcast. Bootstrap the connected candidate manually, then test a real later in-app upgrade.'
+printf '%s\n' 'Verified beta prepared locally; nothing was uploaded. Publish the one DMG installer, then the signed appcast in the repository. Source remains in GitHub. Bootstrap the connected candidate manually, then test a real later in-app upgrade.'

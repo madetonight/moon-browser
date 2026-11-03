@@ -1,3 +1,20 @@
+## Moon 0.4.0 beta — latest-only distribution
+
+The app bytes and version are unchanged. One signed DMG now serves manual
+installation and Sparkle updates. Its one-item appcast was generated and signed
+with the existing update key; independent verification checks the DMG signature,
+length, URL, version/build and minimum macOS, and rejects altered bytes. The
+publisher verifies all bytes before updating the feed, then retires extra assets
+and older releases. Thirteen offline pipeline checks pass, including tampering,
+wrong repository/URL, newer releases, mismatching existing installers, racing
+branch updates, feed failures and repeat runs. No private key is uploaded.
+
+The previous full source CI passed 461 tests with one rendered-frame check
+skipped because the runner had Reduce Motion enabled. That rendered check passed
+locally. Earlier failed runs are historical animation-test attempts, including a
+subsequently fixed test-only compile error. App CI now filters out release-only
+metadata changes; a fast separate workflow validates release scripts/manifests.
+
 ## Moon 0.4.0 beta — personal interface colors
 
 49 focused checks passed: five palette validation/persistence, per-appearance,
