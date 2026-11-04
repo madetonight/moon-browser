@@ -115,6 +115,7 @@ enum Web {
         // version turns it into the same string Safari sends, and the modern
         // page comes back.
         config.applicationNameForUserAgent = Web.userAgentName
+        config.suppressesIncrementalRendering = false
         config.allowsAirPlayForMediaPlayback = true
         // Off by default on macOS, which is why a full-screen button on a video
         // did nothing at all: the page asks, and WebKit refuses without a word.
@@ -885,7 +886,10 @@ final class Tab: ObservableObject, Identifiable {
             guard let self else { return }
             self.onSearch?(self, text)
         }
-        web.onFirstFrame = { [weak self] in self?.painted = true }
+        web.onFirstFrame = { [weak self] in
+            self?.painted = true
+            self?.uncover()
+        }
         web.holdForFirstFrame()
         painted = !web.unpainted
         // Pages follow the appearance of the window they are drawn in, and the
@@ -1037,10 +1041,42 @@ final class Tab: ObservableObject, Identifiable {
     /// `to`: where the next document comes from, when that isn't the page up
     /// now (a navigation just decided). Dark pages hand that one site's
     /// answer over, and nothing at all to a page that isn't to be darkened.
+    private struct ArmedScripts: Equatable {
+        let css: String
+        let autoScroll: Bool
+        let hoveredLinks: Bool
+        let passkeys: Bool
+        let translation: Bool
+        let external: String?
+        let dusk: String?
+        let youtube: [String]
+    }
+    private var armedScripts: ArmedScripts?
+    private weak var armedController: WKUserContentController?
+    private var installedScripts: [WKUserScript] = []
+
     func arm(hiding css: String, to url: URL? = nil) {
         veils = css
         guard let built else { return }
         let controller = built.configuration.userContentController
+        let host = Dusk.host(of: url ?? pageAddress)
+        let youtube = YouTubeAds.scripts(for: host)
+        let next = ArmedScripts(css: css, autoScroll: AutoScroll.on,
+                                hoveredLinks: HoveredLink.on, passkeys: FormRelay.passkeysOffered,
+                                translation: PageTranslator.enabled, external: ExtensionExternal.script,
+                                dusk: Dusk.shared.script(for: host), youtube: youtube.map(\.source))
+        let resident = controller.userScripts
+        // Sources alone cannot identify an installation: an identical script
+        // in the page world has a different security boundary. Retain and
+        // compare the actual installed objects, including unexpected changes.
+        if next == armedScripts, controller === armedController, !installedScripts.isEmpty,
+           resident.count == installedScripts.count,
+           zip(resident, installedScripts).allSatisfy({ $0 === $1 }) { return }
+        defer {
+            armedScripts = next
+            armedController = controller
+            installedScripts = controller.userScripts
+        }
         controller.removeAllUserScripts()
         controller.addUserScript(WKUserScript(source: MoonDraftRelay.script, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: Web.world))
         controller.addUserScript(PopupGestureRelay.userScript)
@@ -1056,7 +1092,7 @@ final class Tab: ObservableObject, Identifiable {
         controller.addUserScript(
             WKUserScript(source: IconRelay.script, injectionTime: .atDocumentEnd, forMainFrameOnly: true, in: Web.world)
         )
-        if AutoScroll.on {
+        if next.autoScroll {
             controller.addUserScript(
                 WKUserScript(source: AutoScroll.script, injectionTime: .atDocumentEnd, forMainFrameOnly: true, in: Web.world)
             )
@@ -1083,7 +1119,7 @@ final class Tab: ObservableObject, Identifiable {
             )
         }
         // Only while Settings says so: off, pages get nothing at all.
-        if HoveredLink.on {
+        if next.hoveredLinks {
             controller.addUserScript(WKUserScript(
                 source: HoveredLink.script, injectionTime: .atDocumentStart,
                 forMainFrameOnly: false, in: .defaultClient
@@ -1101,7 +1137,7 @@ final class Tab: ObservableObject, Identifiable {
         )
         // Every frame, in the page's own world: a page an extension lists
         // reaches it as chrome.runtime (see ExtensionExternal.swift).
-        if let external = ExtensionExternal.script {
+        if let external = next.external {
             controller.addUserScript(
                 WKUserScript(source: external, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .page)
             )
@@ -1110,7 +1146,7 @@ final class Tab: ObservableObject, Identifiable {
         // functions — and reach Search through a bridge in Moon's, off or on:
         // an extension's page script can carry the patch either way (see
         // Passkeys.swift and ExtensionShims.passkeys).
-        if !FormRelay.passkeysOffered {
+        if !next.passkeys {
             controller.addUserScript(
                 WKUserScript(source: FormRelay.withoutPasskeys, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .page)
             )
@@ -1124,7 +1160,7 @@ final class Tab: ObservableObject, Identifiable {
         )
         // Every frame but the top, only while Translate Page is switched on:
         // a frame of another site says it's there, to be translated too.
-        if PageTranslator.enabled {
+        if next.translation {
             controller.addUserScript(
                 WKUserScript(source: PageTranslator.announce, injectionTime: .atDocumentEnd, forMainFrameOnly: false, in: Web.world)
             )
@@ -1133,7 +1169,7 @@ final class Tab: ObservableObject, Identifiable {
         // (see Dusk.swift). Before the document, so a site known to be light
         // is never seen white. Every frame: a frame darkens its own document,
         // led by its page.
-        if let dusk = Dusk.shared.script(for: Dusk.host(of: url ?? pageAddress)) {
+        if let dusk = next.dusk {
             controller.addUserScript(
                 WKUserScript(source: dusk, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: Web.world)
             )
@@ -1141,7 +1177,7 @@ final class Tab: ObservableObject, Identifiable {
         // YouTube's ads, while Shield is on for the site this tab is on
         // (see YouTubeAds.swift). Every frame; each script does nothing in a
         // frame that isn't YouTube's.
-        for script in YouTubeAds.scripts(for: Dusk.host(of: url ?? pageAddress)) {
+        for script in youtube {
             controller.addUserScript(script)
         }
         guard !css.isEmpty else { return }
@@ -1331,6 +1367,7 @@ final class Tab: ObservableObject, Identifiable {
     }
 
     func go(to url: URL) {
+        loadRevision = UUID()
         if let own = InternalPage(url: url) {
             show(own)
             return
@@ -1585,7 +1622,12 @@ final class Tab: ObservableObject, Identifiable {
     /// take — no error, no navigation, just a view that goes on sitting on
     /// about:blank with nothing left to say so. Still there, or still
     /// answering for a process that's already gone, is asked once more.
-    private func loadAndVerify(_ url: URL, state: Any? = nil, tries: Int = 0) {
+    private var loadRevision = UUID()
+
+    private func loadAndVerify(_ url: URL, state: Any? = nil, tries: Int = 0, revision: UUID? = nil) {
+        let revision = revision ?? UUID()
+        if tries == 0 { loadRevision = revision }
+        guard loadRevision == revision else { return }
         // Wait for the stage to take the view back before loading into it. A
         // page loaded while its view is off any window boots as a hidden tab,
         // and a site that holds everything until it is shown — x.com does,
@@ -1599,7 +1641,7 @@ final class Tab: ObservableObject, Identifiable {
         let view = web
         if view.window == nil, tries < 50 {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.02) { [weak self] in
-                self?.loadAndVerify(url, state: state, tries: tries + 1)
+                self?.loadAndVerify(url, state: state, tries: tries + 1, revision: revision)
             }
             return
         }
@@ -1613,14 +1655,18 @@ final class Tab: ObservableObject, Identifiable {
             view.open(url)
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
-            guard let self else { return }
-            guard built?.url?.absoluteString != "about:blank" else {
-                web.open(url)
+            guard let self, loadRevision == revision, built === view else { return }
+            // A slow response is still a live navigation. Restarting it at
+            // 1.5 seconds wastes its connection and postpones first paint.
+            guard !view.isLoading else { return }
+            guard let current = view.url, current.absoluteString != "about:blank" else {
+                view.open(url)
                 return
             }
             web.evaluateJavaScript("document.readyState") { [weak self] _, error in
                 MainActor.assumeIsolated {
-                    guard let self, let error = error as NSError? else { return }
+                    guard let self, self.loadRevision == revision, self.built === view,
+                          let error = error as NSError? else { return }
                     guard error.domain == WKErrorDomain,
                           error.code == WKError.webContentProcessTerminated.rawValue
                     else { return }
@@ -1827,6 +1873,10 @@ final class Tab: ObservableObject, Identifiable {
     /// back-forward cache. The tab keeps its address; `web` builds again the
     /// next time anyone asks for it.
     private func discard() {
+        loadRevision = UUID()
+        armedScripts = nil
+        armedController = nil
+        installedScripts = []
         popupGesture.clear()
         if !blockedPopups.isEmpty { blockedPopups = [] }
         translationGone(sleeping: true)
@@ -2317,16 +2367,12 @@ final class PageView: WKWebView {
         alphaValue = 0
     }
 
-    /// In, quickly: the page is there, and the fade only covers the frame
-    /// between WebKit laying it out and putting it on screen.
+    /// Show a ready frame immediately, without a second presentation delay.
     func showFirstFrame() {
         guard unpainted else { return }
         unpainted = false
         onFirstFrame?()
-        NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.12
-            animator().alphaValue = 1
-        }
+        alphaValue = 1
     }
 
     /// _WKRenderingProgressEventFirstVisuallyNonEmptyLayout — the moment

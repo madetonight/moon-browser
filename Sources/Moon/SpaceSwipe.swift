@@ -74,9 +74,14 @@ final class SpaceSwipe {
         case .swipe where event.deltaX != 0: step = event.deltaX > 0 ? -1 : 1
         default: return false
         }
-        guard let browser = Browsers.browser(for: event.window), !browser.isPopup, browser.prefs.usesSpaces,
+        guard let browser = Browsers.browser(for: event.window), !browser.isPopup,
               !browser.folded || browser.peeking, overTabs(event, in: browser) else { return false }
         self.browser = browser
+        if event.type == .swipe, event.deltaX > 0, browser.prefs.sidebar, !browser.makingSpace {
+            createFromRight(browser)
+            return true
+        }
+        guard browser.prefs.usesSpaces else { return false }
         let here = browser.makingSpace ? browser.spaces.count : (browser.spaces.firstIndex { $0.id == browser.spaceID } ?? 0)
         let target = here + step
         if target >= 0, target <= browser.spaces.count { slide(browser, to: target, from: here) }
@@ -101,12 +106,14 @@ final class SpaceSwipe {
         if event.phase == .began || !event.hasPreciseScrollingDeltas, let over = Browsers.browser(for: event.window) {
             browser = over
         }
-        guard let browser, browser.prefs.usesSpaces, !browser.folded || browser.peeking else { return false }
+        guard let browser, !browser.isPopup, browser.prefs.usesSpaces || browser.prefs.sidebar,
+              !browser.folded || browser.peeking else { return false }
         // A mouse wheel over the tabs: a notch along the spaces' axis — up or down
         // in the bar, sideways in the column — brings one space. In the column
         // only a notch more sideways than up or down: scrolling the tabs is
         // never taken for it.
         if !event.hasPreciseScrollingDeltas {
+            guard browser.prefs.usesSpaces else { return false }
             let dx = event.scrollingDeltaX, dy = event.scrollingDeltaY
             let step = browser.prefs.sidebar ? (abs(dx) > abs(dy) ? dx : 0) : dy
             guard step != 0, overTabs(event, in: browser) else { return false }
@@ -155,6 +162,7 @@ final class SpaceSwipe {
     // MARK: - the gesture, apart from where its events come from (the bench drives these)
 
     func began() {
+        browser?.newSpaceSwipe = false
         axis = .undecided
         gathered = .zero
         // Just after a space came: the same hand's next stroke is let go by.
@@ -175,6 +183,8 @@ final class SpaceSwipe {
             axis = abs(gathered.width) > abs(gathered.height) * 1.5 ? .across : .along
         }
         guard axis == .across else { return false }
+        guard browser.prefs.usesSpaces || (browser.prefs.sidebar && gathered.width > 0) else { return false }
+        browser.newSpaceSwipe = browser.prefs.sidebar && gathered.width > 0 && !browser.makingSpace
         browser.spaceSwipe = resisted(gathered.width, in: browser)
         return true
     }
@@ -190,11 +200,17 @@ final class SpaceSwipe {
         defer { tracking = false }
         guard let browser, axis == .across else { return }
         let travel = gathered.width
+        if !cancelled, browser.prefs.sidebar, !browser.makingSpace, travel >= Self.enough(for: browser) {
+            createFromRight(browser)
+            return
+        }
         let here = browser.makingSpace ? browser.spaces.count : (browser.spaces.firstIndex { $0.id == browser.spaceID } ?? 0)
         // Fingers to the left, or up, bring what is next.
         let target = cancelled || abs(travel) < SpaceSwipe.enough(for: browser) ? here : here + (travel < 0 ? 1 : -1)
         guard target != here, target >= 0, target <= browser.spaces.count else {
-            withAnimation(Motion.settle) { browser.spaceSwipe = 0 }
+            withAnimation(Motion.settle) { browser.spaceSwipe = 0 } completion: {
+                if browser.spaceSwipe == 0 { browser.newSpaceSwipe = false }
+            }
             return
         }
         slide(browser, to: target, from: here)
@@ -202,6 +218,7 @@ final class SpaceSwipe {
 
     /// Nothing that way: the rows give a little, and come back.
     private func resisted(_ travel: CGFloat, in browser: Browser) -> CGFloat {
+        if browser.newSpaceSwipe { return travel }
         let here = browser.makingSpace ? browser.spaces.count : (browser.spaces.firstIndex { $0.id == browser.spaceID } ?? 0)
         let blocked = (travel > 0 && here == 0) || (travel < 0 && here == browser.spaces.count)
         return blocked ? travel / 4 : travel
@@ -211,13 +228,20 @@ final class SpaceSwipe {
     /// where this one was; then it becomes the one on screen, in the same
     /// frame and without anything moving — it was already there. One past
     /// the last space is the card for a new one.
-    func slide(_ browser: Browser, to target: Int, from here: Int) {
+    private func createFromRight(_ browser: Browser) {
+        browser.prefs.usesSpaces = true
+        let here = browser.spaces.firstIndex { $0.id == browser.spaceID } ?? 0
+        slide(browser, to: browser.spaces.count, from: here, creatingFromRight: true)
+    }
+
+    func slide(_ browser: Browser, to target: Int, from here: Int, creatingFromRight: Bool = false) {
         if browser.makingSpace, target != browser.spaces.count {
             browser.cancelSpaceCreation()
         }
         // A page is the column's width, or the bar's height.
         let width = browser.prefs.sidebar ? browser.prefs.columnWidth : Metrics.strip
-        let away: CGFloat = target > here ? -1 : 1
+        browser.newSpaceSwipe = creatingFromRight
+        let away: CGFloat = creatingFromRight ? 1 : target > here ? -1 : 1
         browser.spaceStep = target > here ? 1 : -1
         resting = Date().addingTimeInterval(SpaceSwipe.rest)
         withAnimation(.easeOut(duration: 0.22), completionCriteria: .removed) {
@@ -233,6 +257,7 @@ final class SpaceSwipe {
                     browser.switchSpace(to: browser.spaces[target].id)
                 }
                 browser.spaceSwipe = 0
+                browser.newSpaceSwipe = false
             }
         }
     }

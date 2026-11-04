@@ -236,7 +236,9 @@ struct SideBar: View {
                 .offset(x: swipe)
             // Only while the fingers are bringing one in: the one they are
             // bringing, a page's width away.
-            if swipe > 0, at > 0 {
+            if swipe > 0, browser.newSpaceSwipe {
+                newSpacePage.offset(x: swipe - width)
+            } else if swipe > 0, at > 0 {
                 page(at - 1, pill: before)
                     .offset(x: swipe - width)
             }
@@ -257,13 +259,7 @@ struct SideBar: View {
     private func page(_ index: Int, pill: Namespace.ID) -> some View {
         Group {
             if index == browser.spaces.count {
-                VStack(spacing: 0) {
-                    Spacer(minLength: 0)
-                    NewSpaceCard(browser: browser)
-                    Spacer(minLength: 0)
-                    Spacer(minLength: 0)
-                }
-                .frame(maxHeight: .infinity)
+                newSpacePage
             } else if browser.spaces[index].id == browser.spaceID {
                 VStack(alignment: .leading, spacing: 0) {
                     if !browser.squarePins.isEmpty || ghostSquare != nil {
@@ -820,6 +816,15 @@ struct SideBar: View {
         return true
     }
 
+    private var newSpacePage: some View {
+        VStack(spacing: 0) {
+            Spacer(minLength: 0)
+            NewSpaceCard(browser: browser)
+            Spacer(minLength: 0)
+            Spacer(minLength: 0)
+        }.frame(maxHeight: .infinity)
+    }
+
     /// The pinned rows, the loose tabs and the row that makes another,
     /// which scroll as one.
     private var rows: some View {
@@ -878,8 +883,6 @@ private struct SideFoot: View {
                 FetchDoor(browser: browser, fetches: fetches, persistent: true)
                 TranslationDoor(browser: browser, arrowEdge: prefs.sidePosition == .right ? .leading : .trailing)
                 OrbitDoor(browser: browser, arrowEdge: prefs.sidePosition == .right ? .leading : .trailing)
-                if prefs.usesSpaces { SpaceDot(browser: browser) }
-                if Profiles.shared.several { ProfileBadge(browser: browser) }
             }
             .frame(maxWidth: .infinity)
             .padding(.bottom, 8)
@@ -918,8 +921,6 @@ private struct SideFoot: View {
     }
     private var utilities: some View {
         Group {
-            if Profiles.shared.several { ProfileBadge(browser: browser) }
-            if prefs.usesSpaces { SpaceDot(browser: browser) }
             ExtensionSlot(edge: .trailing, room: room)
         }
     }
@@ -929,19 +930,14 @@ private struct SideFoot: View {
 
     /// How many doors the foot has, stacked: what the rows stop short of.
     @MainActor static func doors(_ prefs: Preferences, _ fetches: Fetches) -> Int {
-        var kept = 5  // extensions, bookmarks, downloads, translation and Orbit
-        if prefs.usesSpaces { kept += 1 }
-        if Profiles.shared.several { kept += 1 }
-        return kept
+        5  // extensions, bookmarks, downloads, translation and Orbit
     }
 
     /// How many pinned extensions fit beside the doors that stay. Every door
     /// is 26 points, with 2 between them.
     private var room: Int {
         let door: CGFloat = 26 + 2
-        var kept = 5  // extensions, bookmarks, downloads, translation and Orbit
-        if prefs.usesSpaces { kept += 1 }
-        if Profiles.shared.several { kept += 1 }
+        let kept = 5  // extensions, bookmarks, downloads, translation and Orbit
         let free = (availableWidth ?? prefs.sideWidth) - 2 * 10 + 2 - CGFloat(kept) * door
         return max(0, Int((free / door).rounded(.down)))
     }

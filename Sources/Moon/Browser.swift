@@ -2037,6 +2037,7 @@ final class Browser: NSObject, ObservableObject {
     /// How far the column's rows have followed two fingers sideways, and
     /// whether the card for a new space stands in for them (see SpaceSwipe).
     @Published var spaceSwipe: CGFloat = 0
+    @Published var newSpaceSwipe = false
     @Published var makingSpace = false
     /// A tab being sent into the Space being made from its context menu.
     var afterSpaceCreated: ((Space) -> Void)?
@@ -6736,7 +6737,8 @@ extension Browser: WKNavigationDelegate, WKUIDelegate {
         tab.applyRememberedZoom()
         // A tab waking from sleep: the new document is in, and a moment
         // after it is on screen the picture of the old one can go.
-        tab.uncover(after: 0.45)
+        // The first painted frame (or didFinish fallback) removes a sleeping
+        // tab's preview. A fixed timer can obscure a ready full-resolution page.
     }
 
     /// The page has drawn something: a view kept out of sight until now, so

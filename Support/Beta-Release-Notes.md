@@ -1,12 +1,13 @@
-# Moon 0.4.2 beta
+# Moon 0.4.3 beta
 
-Meet **Orbit**, your time at a glance, built for Moon and macOS.
+Less waiting. More of the page.
 
-- A sidebar summary beside Translate, and a native Orbit window with Moon and Mac activity summaries.
-- Connect to the official local ActivityWatch engine for its complete workspace: activity and multi-device views, timeline swimlanes and filters, category sets and priorities, trends, time spiral, work and billable reports, stopwatch, alerts, search, graphs, query explorer, raw events, import/export and privacy settings.
-- ActivityWatch runs separately so Moon stays small and sandboxed. Browser/editor watchers, notifications, AI services and optional sync retain their own setup and permission requirements. No Mac-wide watchers or cloud services are enabled automatically.
-- Moon tracking starts off. It stores website names and hourly totals locally for 30 days and excludes private tabs. When connected, sanitized origins can be sent to the local ActivityWatch engine; full URLs, paths, searches, passwords and page contents are not shared. Native API keys stay in Keychain and never enter web scripts or URLs.
-- Symmetric sidebar margins and a responsive footer that keeps Bookmarks, Downloads, Translate and Orbit visible even at narrow widths.
-- What's New shows only the current release and is checked against the app version before shipping.
+- Avoid repeated page-script setup when the site's scripts and options are unchanged. Changes to script objects, content worlds, privacy-related options and site styles still trigger a fresh installation.
+- Show a ready first frame immediately, and remove a sleeping tab's preview when the page actually paints.
+- Cancel obsolete recovery work when you navigate elsewhere. Slow navigations are allowed to finish without being restarted by the recovery timer.
+- Simplify the sidebar dock to Extensions, Bookmarks, Downloads, Translate and Orbit. Profile and space buttons are removed from the dock; existing profiles and spaces are preserved.
+- Swipe right on the sidebar to open the New Space card. Short or cancelled swipes leave your current space alone. Creating the space still requires confirmation in the card.
+- Preserve native WebKit image decoding, video playback, cache validation and connection handling. No image downscaling, forced low-bitrate streaming, custom proxy or certificate bypass is introduced.
+- What's New contains this release only.
 
 Apple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized. The optional ActivityWatch companion is distributed separately by its authors.
