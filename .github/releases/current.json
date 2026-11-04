@@ -1,22 +1,22 @@
 {
   "repository": "madetonight/moon-browser",
-  "tag": "v0.4.0-beta",
-  "build": "2026110301",
-  "title": "Moon 0.4.0 beta",
+  "tag": "v0.4.2-beta",
+  "build": "2026110402",
+  "title": "Moon 0.4.2 beta",
   "keep_latest_only": true,
   "assets": [
     {
-      "name": "Moon-0.4.0-arm64.dmg",
-      "size": 4969893,
-      "sha256": "2b8bd5172173e681dbb9aa34d638a5b91ac4b6b6ae399fa499e2ea39b60b8fb5",
-      "blob": "cf86058fd538f9664701b22d4be0587d4ab2cb42"
+      "name": "Moon-0.4.2-arm64.dmg",
+      "size": 5089119,
+      "sha256": "8e2335a7c55f57672d5b06203f2762d111264fe50df27ddbb9318e1cbf073787",
+      "blob": "cf97c95eb3450d0c1ef162c97a7ec42f74eefd2a"
     }
   ],
   "feed": {
     "name": "appcast.xml",
-    "size": 3065,
-    "sha256": "fa0e2fd73c388ebe2d0a3fda29ce26b19bb7ada05cf468026cbbf3e29ea28ef4",
-    "blob": "d5c9f18e2b43fbb95475d8b6e12baedbbf0d1efe"
+    "size": 3036,
+    "sha256": "dac11c49b39531b5cfaa67e5febf4a945518d162a5e1f6d860c446b12f24279f",
+    "blob": "866ada7ad914e36885ba1537056170c71beec25b"
   },
-  "notes": "[Download Moon for Mac](https://github.com/madetonight/moon-browser/releases/download/v0.4.0-beta/Moon-0.4.0-arm64.dmg)\n\nOne installer for Apple silicon, macOS 26 or later. Open the DMG and drag Moon to Applications. The same DMG powers signed in-app updates.\n\n- Customize background, foreground, text and an optional accent in Settings → Appearance → Colors, with separate light and dark palettes.\n- Sidebar tabs always show page titles, with smoother hover feedback.\n- Pearl Current app icon. Installed app size approximately 11 MB; download approximately 5 MB.\n\nThis beta is Apple Development signed and is not Apple-notarized. Connected installations can use Settings → About → Check now. The signed update feed is maintained in the repository. GitHub’s automatic source-code links contain source, not additional app installers.\n"
+  "notes": "[Download Moon for Mac](https://github.com/madetonight/moon-browser/releases/download/v0.4.2-beta/Moon-0.4.2-arm64.dmg)\n\nOne installer for Apple silicon, macOS 26 or later. Open the DMG and drag Moon to Applications. The same DMG powers signed in-app updates.\n\n- Meet Orbit: a native sidebar summary and activity window, connected optionally to the official local ActivityWatch engine and its full advanced workspace.\n- Translate remains beside Downloads and Orbit, with a readable glass footer and responsive rows at narrow sidebar widths.\n- Symmetric sidebar padding and smoother reveal behavior. What's New contains only the latest release.\n- Moon tracking starts off; private tabs are excluded. Native records keep website names and hourly totals locally. Connecting ActivityWatch shares sanitized origins only when tracking is enabled.\n- ActivityWatch is installed separately. Mac-wide watchers, plugins, sync and AI services require their own setup and permissions. See the [Orbit guide and coverage limits](https://github.com/madetonight/moon-browser/blob/main/Docs/ORBIT.md).\n\nInstalled Moon is approximately 11.3 MB; download approximately 5.1 MB. Personal browser profiles, logins, browsing records and test data are not included.\n\nThis beta is Apple Development signed and is not Apple-notarized. Connected installations can use Settings → About → Check now. GitHub's automatic source-code links contain source, not additional app installers.\n"
 }
