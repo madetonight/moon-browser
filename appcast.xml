@@ -4,30 +4,31 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
     <channel>
         <title>Moon</title>
         <item>
-            <title>0.4.2</title>
-            <pubDate>Wed, 04 Nov 2026 10:00:50 -0500</pubDate>
-            <link>https://github.com/madetonight/moon-browser/releases/tag/v0.4.2-beta</link>
-            <sparkle:version>2026110402</sparkle:version>
-            <sparkle:shortVersionString>0.4.2</sparkle:shortVersionString>
+            <title>0.4.3</title>
+            <pubDate>Wed, 04 Nov 2026 13:55:40 -0500</pubDate>
+            <link>https://github.com/madetonight/moon-browser/releases/tag/v0.4.3-beta</link>
+            <sparkle:version>2026110403</sparkle:version>
+            <sparkle:shortVersionString>0.4.3</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
             <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <description sparkle:format="markdown"><![CDATA[# Moon 0.4.2 beta
+            <description sparkle:format="markdown"><![CDATA[# Moon 0.4.3 beta
 
-Meet **Orbit**, your time at a glance, built for Moon and macOS.
+Less waiting. More of the page.
 
-- A sidebar summary beside Translate, and a native Orbit window with Moon and Mac activity summaries.
-- Connect to the official local ActivityWatch engine for its complete workspace: activity and multi-device views, timeline swimlanes and filters, category sets and priorities, trends, time spiral, work and billable reports, stopwatch, alerts, search, graphs, query explorer, raw events, import/export and privacy settings.
-- ActivityWatch runs separately so Moon stays small and sandboxed. Browser/editor watchers, notifications, AI services and optional sync retain their own setup and permission requirements. No Mac-wide watchers or cloud services are enabled automatically.
-- Moon tracking starts off. It stores website names and hourly totals locally for 30 days and excludes private tabs. When connected, sanitized origins can be sent to the local ActivityWatch engine; full URLs, paths, searches, passwords and page contents are not shared. Native API keys stay in Keychain and never enter web scripts or URLs.
-- Symmetric sidebar margins and a responsive footer that keeps Bookmarks, Downloads, Translate and Orbit visible even at narrow widths.
-- What's New shows only the current release and is checked against the app version before shipping.
+- Avoid repeated page-script setup when the site's scripts and options are unchanged. Changes to script objects, content worlds, privacy-related options and site styles still trigger a fresh installation.
+- Show a ready first frame immediately, and remove a sleeping tab's preview when the page actually paints.
+- Cancel obsolete recovery work when you navigate elsewhere. Slow navigations are allowed to finish without being restarted by the recovery timer.
+- Simplify the sidebar dock to Extensions, Bookmarks, Downloads, Translate and Orbit. Profile and space buttons are removed from the dock; existing profiles and spaces are preserved.
+- Swipe right on the sidebar to open the New Space card. Short or cancelled swipes leave your current space alone. Creating the space still requires confirmation in the card.
+- Preserve native WebKit image decoding, video playback, cache validation and connection handling. No image downscaling, forced low-bitrate streaming, custom proxy or certificate bypass is introduced.
+- What's New contains this release only.
 
 Apple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized. The optional ActivityWatch companion is distributed separately by its authors.
 ]]></description>
-            <enclosure url="https://github.com/madetonight/moon-browser/releases/download/v0.4.2-beta/Moon-0.4.2-arm64.dmg" length="5089119" type="application/octet-stream" sparkle:edSignature="lfqxqRpvR/yh9HmMa+XAGsEr89Rj7La1a2MsuqDudWGDc+dGuZmyAoatoosgXeM5PtDj64CD6s4g2I8Dg2NBBg=="></enclosure>
+            <enclosure url="https://github.com/madetonight/moon-browser/releases/download/v0.4.3-beta/Moon-0.4.3-arm64.dmg" length="5091607" type="application/octet-stream" sparkle:edSignature="KT7TuNxKp8xpfcyzaw2dY2VlGL8jPpix1mwT2Z8g822zsoFDNyrmWMSjj17A82nk8s+XCQutd5YR6madb3hqCw=="></enclosure>
         </item>
     </channel>
 </rss><!-- sparkle-signatures:
-edSignature: qLUuVPkBdW9FKCEtPlnG2D/nFKpApOFH6cKov791Q1F2rIpFSLeziOKW9rSGlnkxTpua9EZIzpjKbzvpHUKTAQ==
-length: 2892
+edSignature: OGgrggciFA5TFkE+9ysWCTXsNxUdTRPNAMhHyXx4R1NoyXJd84giGgTOrpui13uURBq/I34Se9Betho7ZH07CA==
+length: 2662
 -->
