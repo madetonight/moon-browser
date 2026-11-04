@@ -64,11 +64,16 @@ struct SideBar: View {
     /// three doors under it.
     private var top: CGFloat { icons ? lightsBand + Metrics.helmDoors + 8 : Metrics.strip }
     private var innerEdge: Alignment { onRight ? .leading : .trailing }
+    private var roundedSurface: Bool { browser.folded || (prefs.liquidGlass && !reduceTransparency) }
+    private var surfaceInsets: EdgeInsets {
+        roundedSurface ? SidebarSurface.insets(onRight: onRight) : EdgeInsets()
+    }
+    private var pageWidth: CGFloat { prefs.columnWidth - surfaceInsets.leading - surfaceInsets.trailing }
 
     /// The window's buttons' corner: gone in full screen, where macOS takes
     /// them away, and back, forward and reload move up to the edge (idea 184).
     private var lights: CGFloat {
-        browser.fullScreen ? 0 : max(0, min(Metrics.sideLights, prefs.sideWidth - 20 - Metrics.helmDoors))
+        browser.fullScreen ? 0 : max(0, min(Metrics.sideLights, pageWidth - 20 - Metrics.helmDoors))
     }
 
     var body: some View {
@@ -101,36 +106,45 @@ struct SideBar: View {
                 // sitting right of them — the same three doors as the top
                 // bar, moved beside the lights since there's no far end of a
                 // row to put them at in this mode.
-                if icons {
-                    // The lights stacked in their band (Lights, vertical),
-                    // the three doors one above the other under them.
-                    Color.clear.frame(height: lightsBand)
-                    Helm(browser: browser, vertical: true)
-                        .frame(maxWidth: .infinity)
-                        .padding(.bottom, 8)
-                } else {
-                    HStack(spacing: 0) {
-                        Color.clear.frame(width: lights)
-                        Helm(browser: browser)
-                        Spacer(minLength: 0)
+                Group {
+                    if icons {
+                        // The lights stacked in their band (Lights, vertical),
+                        // the three doors one above the other under them.
+                        Color.clear.frame(height: lightsBand)
+                        Helm(browser: browser, vertical: true)
+                            .frame(maxWidth: .infinity)
+                            .padding(.bottom, 8)
+                    } else {
+                        HStack(spacing: 0) {
+                            Color.clear.frame(width: lights)
+                            Helm(browser: browser)
+                            Spacer(minLength: 0)
+                        }
+                        .frame(height: Metrics.strip)
                     }
-                    .frame(height: Metrics.strip)
                 }
+                .padding(.horizontal, 10)
+                .padding(.leading, surfaceInsets.leading)
+                .padding(.trailing, surfaceInsets.trailing)
 
                 // The spaces side by side, as pages: two fingers sideways move
                 // the one on screen and the next one together, the next one
                 // coming in as this one goes, with nothing between them.
                 pages
+                    .padding(.leading, surfaceInsets.leading)
+                    .padding(.trailing, surfaceInsets.trailing)
 
                 Spacer(minLength: 0)
             }
-            .padding(.horizontal, 10)
             // Clear of the foot, which sits over the column's bottom edge.
             .padding(.bottom, footHeight)
 
             VStack {
                 Spacer()
                 foot
+                    .padding(.leading, surfaceInsets.leading)
+                    .padding(.trailing, surfaceInsets.trailing)
+                    .padding(.bottom, surfaceInsets.bottom)
             }
         }
         .environment(\.greys, greys)
@@ -138,18 +152,24 @@ struct SideBar: View {
         .frame(maxHeight: .infinity)
         // Rows on their way to or from another space stay in the column.
         .clipped()
+        .modifier(MoonSidebarGlass(enabled: prefs.liquidGlass && !landing, insets: surfaceInsets, look: prefs.look))
         .onAppear { SpaceSwipe.shared.start(for: browser) }
         .background {
             ZStack {
-                if prefs.liquidGlass && !reduceTransparency && !landing { MoonSidebarGlass(enabled: true) }
-                else { landing ? greys.hover : onFrame ? Palette.frame : Palette.ground }
+                if !prefs.liquidGlass || reduceTransparency || landing {
+                    (landing ? greys.hover : onFrame ? Palette.frame : Palette.ground)
+                        .clipShape(RoundedRectangle(cornerRadius: roundedSurface ? SidebarSurface.radius : 0, style: .continuous))
+                }
+            }
+            .padding(surfaceInsets)
+            .overlay {
                 if prefs.splitView {
                     SplitDropZone(browser: browser, tab: nil, kind: .strip)
                 }
             }
         }
         .overlay(alignment: innerEdge) {
-            if !onFrame && (!prefs.liquidGlass || reduceTransparency) {
+            if !roundedSurface && !onFrame && (!prefs.liquidGlass || reduceTransparency) {
                 Rectangle().fill(Palette.hairline).frame(width: 1)
             }
         }
@@ -208,7 +228,7 @@ struct SideBar: View {
     }
 
     private var pages: some View {
-        let width = prefs.columnWidth
+        let width = pageWidth
         let swipe = browser.spaceSwipe
         let at = spaceAt
         return ZStack(alignment: .topLeading) {
@@ -225,8 +245,9 @@ struct SideBar: View {
                     .offset(x: swipe + width)
             }
         }
-        // The pages are the column's whole width, each with its own margin.
-        .padding(.horizontal, -10)
+        // Each page owns its margins. Compensating again here shifts rows
+        // outside the rounded surface and clips away the leading padding.
+        .frame(width: pageWidth)
         .frame(maxHeight: .infinity, alignment: .top)
     }
 
@@ -326,7 +347,7 @@ struct SideBar: View {
             }
         }
         .padding(.horizontal, 10)
-        .frame(width: prefs.columnWidth, alignment: .topLeading)
+        .frame(width: pageWidth, alignment: .topLeading)
     }
 
     private func refit() {
@@ -486,7 +507,7 @@ struct SideBar: View {
     /// cell allows, never taller than the classic square: past that a cell
     /// turns into a wide, short button rather than a bigger icon.
     private func pinCells(_ count: Int) -> [CGRect] {
-        let room = prefs.columnWidth - 20
+        let room = pageWidth - 20
         let gap = SideBar.pinGap
         let fits = Int((room + gap) / (SideBar.square + gap))
         let rows = SideBar.pinRows(count, most: min(4, max(1, fits)))
@@ -725,7 +746,7 @@ struct SideBar: View {
         let gridShown = !squares.isEmpty || ghostSquare != nil
         let rowsOn = prefs.showsPinRows
         let listedShown = rowsOn && (!browser.listedPins.isEmpty || isListedGhost)
-        let zone = PinDrop.zone(point, width: prefs.columnWidth - 20,
+        let zone = PinDrop.zone(point, width: pageWidth - 20,
                                 gridBottom: gridShown ? frames.grid?.maxY : nil,
                                 listed: listedShown ? frames.listed : nil)
         switch zone {
@@ -812,7 +833,8 @@ struct SideBar: View {
     /// The foot's door and its margin beneath; with icons only, its doors
     /// one above the other.
     private var footHeight: CGFloat {
-        icons ? CGFloat(SideFoot.doors(prefs, browser.fetches)) * 28 + 8 : 26 + 10
+        (icons ? CGFloat(SideFoot.doors(prefs, browser.fetches)) * 28 + 8
+            : (SideFoot.needsTwoRows(width: pageWidth, doors: SideFoot.doors(prefs, browser.fetches)) ? 64 : 36)) + surfaceInsets.bottom
     }
 
     @ViewBuilder
@@ -829,7 +851,7 @@ struct SideBar: View {
 
     /// One small door at the bottom: the settings.
     private var foot: some View {
-        SideFoot(browser: browser, prefs: prefs, fetches: browser.fetches, vertical: icons)
+        SideFoot(browser: browser, prefs: prefs, fetches: browser.fetches, vertical: icons, availableWidth: pageWidth)
     }
 
 }
@@ -846,6 +868,7 @@ private struct SideFoot: View {
     /// The column of icons: one above the other, centred, no pinned
     /// extensions (their list is still the puzzle's).
     var vertical = false
+    var availableWidth: CGFloat? = nil
 
     var body: some View {
         if vertical {
@@ -854,29 +877,50 @@ private struct SideFoot: View {
                 BookmarkDoor(browser: browser, arrowEdge: prefs.sidePosition == .right ? .leading : .trailing)
                 FetchDoor(browser: browser, fetches: fetches, persistent: true)
                 TranslationDoor(browser: browser, arrowEdge: prefs.sidePosition == .right ? .leading : .trailing)
+                OrbitDoor(browser: browser, arrowEdge: prefs.sidePosition == .right ? .leading : .trailing)
                 if prefs.usesSpaces { SpaceDot(browser: browser) }
                 if Profiles.shared.several { ProfileBadge(browser: browser) }
             }
             .frame(maxWidth: .infinity)
             .padding(.bottom, 8)
         } else {
-            HStack(spacing: 2) {
-                if Profiles.shared.several { ProfileBadge(browser: browser) }
-                if prefs.usesSpaces { SpaceDot(browser: browser) }
-                ExtensionSlot(edge: .trailing, room: room)
-                BookmarkDoor(browser: browser, arrowEdge: .trailing)
-                FetchDoor(browser: browser, fetches: fetches, persistent: true)
-                TranslationDoor(browser: browser, arrowEdge: prefs.sidePosition == .right ? .leading : .trailing)
-                Spacer(minLength: 0)
+            VStack(alignment: .leading, spacing: 2) {
+                if Self.needsTwoRows(width: availableWidth ?? prefs.sideWidth, doors: Self.doors(prefs, fetches)) {
+                    HStack(spacing: 2) { utilities; Spacer(minLength: 0) }
+                    HStack(spacing: 2) { primary; Spacer(minLength: 0) }
+                } else {
+                    HStack(spacing: 2) { utilities; primary; Spacer(minLength: 0) }
+                }
             }
+            .frame(width: max(0, (availableWidth ?? prefs.sideWidth) - 20), alignment: .leading)
             .padding(.horizontal, 10)
             .padding(.bottom, 10)
         }
     }
 
+    /// Core actions never participate in extension overflow or shrink away.
+    private var primary: some View {
+        Group {
+            BookmarkDoor(browser: browser, arrowEdge: prefs.sidePosition == .right ? .leading : .trailing)
+            FetchDoor(browser: browser, fetches: fetches, persistent: true)
+            TranslationDoor(browser: browser, arrowEdge: prefs.sidePosition == .right ? .leading : .trailing)
+            OrbitDoor(browser: browser, arrowEdge: prefs.sidePosition == .right ? .leading : .trailing)
+        }
+    }
+    private var utilities: some View {
+        Group {
+            if Profiles.shared.several { ProfileBadge(browser: browser) }
+            if prefs.usesSpaces { SpaceDot(browser: browser) }
+            ExtensionSlot(edge: .trailing, room: room)
+        }
+    }
+    static func needsTwoRows(width: CGFloat, doors: Int) -> Bool {
+        width - 20 < CGFloat(doors * 28 - 2)
+    }
+
     /// How many doors the foot has, stacked: what the rows stop short of.
     @MainActor static func doors(_ prefs: Preferences, _ fetches: Fetches) -> Int {
-        var kept = 4  // extensions, bookmarks, downloads and translation
+        var kept = 5  // extensions, bookmarks, downloads, translation and Orbit
         if prefs.usesSpaces { kept += 1 }
         if Profiles.shared.several { kept += 1 }
         return kept
@@ -886,10 +930,10 @@ private struct SideFoot: View {
     /// is 26 points, with 2 between them.
     private var room: Int {
         let door: CGFloat = 26 + 2
-        var kept = 4  // extensions, bookmarks, downloads and translation
+        var kept = 5  // extensions, bookmarks, downloads, translation and Orbit
         if prefs.usesSpaces { kept += 1 }
         if Profiles.shared.several { kept += 1 }
-        let free = prefs.sideWidth - 2 * 10 + 2 - CGFloat(kept) * door
+        let free = (availableWidth ?? prefs.sideWidth) - 2 * 10 + 2 - CGFloat(kept) * door
         return max(0, Int((free / door).rounded(.down)))
     }
 }

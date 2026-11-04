@@ -2,6 +2,7 @@
 set -Eeuo pipefail
 cd "$(dirname "$0")/.."
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
+python3 Scripts/check-release-notes.py
 
 mode="${1:-}"
 [[ -z "$mode" || "$mode" == --plan ]] || { printf '%s\n' 'Usage: prepare-beta-update.sh [--plan]' >&2; exit 2; }

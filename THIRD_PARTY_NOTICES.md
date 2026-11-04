@@ -44,3 +44,11 @@ SOFTWARE.
 ## Sparkle 2.10.1
 
 Moon uses the pinned Sparkle update framework from https://github.com/sparkle-project/Sparkle. Its license is bundled as Sparkle-LICENSE and retained at Support/Sparkle-LICENSE, including notices for Sparkle and its components.
+# Optional Orbit activity engine
+
+Orbit can connect to an independently installed ActivityWatch engine. ActivityWatch
+and its web interface are developed by the ActivityWatch contributors and are
+available under MPL-2.0: https://github.com/ActivityWatch/activitywatch.
+They are not bundled with Moon. Orbit uses the public loopback API and displays
+the locally served interface in an isolated WebKit store for advanced tools.
+

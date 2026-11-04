@@ -173,6 +173,7 @@ final class SidebarPressTests: XCTestCase {
 
     func testRapidHoverSwitchingClosesOnlyTheFinalHoveredTab() async throws {
         let browser = makeBrowser()
+        browser.prefs.liquidGlass = true
         let tabs = browser.tabs
         let active = browser.activeID
         let window = makeWindow(browser)
@@ -188,7 +189,15 @@ final class SidebarPressTests: XCTestCase {
             }
         }
         window.contentView?.layoutSubtreeIfNeeded()
-        let cross = NSPoint(x: browser.prefs.sideWidth - 15, y: rowPoint(0, in: window).y)
+        // The new page-facing gutter is outside the row's close target.
+        for x in [CGFloat(5), browser.prefs.sideWidth - 5] {
+            let gutter = NSPoint(x: x, y: rowPoint(0, in: window).y)
+            try await send(.leftMouseDown, at: gutter, in: window)
+            try await send(.leftMouseUp, at: gutter, in: window)
+            XCTAssertEqual(browser.tabs.count, tabs.count)
+            XCTAssertEqual(browser.activeID, active, "Both outer margins must be outside tab selection")
+        }
+        let cross = NSPoint(x: browser.prefs.sideWidth - 41, y: rowPoint(0, in: window).y)
         try await send(.leftMouseDown, at: cross, in: window)
         try await send(.leftMouseUp, at: cross, in: window)
         XCTAssertFalse(browser.tabs.contains { $0 === tabs[0] })
@@ -336,9 +345,9 @@ final class SidebarPressTests: XCTestCase {
         activationPolicy = NSApp.activationPolicy()
         NSApp.setActivationPolicy(.prohibited)
         let prefs = Shared.prefs
-        let previous = (prefs.sidebar, prefs.usesTabGroups, prefs.splitView, prefs.listsPins, prefs.roomyTabs)
+        let previous = (prefs.sidebar, prefs.usesTabGroups, prefs.splitView, prefs.listsPins, prefs.roomyTabs, prefs.liquidGlass)
         restorePreferences = {
-            (prefs.sidebar, prefs.usesTabGroups, prefs.splitView, prefs.listsPins, prefs.roomyTabs) = previous
+            (prefs.sidebar, prefs.usesTabGroups, prefs.splitView, prefs.listsPins, prefs.roomyTabs, prefs.liquidGlass) = previous
         }
         let browser = Browser(record: WindowRecord())
         browsers.append(browser)

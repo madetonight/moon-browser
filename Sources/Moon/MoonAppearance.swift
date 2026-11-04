@@ -1,7 +1,15 @@
 import AppKit
 import SwiftUI
 
-/// Moon keeps Search's geometry and motion; glass is an explicit local option.
+/// Shared contour for the sidebar, its content inset and its shadow.
+enum SidebarSurface {
+    static let radius: CGFloat = 18
+    static func insets(onRight: Bool) -> EdgeInsets {
+        EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
+    }
+}
+
+/// Glass is an explicit local option.
 struct MoonWindowGround: View {
     let glass: Bool
     let fullscreen: Bool
@@ -31,22 +39,39 @@ private struct MoonVibrancy: NSViewRepresentable {
     func updateNSView(_ view: NSVisualEffectView, context: Context) {}
 }
 
-/// One continuous glass surface, flush with the window's bounds. Both the
-/// backdrop and native glass share the same clip; no rectangular backing,
-/// inset outline or second shadow sits outside its rounded corners.
-struct MoonSidebarGlass: View {
+/// One native, adaptive glass surface. An opaque vibrancy view underneath
+/// would conceal the content being sampled and flatten its depth.
+struct MoonSidebarGlass: ViewModifier {
     let enabled: Bool
+    let insets: EdgeInsets
+    let look: Look
+    @Environment(\.colorScheme) private var inheritedScheme
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
-    var body: some View {
+    func body(content: Content) -> some View {
         if enabled && !reduceTransparency {
-            let shape = RoundedRectangle(cornerRadius: 14, style: .continuous)
-            MoonVibrancy()
-                .clipShape(shape)
-                .glassEffect(.regular.tint(Palette.frame.opacity(0.12)), in: shape)
-                .clipShape(shape)
-                .allowsHitTesting(false)
+            // Keep labels and controls above the material. Applying glass to
+            // the entire subtree also adapts their tint against page content,
+            // making resting footer icons almost disappear over bright pages.
+            content.background {
+                Color.clear
+                    .glassEffect(.regular.tint(Palette.frame.opacity(0.8)), in: SidebarContour(insets: insets))
+                    .allowsHitTesting(false)
+            }
+                .environment(\.colorScheme, look == .dark ? .dark : look == .light ? .light : inheritedScheme)
+        } else {
+            content
         }
+    }
+}
+
+private struct SidebarContour: Shape {
+    let insets: EdgeInsets
+    func path(in rect: CGRect) -> Path {
+        let surface = CGRect(x: rect.minX + insets.leading, y: rect.minY + insets.top,
+                             width: max(0, rect.width - insets.leading - insets.trailing),
+                             height: max(0, rect.height - insets.top - insets.bottom))
+        return RoundedRectangle(cornerRadius: SidebarSurface.radius, style: .continuous).path(in: surface)
     }
 }
 

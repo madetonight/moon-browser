@@ -8,7 +8,7 @@ import SwiftUI
 // itself, and — so nothing gets lost — the switches from earlier versions
 // that are still off. Nothing else: few words (Drice). Closed, it
 // doesn't come back for that version. Not after a fresh install: the welcome
-// is for that. Every version's notes are in Settings › About › What's New…
+// is for that. This version's notes are in Settings › About › What's New…
 //
 // A release edits `toggles` (its new switches, marked with its version),
 // `releases` (that it has a card) and `notes` (what it brought).
@@ -138,38 +138,18 @@ enum WhatsNew {
         let fixed: [String]
     }
 
-    /// Newest first.
+    /// Only the current release is shown. Release preparation verifies its version.
     static let notes: [Notes] = [
-        Notes(version: "0.3.5", date: "2 November 2026",
-              headline: "Smoother hover, and a smaller Moon.",
-              new: [],
-              better: ["Tab hover highlights ease in and out with a short, interruption-friendly transition.",
-                       "Native icon compression reduces installed app size while keeping the Fluid Dusk design."],
-              fixed: ["Leaving a tab no longer clears its hover highlight abruptly.",
-                      "Close controls and tab selection remain immediate during rapid crossings."]),
-        Notes(version: "0.3.4", date: "2 November 2026",
-              headline: "Fluid Dusk, a new Moon icon and a simpler welcome.",
-              new: ["A liquid-glass gradient app icon in Moon's blue and midnight palette.",
-                    "A three-step Moon welcome with optional imports and layout choices."],
-              better: ["A smaller production app and update framework for Apple silicon.",
-                       "Idle tabs prepare snapshots one at a time to avoid overlapping batches."],
-              fixed: ["Moon branding throughout onboarding and About, with creator credits.",
-                      "Onboarding keeps focus away from the browser controls underneath.",
-                      "Password import starts off and browser discovery waits for your choice."]),
-        Notes(version: "0.3.3", date: "2 November 2026",
-              headline: "Website translation, right beside its sidebar button.",
-              new: ["A compact language menu opens beside Translate, with nine default languages and more supported choices.",
-                    "Choose a language to translate immediately; Show Original and Cancel remain close at hand."],
-              better: ["The translator keeps an auto-hidden sidebar visible and follows the sidebar or horizontal toolbar.",
-                       "View › Translate Website opens the same anchored menu."],
-              fixed: ["Extension popup sizing checks account for both scrollbar modes."]),
-        Notes(version: "0.3.2", date: "2 November 2026",
-              headline: "Moon's first published beta, with signed in-app updates.",
-              new: ["Native WebKit browsing with sidebar tabs, multiple windows, the Moon welcome page and optional Liquid Glass.",
-                    "A full-gradient app icon and Downloads beside Bookmarks.",
-                    "Signed in-app updates and a drag-to-Applications installer."],
-              better: ["A subtle hover highlight with stable tab titles and close controls."],
-              fixed: [])
+        Notes(version: "0.4.2", date: "4 November 2026",
+              headline: "Meet Orbit. A little perspective on your time in Moon.",
+              new: ["Orbit activity tracking, with a quick summary beside Translate in the sidebar.",
+                    "Native activity summaries plus the full ActivityWatch workspace: timelines, category sets, reports, trends, raw data and advanced tools.",
+                    "Optional local ActivityWatch engine, compatible watchers and sync, protected native API-key storage, and privacy-first Moon tracking."],
+              better: ["Symmetric sidebar margins and smoother, continuous glass surfaces.",
+                       "Faster sidebar reveal with consistent easing and interruption handling.",
+                       "What's New shows only the latest release, checked against the app version before shipping."],
+              fixed: ["Symmetric sidebar padding and a responsive footer that keeps Translate and Orbit visible at narrow widths.",
+                      "Native sidebar animation completion no longer interferes across windows."])
     ]
 }
 
@@ -244,7 +224,7 @@ struct WhatsNewCard: View {
     }
 }
 
-/// Every version's notes, newest first: Settings › About › What's New…
+/// The current version's notes: Settings › About › What's New…
 struct ReleaseNotesPanel: View {
     let close: () -> Void
 

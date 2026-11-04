@@ -1,17 +1,12 @@
-# Moon 0.4.0 beta
+# Moon 0.4.2 beta
 
-Personal interface colors, consistent sidebar titles and smoother hover feedback.
+Meet **Orbit**, your time at a glance, built for Moon and macOS.
 
-- The new Pearl Current app icon blends white, icy blue and cobalt with subtle glass depth.
-- Settings → Appearance → Colors adds separate light and dark palettes for background, foreground surfaces and text, an optional accent, and a reset to Moon defaults. Website colors are unchanged.
-- Sidebar highlights, title brightness, close buttons and text-edge masks now ease in over 160 ms and ease out over 140 ms.
-- Interrupted fades continue from their visible opacity, and unrelated title/theme updates do not restart them. Tab titles, close targets and selection stay immediate.
-- Sidebar tabs always show their page or custom title, including the selected tab. The address-display option now applies to horizontal tabs; connection warnings retain a separate indicator.
-- The decorative native highlight ignores pointer input at both framework levels, preserving row tracking and immediate close-button targets.
-- Reduce Motion keeps hover changes instant.
-- Native high-resolution icon compression keeps the installed app around 11 MB while preserving the small icon representations.
-- Moon's current browser features remain included.
+- A sidebar summary beside Translate, and a native Orbit window with Moon and Mac activity summaries.
+- Connect to the official local ActivityWatch engine for its complete workspace: activity and multi-device views, timeline swimlanes and filters, category sets and priorities, trends, time spiral, work and billable reports, stopwatch, alerts, search, graphs, query explorer, raw events, import/export and privacy settings.
+- ActivityWatch runs separately so Moon stays small and sandboxed. Browser/editor watchers, notifications, AI services and optional sync retain their own setup and permission requirements. No Mac-wide watchers or cloud services are enabled automatically.
+- Moon tracking starts off. It stores website names and hourly totals locally for 30 days and excludes private tabs. When connected, sanitized origins can be sent to the local ActivityWatch engine; full URLs, paths, searches, passwords and page contents are not shared. Native API keys stay in Keychain and never enter web scripts or URLs.
+- Symmetric sidebar margins and a responsive footer that keeps Bookmarks, Downloads, Translate and Orbit visible even at narrow widths.
+- What's New shows only the current release and is checked against the app version before shipping.
 
-Apple silicon; macOS 26 or later. This beta is Apple Development signed and **not Apple-notarized**. Sparkle authenticates updates; it does not confer Gatekeeper trust.
-
-Connected Moon builds can use Settings → About → Check now. Older builds with updates disabled need a one-time manual installation. Source and MIT attribution notices accompany this release.
+Apple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized. The optional ActivityWatch companion is distributed separately by its authors.

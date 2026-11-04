@@ -60,6 +60,7 @@ extension Browser {
 struct Fold: View {
     @ObservedObject var browser: Browser
     @ObservedObject var prefs: Preferences
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
     /// The column going back in, a moment after the pointer left it.
     @State private var leaving: DispatchWorkItem?
@@ -74,11 +75,8 @@ struct Fold: View {
     /// How far past the window's edge, on the column's side, the pointer
     /// still counts as on it.
     private static let overshoot: CGFloat = 48
-    /// The grace before the column goes back in. With the time the slide
-    /// takes to start, the column begins to go as soon after the pointer
-    /// leaves as Dia's does. Arc doesn't wait at all, which loses the column
-    /// to a hand that overshoots on the way back in.
-    private static let grace: TimeInterval = 0.065
+    /// A short grace absorbs pointer overshoot without restarting the reveal.
+    private static let grace: TimeInterval = 0.09
     /// How far down from the top, in full screen, the edge leaves the
     /// window's buttons alone: the menu bar and the title bar macOS brings
     /// down with it.
@@ -88,7 +86,7 @@ struct Fold: View {
     /// How long the pointer rests on the edge before a column folded for
     /// good comes out. Long enough to cross the edge, short enough not to be
     /// waited for.
-    private static let dwell: TimeInterval = 0.15
+    private static let dwell: TimeInterval = 0.045
 
     var body: some View {
         ZStack(alignment: onRight ? .topTrailing : .topLeading) {
@@ -140,12 +138,11 @@ struct Fold: View {
                     // again from every row, icon and title on each frame of
                     // the slide, the column's full height over: in full
                     // screen, the whole screen's, and the slide lagged there.
-                    // The column's own ground is opaque, so it is the same
-                    // rectangle either way. It wears the window's ground, as
-                    // it does beside the page's card (see CardEdge), or its
-                    // own white where the page is no card.
+                    // Glass owns its shadow, with no opaque plane beneath it.
+                    // The flat surface's shadow follows the same rounded inset.
                     SideBar(browser: browser, prefs: prefs, onFrame: browser.asCards)
-                        .modifier(FoldShadow(x: onRight ? -4 : 4, behind: true, strength: browser.peeking ? 1 : 0))
+                        .modifier(FoldShadow(x: onRight ? -4 : 4, behind: true, strength: browser.peeking ? 1 : 0,
+                                             sidebar: true, glass: prefs.liquidGlass && !reduceTransparency, onRight: onRight))
                         .offset(x: browser.peeking ? 0 : (onRight ? prefs.columnWidth : -prefs.columnWidth))
                         .allowsHitTesting(browser.peeking)
                 }
@@ -218,6 +215,9 @@ struct Fold: View {
         .onChange(of: browser.translationOpen) { _, open in
             if !open, !inside, browser.peeking { peek(false) }
         }
+        .onChange(of: browser.orbitOpen) { _, open in
+            if !open, !inside, browser.peeking { peek(false) }
+        }
     }
 
     /// A popover opened from a button in the column, still open: the
@@ -225,7 +225,7 @@ struct Fold: View {
     /// it along, so it holds the column out wherever the pointer has gone,
     /// on the way to a bookmark over the page included (#88).
     private var holding: Bool {
-        if browser.bookmarksOpen || browser.translationOpen { return true }
+        if browser.bookmarksOpen || browser.translationOpen || browser.orbitOpen { return true }
         if #available(macOS 15.4, *), Extensions.shared.menuOpen { return true }
         return false
     }
@@ -372,8 +372,7 @@ struct Fold: View {
         // comes down with the menu bar; hidden or slid away here, they were
         // missing from it, or out of reach behind the column (#241).
         if browser.window?.styleMask.contains(.fullScreen) == true {
-            bar.layer?.removeAnimation(forKey: "fold")
-            bar.isHidden = false
+            Fold.reset(bar, hidden: false)
             return
         }
         if prefs.sidebar {
@@ -388,13 +387,12 @@ struct Fold: View {
         Links.window?.standardWindowButton(.closeButton)?.superview
     }
 
-    /// Bumped by every slide, so one that was overtaken doesn't hide the
-    /// lights on its way out.
-    private static var slides = 0
+    /// Per-layer ownership: another window's slide cannot cancel completion.
+    private static let slideToken = "moonSidebarSlide"
 
     /// Drop an overtaken slide when the column changes sides.
     static func reset(_ bar: NSView, hidden: Bool) {
-        slides += 1
+        bar.layer?.setValue(nil, forKey: slideToken)
         bar.layer?.removeAnimation(forKey: "fold")
         bar.isHidden = hidden
     }
@@ -403,20 +401,20 @@ struct Fold: View {
     /// does. Shown or hidden at once, they stood in their place while the
     /// column was still sliding in under them, and vanished before it had
     /// gone. So they come in from the chosen edge and go back off it, on the
-    /// column's own spring (Motion.fold, in Core Animation's terms) — from
+    /// column's own timing curve — from
     /// wherever they are, when the pointer turns back halfway. `up` sends
     /// the strip's lights off the top edge.
     static func slide(_ bar: NSView, off: Bool, by width: CGFloat, up: Bool = false,
-                      right: Bool = false) {
-        slides += 1
-        let turn = slides
+                      right: Bool = false, reduceMotion: Bool? = nil) {
         guard let layer = bar.layer else {
             bar.isHidden = off
             return
         }
+        let turn = UUID().uuidString
+        layer.setValue(turn, forKey: slideToken)
         // With Reduce Motion on, the column comes and goes at once, and the
         // lights with it.
-        if Motion.reduced {
+        if reduceMotion ?? Motion.reduced {
             layer.removeAnimation(forKey: "fold")
             bar.isHidden = off
             return
@@ -442,26 +440,24 @@ struct Fold: View {
             bar.isHidden = off
             return
         }
-        let fold = Motion.fold(out: !off)
-        let spring = CASpringAnimation(keyPath: path)
-        spring.mass = 1
-        spring.stiffness = pow(2 * .pi / fold.response, 2)
-        spring.damping = 4 * .pi * fold.damping / fold.response
-        spring.fromValue = from
-        spring.toValue = to
-        spring.duration = spring.settlingDuration
-        spring.fillMode = .forwards
-        spring.isRemovedOnCompletion = false
+        let c = Motion.foldCurve
+        let animation = CABasicAnimation(keyPath: path)
+        animation.fromValue = from
+        animation.toValue = to
+        animation.duration = Motion.foldDuration(out: !off)
+        animation.timingFunction = CAMediaTimingFunction(controlPoints: c.0, c.1, c.2, c.3)
+        animation.fillMode = .forwards
+        animation.isRemovedOnCompletion = false
         bar.isHidden = false
         CATransaction.begin()
         CATransaction.setCompletionBlock {
             MainActor.assumeIsolated {
-                guard turn == slides else { return }
+                guard layer.value(forKey: slideToken) as? String == turn else { return }
                 layer.removeAnimation(forKey: "fold")
                 bar.isHidden = off
             }
         }
-        layer.add(spring, forKey: "fold")
+        layer.add(animation, forKey: "fold")
         CATransaction.commit()
     }
 }
@@ -484,10 +480,24 @@ private struct FoldShadow: ViewModifier {
     /// page until the slide was over.
     var behind = false
     var strength: Double = 1
+    var sidebar = false
+    var glass = false
+    var onRight = false
 
     func body(content: Content) -> some View {
         let color = Color.black.opacity(0.14 * strength)
-        if behind {
+        if sidebar && glass {
+            // Native glass owns its contour and shadow. A solid shadow plane
+            // here used to erase transparency and leave square corners.
+            content
+        } else if sidebar {
+            content.background {
+                RoundedRectangle(cornerRadius: SidebarSurface.radius, style: .continuous)
+                    .fill(Palette.ground)
+                    .padding(SidebarSurface.insets(onRight: onRight))
+                    .shadow(color: color, radius: 14, x: x, y: y)
+            }
+        } else if behind {
             content.background { Palette.ground.shadow(color: color, radius: 20, x: x, y: y) }
         } else {
             content.shadow(color: color, radius: 20, x: x, y: y)

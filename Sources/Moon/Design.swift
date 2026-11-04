@@ -275,20 +275,14 @@ enum Motion {
     /// under the pointer, about 3 points on a pill and 7 on a column row.
     static let give: CGFloat = 0.97
 
-    /// The folded column or strip coming out over the page, and going back.
-    /// On glide it was slow both ways, next to Arc and Dia timed frame by
-    /// frame on the same Mac: each slides its sidebar 90% of the way out in
-    /// about 95ms and back in about 70ms, where glide took over 200ms. These
-    /// match them. Going in is damped all the way, since nothing is arriving
-    /// to settle. Fold.slide moves the window's buttons on the same numbers,
-    /// in Core Animation's terms.
-    static func fold(out: Bool) -> (response: Double, damping: Double) {
-        out ? (0.14, 0.86) : (0.13, 1)
-    }
+    /// A bounded ease-out: no spring tail or overshoot on rapid reversals.
+    /// The sidebar and native window buttons use the identical curve.
+    static let foldCurve: (Swift.Float, Swift.Float, Swift.Float, Swift.Float) = (0.2, 0.85, 0.25, 1)
+    static func foldDuration(out: Bool) -> Double { out ? 0.14 : 0.12 }
 
     static func folding(out: Bool) -> Animation? {
-        let spring = fold(out: out)
-        return reduced ? nil : .spring(response: spring.response, dampingFraction: spring.damping)
+        let c = foldCurve
+        return reduced ? nil : .timingCurve(Double(c.0), Double(c.1), Double(c.2), Double(c.3), duration: foldDuration(out: out))
     }
 }
 

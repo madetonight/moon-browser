@@ -171,6 +171,7 @@ final class Browser: NSObject, ObservableObject {
     @Published var newsShowing = false
     /// The website translator, available from the sidebar and View menu.
     @Published var translationOpen = false
+    @Published var orbitOpen = false
     /// Every version's notes: Settings › About › What's New…, in a tab.
     var notesShowing: Bool {
         get { pageTab(.notes) != nil }

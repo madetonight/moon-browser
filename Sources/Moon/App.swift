@@ -22,6 +22,10 @@ struct MoonApp: App {
 
     init() {
         MoonMigration.run()
+        DispatchQueue.main.async {
+            _ = Orbit.shared
+            if OrbitEngine.shared.enabled { OrbitEngine.shared.refresh() }
+        }
         // Settings › General › Start with a fresh window: the files are cut
         // down before any window reads its row from them.
         if Store.settings.bool(forKey: Preferences.freshKey) {
@@ -351,6 +355,7 @@ struct MoonApp: App {
                     .shortcut("history.show")
                 Button("Downloads…") { browser.hoarding = true }
                     .shortcut("history.downloads")
+                Button("Orbit Activity…") { Orbit.shared.showDetail(profile: browser.profileID) }
                 Divider()
                 Button("Clear Browsing Data…") { browser.recallMode = .clearing }
                     .shortcut("history.clearData")

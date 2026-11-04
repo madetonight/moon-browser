@@ -1,5 +1,11 @@
 # Moon releases and in-app updates
 
+Before each feature release, update `Support/Info.plist`, replace the single
+current `WhatsNew.notes` entry in `Sources/Moon/WhatsNew.swift`, and update
+`Support/Beta-Release-Notes.md`. Run `python3 Scripts/check-release-notes.py`.
+Both release-preparation paths and source CI enforce the one-current-version
+rule so Settings never ships stale release notes or a historical list.
+
 Moon embeds the exact Sparkle 2.10.1 package and uses its installer XPC service
 inside App Sandbox. Automatic checks run hourly when a real signed feed is enabled;
 automatic download/install-on-quit follows the existing Settings switch. Check Now

@@ -15,6 +15,10 @@ final class BoundedFetch: NSObject, URLSessionDataDelegate, @unchecked Sendable 
     private var cancelled = false
     private init(policy: ResourcePolicy, limit: Int) { self.policy = policy; self.limit = limit }
     static func data(from url: URL, policy: ResourcePolicy, limit: Int, timeout: TimeInterval = 30) async throws -> Data {
+        try await data(request: URLRequest(url: url), policy: policy, limit: limit, timeout: timeout)
+    }
+    static func data(request: URLRequest, policy: ResourcePolicy, limit: Int, timeout: TimeInterval = 30) async throws -> Data {
+        guard let url = request.url else { throw URLError(.badURL) }
         guard policy.allows(url) else { throw URLError(.unsupportedURL) }
         let transfer = BoundedFetch(policy: policy, limit: limit)
         return try await withTaskCancellationHandler {
@@ -30,7 +34,7 @@ final class BoundedFetch: NSObject, URLSessionDataDelegate, @unchecked Sendable 
                 let queue = OperationQueue(); queue.maxConcurrentOperationCount = 1; queue.qualityOfService = .utility
                 let session = URLSession(configuration: configuration, delegate: transfer, delegateQueue: queue)
                 transfer.session = session
-                let task = session.dataTask(with: url); transfer.task = task
+                let task = session.dataTask(with: request); transfer.task = task
                 transfer.lock.unlock(); task.resume()
             }
         } onCancel: { transfer.cancel() }

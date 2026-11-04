@@ -1,5 +1,6 @@
 #!/bin/bash
 set -Eeuo pipefail
+python3 "$(dirname "$0")/check-release-notes.py"
 [[ "${MOON_ALLOW_SIGNING:-0}" == 1 ]] || { printf '%s\n' 'Release signing is paused. Set MOON_ALLOW_SIGNING=1 only when ready to authorize private-key access.' >&2; exit 2; }
 cd "$(dirname "$0")/.."
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"

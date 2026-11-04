@@ -35,7 +35,7 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.4.0</string>
+	<string>0.4.2</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -49,11 +49,15 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>2026110301</string>
+	<string>2026110402</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.productivity</string>
+	<key>LSFileQuarantineEnabled</key>
+	<true/>
 	<key>LSMinimumSystemVersion</key>
 	<string>26.0</string>
+	<key>MoonUpdateFeedReady</key>
+	<false/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoadsInWebContent</key>
@@ -81,35 +85,31 @@
 	<string>NSApplication</string>
 	<key>OSAScriptingDefinition</key>
 	<string>Moon.sdef</string>
+	<key>SUAllowsAutomaticUpdates</key>
+	<true/>
 	<key>SUAutomaticallyUpdate</key>
 	<true/>
 	<key>SUEnableAutomaticChecks</key>
 	<true/>
-	<key>SUFeedURL</key>
-	<string>https://raw.githubusercontent.com/madetonight/moon-browser/main/appcast.xml</string>
-	<key>SUAllowsAutomaticUpdates</key>
-	<true/>
+	<key>SUEnableDownloaderService</key>
+	<false/>
 	<key>SUEnableInstallerLauncherService</key>
 	<true/>
-	<key>SUEnableDownloaderService</key>
+	<key>SUEnableJavaScript</key>
 	<false/>
 	<key>SUEnableSystemProfiling</key>
 	<false/>
-	<key>SUEnableJavaScript</key>
-	<false/>
-	<key>SURequireSignedFeed</key>
-	<true/>
-	<key>SUVerifyUpdateBeforeExtraction</key>
-	<true/>
-	<key>SUSignedFeedFailureExpirationInterval</key>
-	<integer>0</integer>
-	<key>SUScheduledCheckInterval</key>
-	<integer>3600</integer>
-	<key>MoonUpdateFeedReady</key>
-	<false/>
+	<key>SUFeedURL</key>
+	<string>https://raw.githubusercontent.com/madetonight/moon-browser/main/appcast.xml</string>
 	<key>SUPublicEDKey</key>
 	<string>et0mVmdWvQuiWMhCa71KL1XjTcdRRltiQ5ijwiMwlwA=</string>
-	<key>LSFileQuarantineEnabled</key>
+	<key>SURequireSignedFeed</key>
+	<true/>
+	<key>SUScheduledCheckInterval</key>
+	<integer>3600</integer>
+	<key>SUSignedFeedFailureExpirationInterval</key>
+	<integer>0</integer>
+	<key>SUVerifyUpdateBeforeExtraction</key>
 	<true/>
 </dict>
 </plist>
