@@ -893,6 +893,15 @@ private struct SideFoot: View {
                 }
             }
             .frame(width: max(0, (availableWidth ?? prefs.sideWidth) - 20), alignment: .leading)
+            .background {
+                if prefs.liquidGlass {
+                    // A quiet backing keeps these permanent actions readable
+                    // when glass samples a bright or moving web page.
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(Palette.frame.opacity(0.94))
+                        .allowsHitTesting(false)
+                }
+            }
             .padding(.horizontal, 10)
             .padding(.bottom, 10)
         }

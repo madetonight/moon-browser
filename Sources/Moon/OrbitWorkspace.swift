@@ -13,6 +13,7 @@ struct OrbitWorkspace: View {
     @State private var selection: Section? = .overview
     @State private var apiKey = ""
     @State private var keyError = false
+    @State private var workspaceRevision = UUID()
 
     enum Section: String, CaseIterable, Identifiable {
         case overview = "Overview", moon = "Moon activity", activity = "All activity", timeline = "Timeline"
@@ -84,7 +85,7 @@ struct OrbitWorkspace: View {
                     setup
                 } else if let route = selection?.route {
                     if engine.enabled {
-                        OrbitEngineWebView(route: route).id(route)
+                        OrbitEngineWebView(route: route).id(route + workspaceRevision.uuidString)
                     } else {
                         setup
                     }
@@ -100,7 +101,7 @@ struct OrbitWorkspace: View {
                 Text(selection?.rawValue ?? "Overview").font(.system(size: 13, weight: .medium))
             }
             ToolbarItem {
-                Button { engine.refresh() } label: { Image(systemName: "arrow.clockwise") }
+                Button { engine.refresh(); workspaceRevision = UUID() } label: { Image(systemName: "arrow.clockwise") }
                     .help("Refresh local activity").disabled(!engine.enabled || engine.refreshing)
             }
         }
@@ -224,8 +225,10 @@ struct OrbitWorkspace: View {
 
 /// A separate, nonpersistent web store prevents the activity workspace from
 /// inheriting Moon website sessions, passwords, extensions or native bridges.
-private struct OrbitEngineWebView: NSViewRepresentable {
+struct OrbitEngineWebView: NSViewRepresentable {
     let route: String
+    // WebKit's content blocker grammar does not support regex alternation.
+    static let networkRules = #"[{"trigger":{"url-filter":"^https?://"},"action":{"type":"block"}},{"trigger":{"url-filter":"^wss?://"},"action":{"type":"block"}},{"trigger":{"url-filter":"^http://127[.]0[.]0[.]1:5600/"},"action":{"type":"ignore-previous-rules"}}]"#
     private static let store = WKWebsiteDataStore.nonPersistent()
     func makeCoordinator() -> Coordinator { Coordinator() }
     func makeNSView(context: Context) -> WKWebView {
@@ -239,9 +242,9 @@ private struct OrbitEngineWebView: NSViewRepresentable {
         let view = WKWebView(frame: .zero, configuration: config)
         view.navigationDelegate = context.coordinator; view.uiDelegate = context.coordinator
         view.isInspectable = false
-        let rules = #"[{"trigger":{"url-filter":"^(https?|wss?)://"},"action":{"type":"block"}},{"trigger":{"url-filter":"^http://127[.]0[.]0[.]1:5600/"},"action":{"type":"ignore-previous-rules"}}]"#
-        WKContentRuleListStore.default().compileContentRuleList(forIdentifier: "moon-orbit-local-only", encodedContentRuleList: rules) { [weak view] list, _ in
-            guard let view, let list else { return }
+        WKContentRuleListStore.default().compileContentRuleList(forIdentifier: "moon-orbit-local-only", encodedContentRuleList: Self.networkRules) { [weak view] list, _ in
+            guard let view else { return }
+            guard let list else { Coordinator.unavailable(view); return }
             view.configuration.userContentController.add(list)
             view.load(URLRequest(url: ActivityWatchEndpoint.workspace(route)))
         }
@@ -250,6 +253,15 @@ private struct OrbitEngineWebView: NSViewRepresentable {
     func updateNSView(_ view: WKWebView, context: Context) {}
 
     final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate, WKDownloadDelegate {
+        static func unavailable(_ view: WKWebView) {
+            view.loadHTMLString("<html><head><meta name='color-scheme' content='light dark'></head><body style='font:13px -apple-system;margin:40px'><h2>Workspace unavailable</h2><p>Open ActivityWatch, then use Refresh to retry the local workspace.</p></body></html>", baseURL: nil)
+        }
+        func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+            if (error as NSError).code != NSURLErrorCancelled { Self.unavailable(webView) }
+        }
+        func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+            if (error as NSError).code != NSURLErrorCancelled { Self.unavailable(webView) }
+        }
         func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
             guard let url = action.request.url else { decisionHandler(.cancel); return }
             let allowed = ActivityWatchEndpoint.allows(url) || url.absoluteString == "about:blank"
