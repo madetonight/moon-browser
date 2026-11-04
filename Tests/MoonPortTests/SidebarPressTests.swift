@@ -186,7 +186,11 @@ final class SidebarPressTests: XCTestCase {
             XCTAssertEqual(browser.tabs.count, tabs.count)
             XCTAssertEqual(browser.activeID, active, "Both outer margins must be outside tab selection")
         }
-        let cross = NSPoint(x: browser.prefs.sideWidth - 41, y: rowPoint(0, in: window).y)
+        // Click the centre of the 30-point close target, inside the visible
+        // glyph on both macOS 26 and later SwiftUI layouts.
+        let inset = SidebarSurface.insets(onRight: browser.prefs.sidePosition == .right).trailing
+        let cross = NSPoint(x: browser.prefs.sideWidth - inset - 10 - 15,
+                            y: rowPoint(0, in: window).y)
         // Gutter clicks can deliver a native mouse-exit on macOS 26. Re-enter
         // the row before stressing hover, as a real pointer must before it
         // can click the cross. Keep the margin checks out of that final state.
