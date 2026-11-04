@@ -23,7 +23,7 @@
 ## Navigation measurements
 
 Three alternating runs per version compared installed 0.4.2 with the signed
-0.4.3 candidate on an Apple M1 Pro Mac with 16 GiB RAM and macOS 27.2, using separate disposable browser profiles and
+0.4.3 candidate in the same test environment, using separate disposable browser profiles and
 normal WebKit scheduling. Each run navigated twelve times through a local
 HTTP/1.1 fixture containing 500 paragraphs and a 3840 × 2160 PNG. The first
 navigation was excluded from warm medians, giving 33 warm samples per version.
@@ -52,14 +52,18 @@ Every measured document retained the generated image's 3840 × 2160 natural
 resolution. The signed candidate played a generated 3840 × 2160 H.264 stream,
 with video-frame callbacks reporting the same decoded frame dimensions.
 
-The test windows were covered/backgrounded for automated timing. Their frame
-presentation was therefore subject to normal WebKit throttling. The standard
-total/dropped-frame counters returned zero and were marked unavailable, rather
-than interpreted as zero dropped frames. These runs do not certify foreground
-frame rate, HDR color accuracy, a particular DRM service, or a site's maximum
-streaming tier. Live screen capture was unavailable during the attempted visual
-playback check. Available stream quality still depends on the source, service,
-codec and hardware.
+The automated timing windows were covered/backgrounded, so their frame
+presentation was subject to normal WebKit throttling. The standard total/dropped
+frame counters returned zero and were marked unavailable, rather than interpreted
+as zero dropped frames.
+
+A subsequent foreground check used the installed app in a temporary private tab.
+The 4K image and video were visually reviewed. The H.264 video produced 145
+video-frame callbacks in 5.00 seconds (29.0 fps from a 30 fps source), with decoded
+frame dimensions of 3840 × 2160. The private tab was closed and its local server
+stopped afterward. These observations do not certify HDR color accuracy, every
+DRM service, sustained streaming under all conditions, or a site's maximum
+streaming tier. Available quality depends on the source, service, codec and hardware.
 
 ## Validation
 
@@ -70,7 +74,7 @@ After explicitly sleeping 37 tabs, it averaged 187.69 MB physical footprint,
 250.31 MB summed RSS, and 0.06% CPU. CPU 100% means one core. RSS can double-count
 shared pages. This is one controlled workload run, not a measurement of 38
 arbitrary websites or active streams, and it is not directly comparable with
-the older macOS 26 workload report.
+earlier workload measurements.
 
 The complete local suite passed: 503 checks passed and one existing WebKit check
 was skipped. New native checks cover stable script installation, content-world

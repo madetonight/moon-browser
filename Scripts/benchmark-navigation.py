@@ -23,7 +23,6 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--app', required=True)
 parser.add_argument('--output', required=True)
 parser.add_argument('--label', default='baseline')
-parser.add_argument('--media-seconds', type=float, default=5)
 args = parser.parse_args()
 fixture = Path('/private/tmp/MoonNavigationMedia')
 fixture.mkdir(exist_ok=True)
@@ -139,8 +138,8 @@ try:
         window.__frames++; window.__lastFrame={width:info.width,height:info.height,presented:info.presentedFrames};
         film.requestVideoFrameCallback(frame);
       }); film.src='/video.mp4'; film.play(); "started"''')
-    print(json.dumps({'stage': 'playing', 'app': str(app), 'label': args.label, 'seconds': args.media_seconds}), flush=True)
-    time.sleep(args.media_seconds)
+    print(json.dumps({'stage': 'playing', 'app': str(app), 'label': args.label, 'seconds': 5}), flush=True)
+    time.sleep(5)
     report['playback'] = json.loads(evaluate(tab, "JSON.stringify({time:film.currentTime,paused:film.paused,width:film.videoWidth,height:film.videoHeight,total:film.getVideoPlaybackQuality().totalVideoFrames,dropped:film.getVideoPlaybackQuality().droppedVideoFrames,rate:film.playbackRate,frameCallbacks:window.__frames,lastFrame:window.__lastFrame})"))
     report['playback']['quality_counters_available'] = report['playback']['total'] > 0
     assert report['playback']['width'] == 3840 and report['playback']['height'] == 2160, report['playback']
