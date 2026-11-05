@@ -6095,7 +6095,11 @@ extension Browser: WKNavigationDelegate, WKUIDelegate {
     func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
         cancelDisplay(for: webView)
         guard let navigation else { return }
-        tab(for: webView)?.extensionReturn.started(navigation, at: webView.url)
+        if let tab = anyTab(for: webView) {
+            tab.navigationLifecycle.started(navigation)
+            tab.failure = nil
+            tab.extensionReturn.started(navigation, at: webView.url)
+        }
     }
 
     func webView(_ webView: WKWebView, didReceiveServerRedirectForProvisionalNavigation navigation: WKNavigation!) {
@@ -6672,6 +6676,7 @@ extension Browser: WKNavigationDelegate, WKUIDelegate {
     }
 
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        guard anyTab(for: webView)?.navigationLifecycle.accepts(navigation) != false else { return }
         tab(for: webView)?.extensionReturn.finished(navigation)
         fail(webView, error)
     }
@@ -6681,6 +6686,7 @@ extension Browser: WKNavigationDelegate, WKUIDelegate {
         didFailProvisionalNavigation navigation: WKNavigation!,
         withError error: Error
     ) {
+        guard anyTab(for: webView)?.navigationLifecycle.accepts(navigation) != false else { return }
         tab(for: webView)?.extensionReturn.finished(navigation)
         fail(webView, error)
     }
@@ -6711,6 +6717,7 @@ extension Browser: WKNavigationDelegate, WKUIDelegate {
     }
 
     func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
+        guard anyTab(for: webView)?.navigationLifecycle.accepts(navigation) != false else { return }
         if websitePopup { cancelCapture() }
         popupTab(for: webView)?.popupGesture.clear()
         guard let tab = tab(for: webView) else {
@@ -6753,6 +6760,7 @@ extension Browser: WKNavigationDelegate, WKUIDelegate {
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        guard anyTab(for: webView)?.navigationLifecycle.accepts(navigation) != false else { return }
         // A page with nothing to lay out never has a first frame. Done is
         // done, and it is shown.
         (webView as? PageView)?.showFirstFrame()

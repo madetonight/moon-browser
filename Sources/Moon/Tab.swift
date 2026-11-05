@@ -285,6 +285,7 @@ final class Tab: ObservableObject, Identifiable {
     private(set) var built: PageView?
     private var configuration: WKWebViewConfiguration
     let extensionReturn = ExtensionReturnNavigation()
+    let navigationLifecycle = NavigationLifecycle()
 
     /// Whether its page was made with the extension controller in it — every
     /// ordinary tab, and a private one only when extensions were allowed
@@ -1368,6 +1369,7 @@ final class Tab: ObservableObject, Identifiable {
 
     func go(to url: URL) {
         loadRevision = UUID()
+        navigationLifecycle.invalidate()
         if let own = InternalPage(url: url) {
             show(own)
             return
@@ -1626,7 +1628,10 @@ final class Tab: ObservableObject, Identifiable {
 
     private func loadAndVerify(_ url: URL, state: Any? = nil, tries: Int = 0, revision: UUID? = nil) {
         let revision = revision ?? UUID()
-        if tries == 0 { loadRevision = revision }
+        if tries == 0 {
+            loadRevision = revision
+            navigationLifecycle.invalidate()
+        }
         guard loadRevision == revision else { return }
         // Wait for the stage to take the view back before loading into it. A
         // page loaded while its view is off any window boots as a hidden tab,
@@ -1874,6 +1879,7 @@ final class Tab: ObservableObject, Identifiable {
     /// next time anyone asks for it.
     private func discard() {
         loadRevision = UUID()
+        navigationLifecycle.invalidate()
         armedScripts = nil
         armedController = nil
         installedScripts = []

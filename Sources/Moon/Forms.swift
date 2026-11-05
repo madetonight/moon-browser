@@ -439,9 +439,21 @@ final class FormRelay: NSObject, WKScriptMessageHandler {
           window.webkit.messageHandlers.officeForms.postMessage({ kind: 'settled' });
         }, 400);
       }
-      new MutationObserver(function () {
-        if (!looking) looking = setTimeout(look, 250);
-      }).observe(document.documentElement, { childList: true, subtree: true });
+      function hasInput(node) {
+        return node.nodeType === 1 && (node.localName === 'input' || node.querySelector('input'));
+      }
+      new MutationObserver(function (records) {
+        if (looking) return;
+        // Inbox updates, chat text and composing a message do not change
+        // sign-in fields. Only inspect a changed subtree containing inputs.
+        var relevant = records.some(function (record) {
+          if (record.type === 'attributes') return hasInput(record.target);
+          return Array.prototype.some.call(record.addedNodes, hasInput)
+              || Array.prototype.some.call(record.removedNodes, hasInput);
+        });
+        if (relevant) looking = setTimeout(look, 250);
+      }).observe(document.documentElement, { childList: true, subtree: true, attributes: true,
+        attributeFilter: ['type', 'style', 'class', 'hidden'] });
 
       // Whether the caret is somewhere on the page that takes typing.
       //

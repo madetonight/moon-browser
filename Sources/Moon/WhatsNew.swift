@@ -140,15 +140,15 @@ enum WhatsNew {
 
     /// Only the current release is shown. Release preparation verifies its version.
     static let notes: [Notes] = [
-        Notes(version: "0.4.3", date: "4 November 2026",
-              headline: "Less waiting. More of the page.",
-              new: ["Swipe right on the sidebar to open the New Space card."],
-              better: ["Unchanged page scripts stay installed across navigation, avoiding repeated setup work.",
-                       "Ready pages appear immediately, and sleeping-tab previews clear on the first painted frame.",
-                       "A simpler sidebar dock: Extensions, Bookmarks, Downloads, Translate and Orbit."],
-              fixed: ["A delayed recovery cannot replace a newer navigation or restart a page that is still loading.",
-                      "Profile and space buttons no longer occupy the sidebar dock; your existing data remains available.",
-                      "Native image resolution, video playback, caching and connection handling remain intact."])
+        Notes(version: "0.4.4", date: "4 November 2026",
+              headline: "Smoother inboxes. More reliable updates.",
+              new: [],
+              better: ["Gmail and other changing pages avoid unnecessary full-document sign-in scans.",
+                       "Temporary update connection failures receive two bounded retries when connected.",
+                       "Settings shows the actual update result or connection error."],
+              fixed: ["An older navigation's error or completion cannot cover a newer page.",
+                      "Starting a new page clears a previous loading error immediately.",
+                      "A normal no-new-update result stays successful instead of becoming an error."])
     ]
 }
 

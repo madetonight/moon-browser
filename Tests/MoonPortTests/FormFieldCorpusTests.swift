@@ -77,6 +77,41 @@ final class FormFieldCorpusTests: XCTestCase {
 
     // MARK: -
 
+    func testMessageUpdatesAvoidPasswordScansAndDynamicSignInStillWorks() async throws {
+        _ = try await judge(Fixture(file: "message-mutations", url: URL(string: "https://example.invalid/")!,
+                                   expect: "none", name: nil,
+                                   html: "<p id='message' data-probe tabindex='0'>Inbox</p><div id='rows'></div>"))
+        let web = try XCTUnwrap(holding.compactMap { $0 as? WKWebView }.last)
+        let relay = try XCTUnwrap(holding.compactMap { $0 as? Quiet }.last)
+        // Let the two initial delayed form checks finish before measuring
+        // mutation-driven work, as a settled inbox would.
+        try await Task.sleep(for: .milliseconds(2400))
+        _ = try await call(web, """
+        window.passwordScans = 0;
+        const query = document.querySelectorAll.bind(document);
+        document.querySelectorAll = function (selector) {
+          if (selector === 'input[type="password"]') window.passwordScans++;
+          return query(selector);
+        };
+        for (let i=0; i<100; i++) document.getElementById('message').textContent = 'Message ' + i;
+        document.getElementById('rows').innerHTML = '<div>Updated row</div>'.repeat(200);
+        return true;
+        """)
+        try await Task.sleep(for: .milliseconds(400))
+        let scans = try await call(web, "return window.passwordScans;") as? Int
+        XCTAssertEqual(scans, 0, "Message and inbox mutations must not trigger a whole-document password scan")
+        _ = try await call(web, """
+        const form = document.createElement('form'); form.id = 'dynamic-login';
+        form.innerHTML = '<input autocomplete="username"><input type="password">';
+        document.body.append(form); return true;
+        """)
+        try await Task.sleep(for: .milliseconds(400))
+        XCTAssertTrue(relay.kinds.contains("form"), "A dynamically inserted login must still be detected")
+        _ = try await call(web, "document.getElementById('dynamic-login').remove(); return true;")
+        try await Task.sleep(for: .milliseconds(800))
+        XCTAssertTrue(relay.kinds.contains("settled"), "Removing the login must still complete the sign-in lifecycle")
+    }
+
     private static func corpus() throws -> [Fixture] {
         let names = try FileManager.default.contentsOfDirectory(atPath: fixtures.path)
             .filter { $0.hasSuffix(".html") }.sorted()
@@ -129,7 +164,10 @@ final class FormFieldCorpusTests: XCTestCase {
     }
 
     private final class Quiet: NSObject, WKScriptMessageHandler {
-        func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {}
+        var kinds: [String] = []
+        func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
+            if let body = message.body as? [String: Any], let kind = body["kind"] as? String { kinds.append(kind) }
+        }
     }
 
     private final class Loaded: NSObject, WKNavigationDelegate {

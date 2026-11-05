@@ -916,8 +916,7 @@ struct SettingsPanel: View {
         switch updater.stage {
         case .none:
             if let issue = updater.configurationIssue { return issue }
-            return updater.lastChecked.map { "Checked \($0.formatted(.relative(presentation: .named))), every hour on its own" }
-                ?? "Checked every hour on its own"
+            return updater.status
         case .fetching(let next):
             return next.notes ?? "Quietly, in the background. Nothing you have set is touched"
         case .ready(let next):

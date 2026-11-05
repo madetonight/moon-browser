@@ -1,5 +1,6 @@
 import AppKit
 import Combine
+import Network
 import Security
 import Sparkle
 
@@ -47,6 +48,11 @@ final class Updater: NSObject, ObservableObject, SPUUpdaterDelegate {
     private var completion: ((Release?) -> Void)?
     private var say: ((String) -> Void)?
     private var bag: Set<AnyCancellable> = []
+    private var retry = UpdateRetry()
+    private var retryTask: Task<Void, Never>?
+    private var pendingTransportError: NSError?
+    private var networkAvailable = true
+    private var networkMonitor: NWPathMonitor?
 
     /// A missing feed or failed check must never be reported as up to date.
     nonisolated static func configurationProblem(_ info: [String: Any]) -> String? {
@@ -82,9 +88,23 @@ final class Updater: NSObject, ObservableObject, SPUUpdaterDelegate {
             status = "Signed updates checked every hour"
             candidate.updater.publisher(for: \.sessionInProgress)
                 .receive(on: DispatchQueue.main).assign(to: &$checking)
+            candidate.updater.publisher(for: \.sessionInProgress)
+                .receive(on: DispatchQueue.main).sink { [weak self] busy in
+                    if !busy { self?.scheduleTransportRetry() }
+                }.store(in: &bag)
             candidate.updater.publisher(for: \.lastUpdateCheckDate)
                 .receive(on: DispatchQueue.main).assign(to: &$lastChecked)
             applyAutomaticPreference()
+            let monitor = NWPathMonitor()
+            monitor.pathUpdateHandler = { [weak self] path in
+                let available = path.status == .satisfied
+                Task { @MainActor [weak self] in
+                    self?.networkAvailable = available
+                    if available { self?.scheduleTransportRetry() }
+                }
+            }
+            monitor.start(queue: DispatchQueue(label: "org.moonbrowser.update-connectivity", qos: .utility))
+            networkMonitor = monitor
             NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
                 .receive(on: DispatchQueue.main).sink { [weak self] _ in self?.applyAutomaticPreference() }.store(in: &bag)
         } catch { status = "Updates could not start: \(error.localizedDescription)" }
@@ -98,7 +118,11 @@ final class Updater: NSObject, ObservableObject, SPUUpdaterDelegate {
     func checkByHand() {
         start()
         guard let controller else { say?(status); return }
-        guard controller.updater.canCheckForUpdates else { return }
+        guard controller.updater.canCheckForUpdates else {
+            say?("An update check or installation is already in progress")
+            return
+        }
+        clearTransportRetry(reset: true)
         controller.checkForUpdates(nil)
     }
     func check(then done: @escaping (Release?) -> Void) {
@@ -119,20 +143,59 @@ final class Updater: NSObject, ObservableObject, SPUUpdaterDelegate {
                 sha256: nil, notes: nil, minimumSystemVersion: item.minimumSystemVersion)
     }
     func updater(_ updater: SPUUpdater, didFindValidUpdate item: SUAppcastItem) {
+        clearTransportRetry(reset: false)
         let next = release(item)
         stage = updater.automaticallyDownloadsUpdates ? .fetching(next) : .waiting(next)
         status = "Moon \(next.version) is available"
         completion?(next); completion = nil
     }
     func updaterDidNotFindUpdate(_ updater: SPUUpdater) {
+        clearTransportRetry(reset: true)
         stage = .none; status = "Moon is up to date"
         completion?(nil); completion = nil
     }
     func updater(_ updater: SPUUpdater, didAbortWithError error: Error) {
+        // Sparkle ends an ordinary "no update" cycle with this sentinel too.
+        // didNotFindUpdate already supplied the successful result.
+        let failure = error as NSError
+        if failure.domain == SUSparkleErrorDomain, failure.code == Int(SUError.noUpdateError.rawValue) { return }
+        clearTransportRetry(reset: false)
         stage = .none
         installAndRelaunch = nil
         status = "Update check failed: \(error.localizedDescription)"
         completion?(nil); completion = nil
+        if UpdateRetry.isTransient(error as NSError) {
+            pendingTransportError = error as NSError
+            status = "Update connection interrupted — retrying when connected"
+            scheduleTransportRetry()
+        }
+    }
+    private func clearTransportRetry(reset: Bool) {
+        retryTask?.cancel()
+        retryTask = nil
+        pendingTransportError = nil
+        if reset { retry.reset() }
+    }
+    private func scheduleTransportRetry() {
+        guard !Store.testing, networkAvailable, retryTask == nil,
+              let error = pendingTransportError,
+              let updater = controller?.updater, updater.canCheckForUpdates else { return }
+        guard let delay = retry.nextDelay(for: error) else {
+            pendingTransportError = nil
+            status = "Update connection failed. Check your connection and try again."
+            return
+        }
+        // Sleeping suspends this task; only Sparkle's UI-bound state is used
+        // on the main actor. Never replace its downloader or signature checks.
+        retryTask = Task { @MainActor [weak self] in
+            do { try await Task.sleep(for: .seconds(delay)) } catch { return }
+            guard let self else { return }
+            retryTask = nil
+            guard networkAvailable, updater.canCheckForUpdates else { return }
+            pendingTransportError = nil
+            status = "Retrying the signed update check"
+            updater.checkForUpdatesInBackground()
+        }
     }
     func updater(_ updater: SPUUpdater, willInstallUpdateOnQuit item: SUAppcastItem, immediateInstallationBlock: @escaping () -> Void) -> Bool {
         stage = .ready(release(item))
