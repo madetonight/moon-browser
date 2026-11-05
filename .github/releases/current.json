@@ -1,22 +1,22 @@
 {
   "repository": "madetonight/moon-browser",
-  "tag": "v0.4.3-beta",
-  "build": "2026110403",
-  "title": "Moon 0.4.3 beta",
+  "tag": "v0.4.4-beta",
+  "build": "2026110404",
+  "title": "Moon 0.4.4 beta",
   "keep_latest_only": true,
   "assets": [
     {
-      "name": "Moon-0.4.3-arm64.dmg",
-      "size": 5091607,
-      "sha256": "92612ccd6768a60bff723561ff34bfeb32842b2292d3819f5316ad89882591b9",
-      "blob": "2e2c9f1f222a020dd11758e55778a7c2c2c4d313"
+      "name": "Moon-0.4.4-arm64.dmg",
+      "size": 5095477,
+      "sha256": "62a834457e09cdc8a9f315d51a326874922bb2bf567175ea8a88c68929de64f9",
+      "blob": "aaca2a53a21ca5752f250fb71598f91e9c33e5ec"
     }
   ],
   "feed": {
     "name": "appcast.xml",
-    "size": 2806,
-    "sha256": "edc3a5e1f9c5a30b2ab1c8fdfd362b6966bbfe9468fac9caa71b6ccd70457b72",
-    "blob": "b897b3ba51c4ddf4008d7966f1d1386950493627"
+    "size": 2590,
+    "sha256": "c89dc2b48582c0102b05c39c558d61f348293e08106da69d4d292671f55be377",
+    "blob": "9baae70ec55f0816f4434c15f289c261ae9a7e35"
   },
-  "notes": "[Download Moon for Mac](https://github.com/madetonight/moon-browser/releases/download/v0.4.3-beta/Moon-0.4.3-arm64.dmg)\n\nOne installer for Apple silicon, macOS 26 or later. The same signed DMG powers installation and in-app updates.\n\n- Avoid repeated setup of unchanged page scripts while preserving script-world and settings invalidation.\n- Show a ready first frame immediately, removing the previous 120 ms opacity animation. Sleeping previews clear at first paint.\n- Cancel obsolete recovery work; slow active navigations can finish without a recovery restart.\n- Simplify the sidebar dock to Extensions, Bookmarks, Downloads, Translate and Orbit. Swipe right on the sidebar to open the New Space card. Existing profiles and spaces are preserved.\n- In three paired local runs (33 warm samples per version), median native command-to-request delay changed from 16.1 to 12.2 ms; WebKit first contentful paint stayed around 28 ms. These are controlled local measurements, not a general internet-speed claim.\n- The installed build rendered 3840 × 2160 images and H.264 video. A five-second foreground check produced 145 frame callbacks, about 29 fps from a 30 fps source. Streaming tiers, HDR and DRM services depend on the source and hardware.\n- Full local regression suite: 503 checks passed, one existing WebKit check skipped. See the [performance report](https://github.com/madetonight/moon-browser/blob/main/Docs/PERFORMANCE.md) for measurements and limits.\n\nInstalled app approximately 11.31 MB; download approximately 5.09 MB. Personal browsing data and test media are excluded.\n\nThis beta is Apple Development signed and is not Apple-notarized. GitHub's automatic source-code links contain source, not extra app installers.\n"
+  "notes": "[Download Moon for Mac](https://github.com/madetonight/moon-browser/releases/download/v0.4.4-beta/Moon-0.4.4-arm64.dmg)\n\nOne installer for Apple silicon, macOS 26 or later. The same signed DMG powers installation and in-app updates.\n\n- Recover from temporary update connection failures with at most two retries, backoff, and connectivity awareness. Certificate, signature, malformed-feed, and installation errors remain terminal.\n- Keep Sparkle's normal no-new-update result from overwriting a successful check with a failure. Settings displays the actual update status.\n- Keep errors and completions from an older navigation from covering a newer page. New loads clear an earlier failure immediately.\n- Reduce unnecessary password-field scans on Gmail and other changing pages while preserving dynamic login detection.\n- Preserve native WebKit image resolution, video playback, cache validation, and TLS checks. Gmail is never automatically reloaded by this change.\n- What's New shows this version only.\n\nFull local regression suite: 508 checks passed, one existing WebKit check skipped. A native WebKit regression verifies that message updates avoid password scans while inserted and removed sign-in forms remain detected.\n\nInstalled app approximately 11.33 MB; download approximately 5.10 MB. Personal browsing data, credentials, and diagnostic logs are excluded.\n\nThis beta is Apple Development signed and is not Apple-notarized. GitHub's automatic source-code links contain source, not extra app installers.\n"
 }
