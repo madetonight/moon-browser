@@ -1,9 +1,9 @@
-# Moon 0.4.5 beta
+# Moon 0.4.6 beta
 
-Orbit has a home in Moon.
+Orbit’s sidebar summary stays inside the Moon window.
 
-- Open the full Orbit dashboard in a Moon tab with **See more** or **History → Orbit Activity**. Open it again to return to the same tab.
-- See website icons in the sidebar summary, dashboard, and activity breakdown. Moon uses its local icon cache, with a letter for sites without an icon.
-- Switch Orbit sections from the compact menu in narrow windows or Split View.
+- The summary fits narrow and short windows and follows the sidebar on either edge, including compact and folded layouts.
+- In short windows, activity scrolls while the tracking switch and See more stay in reach.
+- Close the summary by clicking outside, pressing Escape or Command-W, or minimizing the window.
 
-Apple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This beta is Apple Development signed and is not Apple-notarized. The optional ActivityWatch companion is distributed separately by its authors.
+Apple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized. The optional ActivityWatch companion is distributed separately by its authors.

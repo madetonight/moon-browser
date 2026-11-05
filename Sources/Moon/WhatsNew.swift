@@ -140,12 +140,12 @@ enum WhatsNew {
 
     /// Only the current release is shown. Release preparation verifies its version.
     static let notes: [Notes] = [
-        Notes(version: "0.4.5", date: "5 November 2026",
-              headline: "Orbit has a home in Moon.",
-              new: ["Open the full Orbit dashboard in a Moon tab from the sidebar or History menu."],
-              better: ["Website activity shows each site’s icon when Moon has one.",
-                       "Orbit’s section menu fits narrow windows and Split View."],
-              fixed: [])
+        Notes(version: "0.4.6", date: "5 November 2026",
+              headline: "Orbit stays inside your Moon window.",
+              new: [],
+              better: ["Orbit’s summary scrolls in short windows and keeps See more within reach."],
+              fixed: ["The sidebar summary stays inside Moon at every supported window size, including compact and folded sidebars.",
+                      "Minimizing Moon dismisses the summary."])
     ]
 }
 

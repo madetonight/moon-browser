@@ -1,22 +1,22 @@
 {
   "repository": "madetonight/moon-browser",
-  "tag": "v0.4.5-beta",
-  "build": "2026110503",
-  "title": "Moon 0.4.5 beta",
+  "tag": "v0.4.6-beta",
+  "build": "2026110504",
+  "title": "Moon 0.4.6 beta",
   "keep_latest_only": true,
   "assets": [
     {
-      "name": "Moon-0.4.5-arm64.dmg",
-      "size": 5098685,
-      "sha256": "43225bf3a2a39eaa625d2a4a72ad78207560461607e90d2fc35ac08ab7104faa",
-      "blob": "8a6aaa25343788b26d1f8a726c0d98f1526afdfa"
+      "name": "Moon-0.4.6-arm64.dmg",
+      "size": 5102341,
+      "sha256": "fd4fae2e08700b9f7a9b1398e0cae34fa5453ef5ca5c0c54447ad032236a0bb6",
+      "blob": "9ac0c2cca6f574ecacc13961561961f576e647f4"
     }
   ],
   "feed": {
     "name": "appcast.xml",
-    "size": 2107,
-    "sha256": "045f8d9fa8411001249c3cdc2c7174a8d69782ba850373ad2465e1eabcaa0c38",
-    "blob": "80414b5ce149a7a05b9753c3bf9a4e18bae9c21c"
+    "size": 2081,
+    "sha256": "4baf93d319b67a44b9eeb6ad6e74aa33c2e58d33d17e1c4e246b992ee0f2faba",
+    "blob": "7ab81ce6f2a325f4af74f3a633cf2a39969958eb"
   },
-  "notes": "[Download Moon for Mac](https://github.com/madetonight/moon-browser/releases/download/v0.4.5-beta/Moon-0.4.5-arm64.dmg)\n\nOrbit has a home in Moon.\n\n- Open the full Orbit dashboard in a Moon tab with **See more** or **History → Orbit Activity**. Open it again to return to the same tab.\n- See website icons in the sidebar summary, dashboard, and activity breakdown. Moon uses its local icon cache, with a letter for sites without an icon.\n- Switch Orbit sections from the compact menu in narrow windows or Split View.\n\nApple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This beta is Apple Development signed and is not Apple-notarized. The optional ActivityWatch companion is distributed separately by its authors.\n"
+  "notes": "[Download Moon for Mac](https://github.com/madetonight/moon-browser/releases/download/v0.4.6-beta/Moon-0.4.6-arm64.dmg)\n\nOrbit’s sidebar summary stays inside the Moon window.\n\n- The summary fits narrow and short windows and follows the sidebar on either edge, including compact and folded layouts.\n- In short windows, activity scrolls while the tracking switch and See more stay in reach.\n- Close the summary by clicking outside, pressing Escape or Command-W, or minimizing the window.\n\nApple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized. The optional ActivityWatch companion is distributed separately by its authors.\n"
 }

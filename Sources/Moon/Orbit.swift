@@ -117,37 +117,88 @@ import UniformTypeIdentifiers
 
 struct OrbitDoor: View {
     @ObservedObject var browser: Browser
-    var arrowEdge: Edge = .trailing
     var body: some View {
         Door(icon: "sparkles", on: browser.orbitOpen, help: "Orbit — Activity") { browser.orbitOpen.toggle() }
             .accessibilityLabel("Orbit Activity")
-            .popover(isPresented: $browser.orbitOpen, attachmentAnchor: .rect(.bounds), arrowEdge: arrowEdge) {
-                OrbitSummary(orbit: .shared, profile: browser.profileID) {
+            .accessibilityIdentifier("orbit.door")
+    }
+}
+
+/// The largest rectangle the card can occupy, in window coordinates.
+/// Prefer the space beside the dock, overlapping the column only when needed.
+enum OrbitSummaryLayout {
+    static func available(in size: CGSize, sidebarWidth: CGFloat, onRight: Bool) -> CGRect {
+        let margin: CGFloat = 10
+        let width = min(320, max(0, size.width - 2 * margin))
+        let height = max(0, size.height - 2 * margin)
+        let inset = max(margin, min(sidebarWidth + margin, size.width - width - margin))
+        return CGRect(x: onRight ? size.width - inset - width : inset, y: margin,
+                      width: width, height: height)
+    }
+}
+
+struct OrbitSummaryOverlay: View {
+    @ObservedObject var browser: Browser
+    let sidebarWidth: CGFloat
+    let onRight: Bool
+
+    var body: some View {
+        GeometryReader { geometry in
+            let area = OrbitSummaryLayout.available(in: geometry.size, sidebarWidth: sidebarWidth, onRight: onRight)
+            ZStack(alignment: .topLeading) {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture { browser.orbitOpen = false }
+                    .accessibilityHidden(true)
+                OrbitSummary(orbit: .shared, profile: browser.profileID, close: { browser.orbitOpen = false }) {
                     browser.orbitOpen = false
                     browser.show(InternalPage(.orbit))
                 }
-                .onExitCommand { browser.orbitOpen = false }
+                .frame(width: area.width)
+                .frame(height: area.height, alignment: .bottom)
+                .offset(x: area.minX, y: area.minY)
             }
+        }
+        .clipped()
     }
 }
 
 private struct OrbitSummary: View {
     @ObservedObject var orbit: Orbit
     let profile: UUID
+    let close: () -> Void
     let more: () -> Void
     @ObservedObject private var engine = OrbitEngine.shared
     private var rows: [OrbitLedger.Entry] { orbit.rows(profile: profile, days: 1) }
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 10) {
             HStack {
-                VStack(alignment: .leading, spacing: 3) {
-                    Label("Orbit", systemImage: "sparkles").font(.system(size: 17, weight: .semibold))
-                    Text("Your time in Moon").font(.system(size: 11)).foregroundStyle(.secondary)
-                }
+                Label("Orbit", systemImage: "sparkles").font(.system(size: 17, weight: .semibold))
                 Spacer()
                 Toggle("Track activity", isOn: $orbit.enabled).labelsHidden().toggleStyle(.switch).controlSize(.small)
                     .help("Track website time on this Mac")
+                Button(action: close) {
+                    Label("Close Orbit summary", systemImage: "xmark").labelStyle(.iconOnly)
+                }
+                .buttonStyle(.borderless)
             }
+            ViewThatFits(in: .vertical) {
+                activity.fixedSize(horizontal: false, vertical: true)
+                ScrollView { activity }
+            }
+            Divider()
+            Button(action: more) { HStack { Text("See more"); Spacer(); Image(systemName: "chevron.right") } }
+                .buttonStyle(.plain).font(.system(size: 12, weight: .medium)).accessibilityIdentifier("orbit.more")
+        }
+        .padding(14)
+        .popoverGround(card: true)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("orbit.summary")
+        .task { if engine.enabled { engine.refresh() } }
+    }
+
+    private var activity: some View {
+        VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
                 Text(Orbit.duration(rows.reduce(0) { $0 + $1.seconds })).font(.system(size: 29, weight: .medium, design: .rounded))
                 Text("today").font(.system(size: 12)).foregroundStyle(.secondary)
@@ -168,11 +219,7 @@ private struct OrbitSummary: View {
             }
             Text("Local to this Mac. Website names and time only. Private tabs excluded. Pauses in the background or after three minutes idle, unless the page is playing audio.")
                 .font(.system(size: 10.5)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-            Button(action: more) { HStack { Text("See more"); Spacer(); Image(systemName: "arrow.up.right") } }
-                .buttonStyle(.plain).font(.system(size: 12, weight: .medium)).accessibilityIdentifier("orbit.more")
         }
-        .padding(20).frame(width: 320).popoverGround()
-        .task { if engine.enabled { engine.refresh() } }
     }
 }
 

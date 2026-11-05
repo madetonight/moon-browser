@@ -882,7 +882,7 @@ private struct SideFoot: View {
                 BookmarkDoor(browser: browser, arrowEdge: prefs.sidePosition == .right ? .leading : .trailing)
                 FetchDoor(browser: browser, fetches: fetches, persistent: true)
                 TranslationDoor(browser: browser, arrowEdge: prefs.sidePosition == .right ? .leading : .trailing)
-                OrbitDoor(browser: browser, arrowEdge: prefs.sidePosition == .right ? .leading : .trailing)
+                OrbitDoor(browser: browser)
             }
             .frame(maxWidth: .infinity)
             .padding(.bottom, 8)
@@ -916,7 +916,7 @@ private struct SideFoot: View {
             BookmarkDoor(browser: browser, arrowEdge: prefs.sidePosition == .right ? .leading : .trailing)
             FetchDoor(browser: browser, fetches: fetches, persistent: true)
             TranslationDoor(browser: browser, arrowEdge: prefs.sidePosition == .right ? .leading : .trailing)
-            OrbitDoor(browser: browser, arrowEdge: prefs.sidePosition == .right ? .leading : .trailing)
+            OrbitDoor(browser: browser)
         }
     }
     private var utilities: some View {

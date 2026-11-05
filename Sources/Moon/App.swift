@@ -743,6 +743,12 @@ struct ContentView: View {
     /// and goes (What's New).
     @ViewBuilder
     private var panels: some View {
+        if browser.orbitOpen {
+            OrbitSummaryOverlay(browser: browser,
+                                sidebarWidth: browser.prefs.sidebar ? browser.prefs.columnWidth : 0,
+                                onRight: sideOnRight)
+                .ignoresSafeArea()
+        }
         if browser.welcoming {
             WelcomePanel(browser: browser, prefs: browser.prefs)
                 .ignoresSafeArea()
@@ -842,7 +848,10 @@ struct ContentView: View {
             .onChange(of: reduceTransparency) { _, _ in
                 if let window { updateWindowGround(window) }
             }
-            .onChange(of: browser.activeID) { _, _ in browser.translationOpen = false }
+            .onChange(of: browser.activeID) { _, _ in
+                browser.translationOpen = false
+                browser.orbitOpen = false
+            }
             .onChange(of: browser.prefs.sidePosition) { _, _ in
                 DispatchQueue.main.async { Lights.refresh(window); measureLights() }
             }
@@ -866,8 +875,12 @@ struct ContentView: View {
             .onReceive(NotificationCenter.default.publisher(for: NSWindow.didResignKeyNotification)) { note in
                 if let window, (note.object as? NSWindow) === window {
                     browser.tabSwitcher.cancel()
+                    browser.orbitOpen = false
                     if browser.commandHeld { browser.commandHeld = false }
                 }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: NSWindow.didMiniaturizeNotification)) { note in
+                if let window, (note.object as? NSWindow) === window { browser.orbitOpen = false }
             }
             .onReceive(NotificationCenter.default.publisher(for: NSWindow.willEnterFullScreenNotification)) { note in
                 if let window, (note.object as? NSWindow) === window { browser.fullScreen = true }

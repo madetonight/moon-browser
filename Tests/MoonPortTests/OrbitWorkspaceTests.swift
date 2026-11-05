@@ -5,6 +5,30 @@ import XCTest
 
 @MainActor
 final class OrbitWorkspaceTests: XCTestCase {
+    func testSummaryBoundsStayInsideNarrowShortAndWideWindows() {
+        for size in [CGSize(width: 200, height: 150), CGSize(width: 640, height: 420),
+                     CGSize(width: 1180, height: 780)] {
+            for sidebarWidth in [0.0, 48.0, 220.0, 480.0] {
+                for onRight in [false, true] {
+                    let bounds = OrbitSummaryLayout.available(in: size, sidebarWidth: sidebarWidth, onRight: onRight)
+                    XCTAssertTrue(CGRect(origin: .zero, size: size).insetBy(dx: 10, dy: 10).contains(bounds))
+                    XCTAssertGreaterThan(bounds.width, 0)
+                    XCTAssertGreaterThan(bounds.height, 0)
+                }
+            }
+        }
+    }
+
+    func testCloseFrontDismissesOrbitSummaryAndKeepsItsTab() {
+        _ = NSApplication.shared
+        let browser = Browser(record: WindowRecord())
+        let orbit = browser.show(InternalPage(.orbit))
+        browser.orbitOpen = true
+        browser.closeFront()
+        XCTAssertFalse(browser.orbitOpen)
+        XCTAssertEqual(browser.activeID, orbit.id)
+    }
+
     func testOrbitOpensAndReusesAnInternalTabWithoutCreatingAWindow() throws {
         _ = NSApplication.shared
         let browser = Browser(record: WindowRecord())

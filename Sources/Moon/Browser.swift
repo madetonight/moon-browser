@@ -3568,6 +3568,7 @@ final class Browser: NSObject, ObservableObject {
         // Settings, History and the rest are tabs now (InternalPages.swift):
         // ⌘W closes them as it closes any tab, and Escape leaves them be.
         if newsShowing { newsShowing = false }
+        else if orbitOpen { orbitOpen = false }
         else if translationOpen { translationOpen = false }
         else { return false }
         return true
