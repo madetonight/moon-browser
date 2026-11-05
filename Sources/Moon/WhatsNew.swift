@@ -140,15 +140,12 @@ enum WhatsNew {
 
     /// Only the current release is shown. Release preparation verifies its version.
     static let notes: [Notes] = [
-        Notes(version: "0.4.4", date: "4 November 2026",
-              headline: "Smoother inboxes. More reliable updates.",
-              new: [],
-              better: ["Gmail and other changing pages avoid unnecessary full-document sign-in scans.",
-                       "Temporary update connection failures receive two bounded retries when connected.",
-                       "Settings shows the actual update result or connection error."],
-              fixed: ["An older navigation's error or completion cannot cover a newer page.",
-                      "Starting a new page clears a previous loading error immediately.",
-                      "A normal no-new-update result stays successful instead of becoming an error."])
+        Notes(version: "0.4.5", date: "5 November 2026",
+              headline: "Orbit has a home in Moon.",
+              new: ["Open the full Orbit dashboard in a Moon tab from the sidebar or History menu."],
+              better: ["Website activity shows each site’s icon when Moon has one.",
+                       "Orbit’s section menu fits narrow windows and Split View."],
+              fixed: [])
     ]
 }
 

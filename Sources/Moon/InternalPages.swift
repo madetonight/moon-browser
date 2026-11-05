@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 // Moon's own pages — Settings, History, Downloads, Bookmarks, Passwords,
-// Bring Things Over and the release notes — each in a tab of its own, as
+// Bring Things Over, Orbit and the release notes — each in a tab of its own, as
 // chrome://settings is in Chrome, rather than a card over the page. A tab
 // is something you can leave open beside your work, come back to with ⌃Tab,
 // put beside a page in Split View, and close with ⌘W like any other.
@@ -15,7 +15,7 @@ import SwiftUI
 /// Which of Moon's own pages, and where inside it.
 struct InternalPage: Equatable {
     enum Kind: String, CaseIterable {
-        case settings, history, downloads, bookmarks, passwords
+        case settings, history, downloads, bookmarks, passwords, orbit
         case importing = "import"
         case notes = "release-notes"
     }
@@ -55,6 +55,7 @@ struct InternalPage: Equatable {
         case .downloads: return "Downloads"
         case .bookmarks: return "Bookmarks"
         case .passwords: return "Passwords"
+        case .orbit: return "Orbit"
         case .importing: return "Bring Things Over"
         case .notes: return "What's New"
         }
@@ -67,6 +68,7 @@ struct InternalPage: Equatable {
         case .downloads: return "arrow.down.circle"
         case .bookmarks: return "book"
         case .passwords: return "key"
+        case .orbit: return "sparkles"
         case .importing: return "square.and.arrow.down"
         case .notes: return "sparkles"
         }
@@ -149,6 +151,8 @@ struct InternalPageView: View {
             DownloadsPanel(browser: browser, loot: browser.loot)
         case .bookmarks:
             BookmarksPanel(browser: browser, bookmarks: browser.bookmarks)
+        case .orbit:
+            OrbitWorkspace(orbit: .shared, profile: browser.profileID)
         case .passwords:
             // The list is read each time the page is drawn, whichever way it
             // came: brought back from the last session, Settings › Passwords ›

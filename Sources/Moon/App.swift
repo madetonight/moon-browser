@@ -355,7 +355,7 @@ struct MoonApp: App {
                     .shortcut("history.show")
                 Button("Downloads…") { browser.hoarding = true }
                     .shortcut("history.downloads")
-                Button("Orbit Activity…") { Orbit.shared.showDetail(profile: browser.profileID) }
+                Button("Orbit Activity…") { browser.show(InternalPage(.orbit)) }
                 Divider()
                 Button("Clear Browsing Data…") { browser.recallMode = .clearing }
                     .shortcut("history.clearData")

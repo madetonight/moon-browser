@@ -71,44 +71,75 @@ struct OrbitWorkspace: View {
     }
 
     var body: some View {
-        NavigationSplitView {
-            List(Section.allCases, selection: $selection) { section in
-                Label(section.rawValue, systemImage: section.symbol).tag(section)
-            }
-            .listStyle(.sidebar)
-            .navigationSplitViewColumnWidth(min: 155, ideal: 180, max: 230)
-        } detail: {
-            Group {
-                if selection == .moon {
-                    OrbitMoonDetail(orbit: orbit, profile: profile)
-                } else if selection == .setup {
-                    setup
-                } else if let route = selection?.route {
-                    if engine.enabled {
-                        OrbitEngineWebView(route: route).id(route + workspaceRevision.uuidString)
-                    } else {
-                        setup
+        GeometryReader { geometry in
+            let compact = geometry.size.width < 600
+            VStack(spacing: 0) {
+                header(compact: compact)
+                Divider()
+                HStack(spacing: 0) {
+                    if !compact {
+                        List(Section.allCases, selection: $selection) { section in
+                            Label(section.rawValue, systemImage: section.symbol).tag(section)
+                        }
+                        .listStyle(.sidebar)
+                        .frame(width: 175)
+                        Divider()
                     }
-                } else {
-                    overview
+                    detail.frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
-            .frame(minWidth: 420, maxWidth: .infinity, maxHeight: .infinity)
         }
-        .navigationTitle("Orbit")
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text(selection?.rawValue ?? "Overview").font(.system(size: 13, weight: .medium))
-            }
-            ToolbarItem {
-                Button { engine.refresh(); workspaceRevision = UUID() } label: { Image(systemName: "arrow.clockwise") }
-                    .help("Refresh local activity").disabled(!engine.enabled || engine.refreshing)
-            }
-        }
+        .background(.background)
         .task { if engine.enabled { engine.refresh() } }
         .alert("Could not save the local API key", isPresented: $keyError) {
             Button("OK", role: .cancel) {}
         } message: { Text("Check Keychain access and try again. Keys must be a single line under 4 KB.") }
+    }
+
+    private func header(compact: Bool) -> some View {
+        HStack(spacing: 12) {
+            Label("Orbit", systemImage: "sparkles").font(.system(size: 13, weight: .semibold))
+            Spacer()
+            if compact {
+                Picker("Orbit section", selection: $selection) {
+                    ForEach(Section.allCases) { section in
+                        Label(section.rawValue, systemImage: section.symbol).tag(Optional(section))
+                    }
+                }
+                .pickerStyle(.menu)
+                .labelsHidden()
+            } else {
+                Text((selection ?? .overview).rawValue).foregroundStyle(.secondary)
+            }
+            Button {
+                engine.refresh()
+                workspaceRevision = UUID()
+            } label: {
+                Label("Refresh local activity", systemImage: "arrow.clockwise").labelStyle(.iconOnly)
+            }
+            .help("Refresh local activity")
+            .disabled(!engine.enabled || engine.refreshing)
+        }
+        .controlSize(.small)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 9)
+    }
+
+    @ViewBuilder
+    private var detail: some View {
+        if selection == .moon {
+            OrbitMoonDetail(orbit: orbit, profile: profile)
+        } else if selection == .setup {
+            setup
+        } else if let route = selection?.route {
+            if engine.enabled {
+                OrbitEngineWebView(route: route).id(route + workspaceRevision.uuidString)
+            } else {
+                setup
+            }
+        } else {
+            overview
+        }
     }
 
     private var overview: some View {
@@ -150,7 +181,7 @@ struct OrbitWorkspace: View {
                     let sites = Orbit.sites(orbit.rows(profile: profile, days: 1))
                     if sites.isEmpty {
                         Text("Enable Moon tracking to begin. Private tabs stay private.").font(.system(size: 12)).foregroundStyle(.secondary)
-                    } else { OrbitSites(rows: Array(sites.prefix(5))) }
+                    } else { OrbitSites(rows: Array(sites.prefix(5)), showsFavicons: true) }
                     Toggle("Track Moon website time", isOn: $orbit.enabled).toggleStyle(.switch).controlSize(.small)
                 }
                 Divider()

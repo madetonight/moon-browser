@@ -23,7 +23,6 @@ import UniformTypeIdentifiers
     private var observers: [AnyCancellable] = []
     private var lastSave = Date()
     private let file = Store.file("orbit.json")
-    private var detailWindow: NSWindow?
 
     private init() {
         enabled = Store.settings.bool(forKey: "orbit.enabled")
@@ -88,21 +87,6 @@ import UniformTypeIdentifiers
         return ledger.rows(profile: profile, since: start)
     }
 
-    func showDetail(profile: UUID) {
-        if detailWindow == nil {
-            let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 920, height: 690),
-                                  styleMask: [.titled, .closable, .resizable, .miniaturizable], backing: .buffered, defer: false)
-            window.title = "Orbit — Activity in Moon"
-            window.isReleasedWhenClosed = false
-            window.minSize = NSSize(width: 700, height: 520)
-            window.center()
-            detailWindow = window
-        }
-        detailWindow?.contentView = NSHostingView(rootView: OrbitWorkspace(orbit: self, profile: profile)
-            .preferredColorScheme(Shared.prefs.look == .dark ? .dark : Shared.prefs.look == .light ? .light : nil))
-        detailWindow?.makeKeyAndOrderFront(nil)
-    }
-
     func export(profile: UUID, days: Int) {
         let panel = NSSavePanel()
         panel.allowedContentTypes = [.json]
@@ -140,7 +124,7 @@ struct OrbitDoor: View {
             .popover(isPresented: $browser.orbitOpen, attachmentAnchor: .rect(.bounds), arrowEdge: arrowEdge) {
                 OrbitSummary(orbit: .shared, profile: browser.profileID) {
                     browser.orbitOpen = false
-                    Orbit.shared.showDetail(profile: browser.profileID)
+                    browser.show(InternalPage(.orbit))
                 }
                 .onExitCommand { browser.orbitOpen = false }
             }
@@ -172,7 +156,7 @@ private struct OrbitSummary: View {
                 Text(orbit.enabled ? "Your first websites will appear here as you browse." : "Turn on Orbit to see where your browsing time goes.")
                     .font(.system(size: 12)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             } else {
-                OrbitSites(rows: Array(Orbit.sites(rows).prefix(4)))
+                OrbitSites(rows: Array(Orbit.sites(rows).prefix(4)), showsFavicons: true)
             }
             Divider()
             if engine.enabled {
@@ -194,12 +178,17 @@ private struct OrbitSummary: View {
 
 struct OrbitSites: View {
     let rows: [(host: String, seconds: Double)]
+    var showsFavicons = false
     private var peak: Double { max(1, rows.first?.seconds ?? 1) }
     var body: some View {
         VStack(spacing: 13) {
             ForEach(rows, id: \.host) { row in
                 VStack(spacing: 6) {
                     HStack {
+                        if showsFavicons {
+                            Mark(icon: Favicons.shared.cached(row.host), letter: String(row.host.prefix(1)).uppercased())
+                                .accessibilityHidden(true)
+                        }
                         Text(row.host).lineLimit(1).truncationMode(.middle)
                         Spacer()
                         Text(Orbit.duration(row.seconds)).foregroundStyle(.secondary).monospacedDigit()
@@ -253,7 +242,7 @@ struct OrbitMoonDetail: View {
                         }
                         VStack(alignment: .leading, spacing: 16) {
                             Text("Websites").font(.system(size: 13, weight: .semibold))
-                            OrbitSites(rows: sites)
+                            OrbitSites(rows: sites, showsFavicons: true)
                         }
                     }
                     Text("Only the foreground website in this profile is counted. Private tabs, Moon’s internal pages, other apps and long idle periods are excluded. Orbit stores website names and hourly totals for 30 days, never full URLs, searches, page titles, passwords or page content.")
