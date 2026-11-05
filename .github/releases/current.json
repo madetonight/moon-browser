@@ -1,22 +1,22 @@
 {
   "repository": "madetonight/moon-browser",
-  "tag": "v0.4.4-beta",
-  "build": "2026110404",
-  "title": "Moon 0.4.4 beta",
+  "tag": "v0.4.5-beta",
+  "build": "2026110503",
+  "title": "Moon 0.4.5 beta",
   "keep_latest_only": true,
   "assets": [
     {
-      "name": "Moon-0.4.4-arm64.dmg",
-      "size": 5095477,
-      "sha256": "62a834457e09cdc8a9f315d51a326874922bb2bf567175ea8a88c68929de64f9",
-      "blob": "aaca2a53a21ca5752f250fb71598f91e9c33e5ec"
+      "name": "Moon-0.4.5-arm64.dmg",
+      "size": 5098685,
+      "sha256": "43225bf3a2a39eaa625d2a4a72ad78207560461607e90d2fc35ac08ab7104faa",
+      "blob": "8a6aaa25343788b26d1f8a726c0d98f1526afdfa"
     }
   ],
   "feed": {
     "name": "appcast.xml",
-    "size": 2590,
-    "sha256": "c89dc2b48582c0102b05c39c558d61f348293e08106da69d4d292671f55be377",
-    "blob": "9baae70ec55f0816f4434c15f289c261ae9a7e35"
+    "size": 2107,
+    "sha256": "045f8d9fa8411001249c3cdc2c7174a8d69782ba850373ad2465e1eabcaa0c38",
+    "blob": "80414b5ce149a7a05b9753c3bf9a4e18bae9c21c"
   },
-  "notes": "[Download Moon for Mac](https://github.com/madetonight/moon-browser/releases/download/v0.4.4-beta/Moon-0.4.4-arm64.dmg)\n\nOne installer for Apple silicon, macOS 26 or later. The same signed DMG powers installation and in-app updates.\n\n- Recover from temporary update connection failures with at most two retries, backoff, and connectivity awareness. Certificate, signature, malformed-feed, and installation errors remain terminal.\n- Keep Sparkle's normal no-new-update result from overwriting a successful check with a failure. Settings displays the actual update status.\n- Keep errors and completions from an older navigation from covering a newer page. New loads clear an earlier failure immediately.\n- Reduce unnecessary password-field scans on Gmail and other changing pages while preserving dynamic login detection.\n- Preserve native WebKit image resolution, video playback, cache validation, and TLS checks. Gmail is never automatically reloaded by this change.\n- What's New shows this version only.\n\nFull local regression suite: 508 checks passed, one existing WebKit check skipped. A native WebKit regression verifies that message updates avoid password scans while inserted and removed sign-in forms remain detected.\n\nInstalled app approximately 11.33 MB; download approximately 5.10 MB. Personal browsing data, credentials, and diagnostic logs are excluded.\n\nThis beta is Apple Development signed and is not Apple-notarized. GitHub's automatic source-code links contain source, not extra app installers.\n"
+  "notes": "[Download Moon for Mac](https://github.com/madetonight/moon-browser/releases/download/v0.4.5-beta/Moon-0.4.5-arm64.dmg)\n\nOrbit has a home in Moon.\n\n- Open the full Orbit dashboard in a Moon tab with **See more** or **History → Orbit Activity**. Open it again to return to the same tab.\n- See website icons in the sidebar summary, dashboard, and activity breakdown. Moon uses its local icon cache, with a letter for sites without an icon.\n- Switch Orbit sections from the compact menu in narrow windows or Split View.\n\nApple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This beta is Apple Development signed and is not Apple-notarized. The optional ActivityWatch companion is distributed separately by its authors.\n"
 }
