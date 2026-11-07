@@ -188,7 +188,7 @@ enum SettingsIndex {
               title: "Tabs show", detail: "Beside the title, and on a pinned square",
               keys: ["glyph"], words: ["favicon", "icons", "letters"]),
         .init(id: "tabs.reading", group: "tablook", icon: "text.line.first.and.arrowtriangle.forward",
-              title: "Show how far you've read", detail: "The tab you're on fills with grey as you scroll down",
+              title: "Show how far you've read", detail: "The active tab shows your progress as you scroll down",
               keys: ["tabs.reading"], words: ["progress", "scroll"]),
         .init(id: "tabs.give", group: "tablook", icon: "hand.point.up.left",
               title: "Tabs give when pressed", detail: "A tab sinks a little under the pointer, as in Arc",

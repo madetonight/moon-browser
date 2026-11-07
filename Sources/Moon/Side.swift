@@ -378,7 +378,7 @@ struct SideBar: View {
                                  pill: pill, close: {}, interactive: false)
                     } else {
                         SideRow(browser: browser, prefs: prefs, tab: tab, live: tab.id == row.active,
-                                pill: pill, close: {}, interactive: false)
+                                close: {}, interactive: false)
                     }
                 }
                 // Its groups, folded as they were left (see Parked.drawn).
@@ -462,7 +462,7 @@ struct SideBar: View {
                 .frame(maxWidth: .infinity)
         } else {
             SideRow(browser: browser, prefs: prefs, tab: tab,
-                    live: tab.id == activeID, pill: pill, close: close,
+                    live: tab.id == activeID, close: close,
                     interactive: interactive)
         }
     }
@@ -582,7 +582,7 @@ struct SideBar: View {
                                  close: { browser.close(tab) })
                     } else {
                         SideRow(browser: browser, prefs: prefs, tab: tab,
-                                live: tab.id == browser.activeID, pill: pill,
+                                live: tab.id == browser.activeID,
                                 close: { browser.close(tab) })
                     }
                 }
@@ -1079,7 +1079,6 @@ private struct SideRow: View {
     @ObservedObject var prefs: Preferences
     @ObservedObject var tab: Tab
     let live: Bool
-    let pill: Namespace.ID
     let close: () -> Void
     var interactive = true
 
@@ -1234,7 +1233,11 @@ private struct SideRow: View {
         .animation(Motion.quick, value: tab.blockedPopups.isEmpty)
         .animation(Motion.quick, value: tab.translation == nil)
         .animation(Motion.quick, value: peeking)
+        .modifier(Give(pressed: pressed && prefs.tabsGive))
         .background { ground.animation(Motion.quick, value: live) }
+        .overlay(alignment: .bottomLeading) {
+            if live, !editing, prefs.showsReading { SidebarReadingMark(meter: tab.meter) }
+        }
         .overlay {
             if browser.selectedTabIDs.contains(tab.id) {
                 RoundedRectangle(cornerRadius: 9, style: .continuous)
@@ -1243,7 +1246,6 @@ private struct SideRow: View {
             }
         }
         .modifier(Shake(travel: shake))
-        .modifier(Give(pressed: pressed && prefs.tabsGive))
         .contentShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
         .modifier(OneClick(double: false) {
             guard interactive, !selectedOnPress, NSEvent.modifierFlags.intersection([.command, .shift]).isEmpty else { return }
@@ -1282,18 +1284,7 @@ private struct SideRow: View {
 
     @ViewBuilder
     private var ground: some View {
-        if live {
-            ZStack(alignment: .leading) {
-                Rectangle().fill(greys.wash)
-                if prefs.showsReading {
-                    GeometryReader { geo in
-                        ReadingFill(meter: tab.meter, width: geo.size.width)
-                    }
-                }
-            }
-            .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
-            .matchedGeometryEffect(id: "live", in: pill)
-        } else if browser.selectedTabIDs.contains(tab.id) {
+        if live || browser.selectedTabIDs.contains(tab.id) {
             RoundedRectangle(cornerRadius: 9, style: .continuous)
                 .fill(greys.wash)
         } else {
@@ -1304,6 +1295,22 @@ private struct SideRow: View {
     private var colour: Color {
         if live { return Palette.ink }
         return hovering ? Palette.ink : Palette.muted
+    }
+}
+
+/// Reading progress stays separate from the sidebar selection surface.
+struct SidebarReadingMark: View {
+    @ObservedObject var meter: Reading
+
+    var body: some View {
+        Capsule()
+            .fill(Palette.ink.opacity(0.3))
+            .frame(width: 24 * meter.value, height: 1)
+            .padding(.leading, 10)
+            .padding(.bottom, 2)
+            .animation(.easeOut(duration: 0.15), value: meter.value)
+            .accessibilityHidden(true)
+            .allowsHitTesting(false)
     }
 }
 

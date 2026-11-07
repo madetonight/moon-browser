@@ -140,12 +140,11 @@ enum WhatsNew {
 
     /// Only the current release is shown. Release preparation verifies its version.
     static let notes: [Notes] = [
-        Notes(version: "0.4.6", date: "5 November 2026",
-              headline: "Orbit stays inside your Moon window.",
+        Notes(version: "0.4.7", date: "6 November 2026",
+              headline: "A consistent highlight for sidebar tabs.",
               new: [],
-              better: ["Orbit’s summary scrolls in short windows and keeps See more within reach."],
-              fixed: ["The sidebar summary stays inside Moon at every supported window size, including compact and folded sidebars.",
-                      "Minimizing Moon dismisses the summary."])
+              better: ["Reading progress has its own small indicator on the active sidebar tab."],
+              fixed: ["The selected tab has a solid background and keeps the same height when you switch tabs or hold a click."])
     ]
 }
 

@@ -164,6 +164,9 @@ private struct SplitTabHalf: View {
             .frame(height: stacked ? height : 28)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background { ground.animation(Motion.quick, value: stacked && focused).animation(Motion.quick, value: joined) }
+            .overlay(alignment: .bottomLeading) {
+                if stacked, focused, !editing, prefs.showsReading { SidebarReadingMark(meter: tab.meter) }
+            }
             .frame(height: height)
             .contentShape(Rectangle())
     }
@@ -230,7 +233,7 @@ private struct SplitTabHalf: View {
 
     @ViewBuilder
     private var ground: some View {
-        if focused {
+        if focused && !stacked {
             ZStack(alignment: .leading) {
                 Rectangle().fill(greys.wash)
                 if prefs.showsReading, !narrow {
@@ -241,7 +244,7 @@ private struct SplitTabHalf: View {
             }
             .clipShape(shape)
             .matchedGeometryEffect(id: "live", in: pill)
-        } else if browser.selectedTabIDs.contains(tab.id) {
+        } else if focused || browser.selectedTabIDs.contains(tab.id) {
             shape.fill(greys.wash)
         } else if hovering {
             shape.fill(greys.hover)
