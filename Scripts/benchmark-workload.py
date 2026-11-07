@@ -17,13 +17,29 @@ import socket
 import subprocess
 import threading
 import time
+import uuid
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--app', default='build/Moon.app')
 parser.add_argument('--output', required=True)
 parser.add_argument('--label', default='baseline')
+parser.add_argument('--settle-seconds', type=int, default=30)
+parser.add_argument('--sample-seconds', type=int, default=30)
+parser.add_argument('--windows', type=int, default=3)
+parser.add_argument('--include-sleep', action='store_true', help='Optional separate diagnostic; never included in live-tab results')
+parser.add_argument('--visible', action='store_true', help='Explicit opt-in to a foreground disposable test window')
+parser.add_argument('--static', action='store_true', help='Separate truly idle workload, without the 250ms page-content timer')
 args = parser.parse_args()
+if min(args.settle_seconds, args.sample_seconds, args.windows) < 1:
+    parser.error('Durations and window count must be positive')
 lib = ctypes.CDLL('/usr/lib/libSystem.B.dylib')
+class Timebase(ctypes.Structure):
+    _fields_ = [('numer', ctypes.c_uint32), ('denom', ctypes.c_uint32)]
+
+timebase = Timebase()
+if lib.mach_timebase_info(ctypes.byref(timebase)) != 0 or not timebase.denom:
+    raise RuntimeError('Cannot convert macOS CPU counters to seconds')
+cpu_seconds_per_tick = timebase.numer / timebase.denom / 1e9
 responsible = lib.responsibility_get_pid_responsible_for_pid
 responsible.argtypes = [ctypes.c_int]
 responsible.restype = ctypes.c_int
@@ -35,26 +51,29 @@ class Usage(ctypes.Structure):
         'wired', 'resident', 'footprint', 'start', 'exit')]
 
 
-def footprint(pid):
+def usage(pid):
     usage = Usage()
     if lib.proc_pid_rusage(pid, 0, ctypes.byref(usage)) != 0:
         return None
-    return usage.footprint
+    return usage
 
 
 class Fixture(http.server.BaseHTTPRequestHandler):
+    document_requests = []
     def do_GET(self):
         if not self.path.split('?')[0].strip('/').isdigit() and self.path != '/':
             self.send_error(404)
             return
         page = int(self.path.split('?')[0].strip('/') or '0')
+        self.document_requests.append(page)
         rows = ''.join(f'<tr><td>{i}</td><td>Document {page}, entry {i}</td>'
                        f'<td>{i * 17}</td></tr>' for i in range(1800))
+        clock = '' if args.static else '<script>setInterval(()=>{document.getElementById("clock").textContent=Date.now()},250)</script>'
         body = (f'<!doctype html><title>Workload {page:02}</title>'
                 '<style>body{font:15px system-ui;margin:40px;background:#f6f7fa}'
                 'table{width:100%;border-collapse:collapse}td{padding:6px;border-bottom:1px solid #ddd}</style>'
                 f'<h1>Moon workload {page:02}</h1><p id="clock"></p><table>{rows}</table>'
-                '<script>setInterval(()=>{document.getElementById("clock").textContent=Date.now()},250)</script>').encode()
+                + clock).encode()
         self.send_response(200)
         self.send_header('Content-Type', 'text/html; charset=utf-8')
         self.send_header('Content-Length', str(len(body)))
@@ -68,10 +87,17 @@ class Fixture(http.server.BaseHTTPRequestHandler):
 server = http.server.ThreadingHTTPServer(('127.0.0.1', 0), Fixture)
 threading.Thread(target=server.serve_forever, daemon=True).start()
 app = Path(args.app).resolve()
-world = 'workload-' + args.label
+world = 'workload-' + args.label + '-' + uuid.uuid4().hex[:8]
+world_key = ''.join(c for c in world.lower() if c.isascii() and (c.isalnum() or c == '-'))
+world_hash = 2_166_136_261
+for byte in world_key.encode():
+    world_hash = ((world_hash ^ byte) * 16_777_619) & 0xffffffff
+socket_name = f'b-t-5E4C{world_hash:08X}.sock'
 log = open('/private/tmp/moon-' + world + '.log', 'w')
 before = set(glob.glob(os.path.expanduser('~/Library/Containers/org.moonbrowser.Moon/Data/tmp/b-t-*.sock')))
 env = dict(os.environ, MOON_PROBE=world, MOON_MEASURE='1')
+if args.visible:
+    env['MOON_MEASURE_VISIBLE'] = '1'
 preexisting_pids = {int(p) for p in subprocess.check_output(['/bin/ps', '-axo', 'pid='], text=True).split()}
 proc = subprocess.Popen([str(app/'Contents/MacOS/Moon'), '-bench', 'YES', '-welcomed', 'YES'], env=env, stdout=log, stderr=log)
 launch_owner = responsible(proc.pid)
@@ -125,11 +151,15 @@ def processes():
         owned |= children
     result = {pid: entries[pid] for pid in owned if pid in entries}
     for pid, row in result.items():
-        row['physical_footprint_bytes'] = footprint(pid)
+        counters = usage(pid)
+        row['physical_footprint_bytes'] = counters.footprint if counters else None
+        if counters:
+            row['cpu_seconds'] = (counters.user + counters.system) * cpu_seconds_per_tick
     return result
 
 
 def sample(label, duration=15):
+    before_state = request('tabs').get('measurement')
     initial = processes()
     start = time.monotonic()
     samples = []
@@ -137,24 +167,45 @@ def sample(label, duration=15):
         time.sleep(1)
         samples.append(processes())
     last = samples[-1]
-    cpu = sum(max(0, row['cpu_seconds'] - initial.get(pid, {}).get('cpu_seconds', 0))
-              for pid, row in last.items()) / (time.monotonic()-start)*100
-    result = dict(stage=label, cpu_percent_one_core=round(cpu, 2),
+    elapsed = time.monotonic()-start
+    for pid, row in last.items():
+        row['sample_cpu_percent_one_core'] = max(0, row['cpu_seconds'] - initial.get(pid, {}).get('cpu_seconds', row['cpu_seconds'])) / elapsed * 100
+    cpu = sum(row['sample_cpu_percent_one_core'] for row in last.values())
+    after_tabs = request('tabs')
+    result = dict(stage=label, cpu_percent_one_core=round(cpu, 4),
+                  cpu_at_or_below_0_1=cpu <= 0.1,
                   rss_mean_mb=round(sum(sum(r['rss_bytes'] for r in s.values()) for s in samples)/len(samples)/1e6, 2),
                   rss_peak_mb=round(max(sum(r['rss_bytes'] for r in s.values()) for s in samples)/1e6, 2),
-                  processes=list(last.values()), tabs=request('tabs')['tabs'])
+                  process_count_min=min(len(s) for s in samples),
+                  process_count_max=max(len(s) for s in samples),
+                  measurement_before=before_state, measurement_after=after_tabs.get('measurement'),
+                  processes=list(last.values()), tabs=after_tabs['tabs'])
     if all(r['physical_footprint_bytes'] is not None for s in samples for r in s.values()):
         result['physical_footprint_mean_mb'] = round(sum(sum(r['physical_footprint_bytes'] for r in s.values()) for s in samples)/len(samples)/1e6, 2)
     print(json.dumps({k:v for k,v in result.items() if k not in ('processes','tabs')}), flush=True)
     return result
 
 
-report = dict(label=args.label, tab_count=38, workload='38 documents, each 1800 table rows and a 250ms DOM timer',
-              accounting='RSS summed across responsible process family; CPU 100%=one core', stages=[])
+report = dict(label=args.label, tab_count=38, workload='38 documents, each 1800 table rows' + ('; static idle' if args.static else ' and a 250ms DOM timer'),
+              visibility='foreground requested' if args.visible else 'background',
+              accounting='Physical footprint and CPU from proc_pid_rusage across responsible process family; CPU 100%=one core',
+              cpu_timebase=dict(numer=timebase.numer, denom=timebase.denom),
+              settle_seconds=args.settle_seconds, sample_seconds=args.sample_seconds, stages=[])
+
+def checkpoint():
+    Path(args.output).parent.mkdir(parents=True, exist_ok=True)
+    Path(args.output).write_text(json.dumps(report, indent=2)+'\n')
+
 try:
+    launched_at = time.monotonic()
+    report['startup_process_samples'] = []
     deadline = time.monotonic()+30
     while time.monotonic() < deadline:
-        paths = set(glob.glob(os.path.expanduser('~/Library/Containers/org.moonbrowser.Moon/Data/tmp/b-t-*.sock'))) - before
+        report['startup_process_samples'].append(dict(elapsed_ms=round((time.monotonic()-launched_at)*1000, 1),
+                                                       count=len(processes())))
+        # Match this exact disposable world, rather than whichever new test
+        # socket happens to appear first while another test is running.
+        paths = set(glob.glob(os.path.expanduser('~/Library/Containers/org.moonbrowser.Moon/Data/tmp/' + socket_name))) - before
         if paths:
             sockpath = sorted(paths)[0]
             break
@@ -164,8 +215,11 @@ try:
     if not sockpath:
         raise RuntimeError('No probe socket; inspect '+log.name)
     report['pid'] = proc.pid
+    report['startup_process_peak'] = max(row['count'] for row in report['startup_process_samples'])
     report['socket'] = sockpath
-    report['stages'].append(sample('empty', 5))
+    report['stages'].append(sample('startup_empty', 5))
+    report['startup_process_peak'] = max(report['startup_process_peak'], report['stages'][0]['process_count_max'])
+    checkpoint()
     initial_tabs = request('tabs')['tabs']
     ids = []
     loads = []
@@ -185,24 +239,46 @@ try:
     report['load_ms'] = loads
     report['load_timing_note'] = 'Navigation plus benchmark wait, which adds a fixed 250ms settle delay; not network-only page-load time.'
     time.sleep(5)
-    report['stages'].append(sample('38_loaded'))
-    for ident in ids[:-1]:
-        request('sleep', id=ident)
-        # Let each snapshot finish before asking for another.
-        deadline = time.monotonic()+5
-        while time.monotonic() < deadline:
-            if next(t for t in request('tabs')['tabs'] if t['id']==ident)['asleep']:
-                break
-            time.sleep(.05)
-    time.sleep(5)
-    report['stages'].append(sample('37_sleeping_one_active'))
-    start = time.monotonic()
-    request('select', id=ids[0])
-    request('wait', id=ids[0])
-    report['wake_ms'] = round((time.monotonic()-start)*1000, 2)
+    report['stages'].append(sample('38_loaded_early', 15))
+    checkpoint()
+    time.sleep(args.settle_seconds)
+    for window in range(args.windows):
+        report['stages'].append(sample(f'38_loaded_settled_{window+1}', args.sample_seconds))
+        checkpoint()
+    for stage in report['stages'][1:]:
+        if len(stage['tabs']) != 38 or any(tab['asleep'] for tab in stage['tabs']):
+            raise RuntimeError('Live-tab measurements require exactly 38 awake tabs')
+    # Switching among live tabs must retain the document, not reload it.
+    switch_times = []
+    for ident in [ids[0], ids[len(ids)//2], ids[-1]]:
+        marker = 'state-' + uuid.uuid4().hex
+        request('eval', id=ident, js=f'window.__moonWorkloadState = {json.dumps(marker)}; window.__moonWorkloadState')
+        start = time.monotonic()
+        request('select', id=ident)
+        switch_times.append((time.monotonic()-start)*1000)
+        check = request('eval', id=ident, js='window.__moonWorkloadState')
+        if check.get('value') != marker:
+            raise RuntimeError('Live tab lost its document state when selected')
+        report.setdefault('live_state_checks', []).append(dict(id=ident, marker=marker, response=check))
+    report['live_select_command_ms'] = switch_times
+    report['document_requests_after_live_switches'] = list(Fixture.document_requests)
+    if args.include_sleep:
+        for ident in ids[:-1]:
+            request('sleep', id=ident)
+            # Let each snapshot finish before asking for another.
+            deadline = time.monotonic()+5
+            while time.monotonic() < deadline:
+                if next(t for t in request('tabs')['tabs'] if t['id']==ident)['asleep']:
+                    break
+                time.sleep(.05)
+        time.sleep(5)
+        report['stages'].append(sample('37_sleeping_one_active'))
+        start = time.monotonic()
+        request('select', id=ids[0])
+        request('wait', id=ids[0])
+        report['wake_ms'] = round((time.monotonic()-start)*1000, 2)
 finally:
-    Path(args.output).parent.mkdir(parents=True, exist_ok=True)
-    Path(args.output).write_text(json.dumps(report, indent=2)+'\n')
+    checkpoint()
     if sockpath:
         try:
             request('quit')

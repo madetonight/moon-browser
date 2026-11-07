@@ -48,16 +48,16 @@ enum AIPage {
         else { return nil }
         let title = String((found["title"] as? String ?? "").prefix(300))
         let links = Array((found["links"] as? [String] ?? []).prefix(400))
-        return shaped(title: title, url: tab.pageAddress, text: text, links: links)
+        return shaped(title: title, url: tab.pageAddress, text: text, links: links, cutAtBridge: found["cut"] as? Bool == true)
     }
 
-    static func shaped(title: String, url: URL?, text: String, links: [String]) -> Read {
+    static func shaped(title: String, url: URL?, text: String, links: [String], cutAtBridge: Bool = false) -> Read {
         var read: Read
         if text.count > limit {
             let head = text.prefix(limit * 2 / 3), tail = text.suffix(limit / 3)
             read = Read(title: title, url: url, text: head + "\n\n[…]\n\n" + tail, links: links, cut: true)
         } else {
-            read = Read(title: title, url: url, text: text, links: links, cut: false)
+            read = Read(title: title, url: url, text: text, links: links, cut: cutAtBridge)
         }
         read.addressed = addressesAI(title + "\n" + text)
         return read
@@ -358,15 +358,21 @@ enum AIPage {
       // on the answer: an address the page shows you is on the page.
       for (var l = 0; l < document.links.length && links.length < 400; l++) {
         var a = document.links[l];
-        if (!/^https?:/.test(a.href)) continue;
+        var href = a.href;
+        if (href.length > 8192 || !/^https?:/.test(href)) continue;
         var visible = true;
         for (var up = a; up && up.nodeType === 1 && visible; up = up.parentElement) visible = shown(up);
-        if (visible) links.push(a.href);
+        if (visible) links.push(href);
       }
       var heading = document.querySelector('h1');
       walk(root, ground, 1);
       var text = out.join('').replace(/[ \\t]+\\n/g, '\\n').replace(/\\n{3,}/g, '\\n\\n').trim();
-      return { title: document.title || (heading && heading.textContent.trim()) || '', text: text, links: links };
+      // Bound the message before WebKit copies it into Moon's process.
+      // Keep both ends so Swift can still shape the prompt and flag a cut.
+      var cut = text.length > 96000;
+      if (cut) text = text.slice(0, 64000) + '\\n\\n[…]\\n\\n' + text.slice(-32000);
+      var title = document.title || (heading && heading.textContent.trim()) || '';
+      return { title: title.slice(0, 1200), text: text, links: links, cut: cut };
     })();
     """
 }

@@ -4,11 +4,13 @@ import MoonCore
 /// Chunked background transfer with limits enforced before accumulating each chunk.
 /// No cookies, credentials, disk cache, or redirects outside the chosen policy.
 final class BoundedFetch: NSObject, URLSessionDataDelegate, @unchecked Sendable {
+    typealias Body = (data: Data, response: HTTPURLResponse)
     private let lock = NSLock()
     private let policy: ResourcePolicy
     private let limit: Int
     private var bytes = Data()
-    private var continuation: CheckedContinuation<Data, any Error>?
+    private var response: HTTPURLResponse?
+    private var continuation: CheckedContinuation<Body, any Error>?
     private var task: URLSessionDataTask?
     private var session: URLSession?
     private var finished = false
@@ -18,8 +20,11 @@ final class BoundedFetch: NSObject, URLSessionDataDelegate, @unchecked Sendable 
         try await data(request: URLRequest(url: url), policy: policy, limit: limit, timeout: timeout)
     }
     static func data(request: URLRequest, policy: ResourcePolicy, limit: Int, timeout: TimeInterval = 30) async throws -> Data {
+        try await body(request: request, policy: policy, limit: limit, timeout: timeout).data
+    }
+    static func body(request: URLRequest, policy: ResourcePolicy, limit: Int, timeout: TimeInterval) async throws -> Body {
         guard let url = request.url else { throw URLError(.badURL) }
-        guard policy.allows(url) else { throw URLError(.unsupportedURL) }
+        guard limit > 0, policy.allows(url) else { throw URLError(.unsupportedURL) }
         let transfer = BoundedFetch(policy: policy, limit: limit)
         return try await withTaskCancellationHandler {
             try await withCheckedThrowingContinuation { continuation in
@@ -50,10 +55,14 @@ final class BoundedFetch: NSObject, URLSessionDataDelegate, @unchecked Sendable 
         completionHandler(request)
     }
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse, completionHandler: @escaping @Sendable (URLSession.ResponseDisposition) -> Void) {
-        guard let response = response as? HTTPURLResponse, let url = response.url, policy.allows(url), response.statusCode == 200,
-              response.expectedContentLength <= limit else {
+        guard let response = response as? HTTPURLResponse, let url = response.url,
+              policy.allows(url), policy.allows(status: response.statusCode) else {
             completionHandler(.cancel); finish(.failure(URLError(.badServerResponse))); return
         }
+        guard response.expectedContentLength <= limit else {
+            completionHandler(.cancel); finish(.failure(URLError(.dataLengthExceedsMaximum))); return
+        }
+        lock.lock(); self.response = response; lock.unlock()
         completionHandler(.allow)
     }
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
@@ -65,16 +74,16 @@ final class BoundedFetch: NSObject, URLSessionDataDelegate, @unchecked Sendable 
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: (any Error)?) {
         if let error { finish(.failure(error)) }
         else {
-            lock.lock(); let data = bytes; lock.unlock()
-            finish(.success(data))
+            lock.lock(); let body = response.map { (data: bytes, response: $0) }; lock.unlock()
+            finish(body.map(Result.success) ?? .failure(URLError(.badServerResponse)))
         }
     }
-    private func finish(_ result: Result<Data, any Error>) {
+    private func finish(_ result: Result<Body, any Error>) {
         lock.lock()
         guard !finished else { lock.unlock(); return }
         finished = true
         let continuation = continuation, session = session
-        self.continuation = nil; self.session = nil; task = nil; bytes = Data()
+        self.continuation = nil; self.session = nil; task = nil; bytes = Data(); response = nil
         lock.unlock()
         session?.invalidateAndCancel(); continuation?.resume(with: result)
     }

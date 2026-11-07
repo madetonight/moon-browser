@@ -39,13 +39,13 @@ final class Favicons {
     /// What each address was last found to wear, in each look, until a page
     /// changes: the History panel asks for two thousand at a time, and a page
     /// with no icon of its own is matched against every page of its site.
-    private var lookups: [String: NSImage?] = [:]
+    private let lookups = ResourceCache<String, NSImage?>(capacity: 512)
     private var loaded = false
     private var saving = false
     /// Icons a page stopped wearing, to be deleted once no page wears them.
     private var dropped: Set<String> = []
 
-    private var memory: [String: NSImage] = [:]
+    private let memory = ResourceCache<String, NSImage>(capacity: 512)
     private var busy: Set<String> = []
     private var missing: Set<String> = []
     /// Icon addresses that came back with nothing usable this session.
@@ -68,6 +68,13 @@ final class Favicons {
     private static var index: URL { folder.appendingPathComponent("pages.json") }
     private static let disk = DispatchQueue(label: "Favicons.disk", qos: .utility)
 
+    /// Drop only reproducible decoded images, never page state or disk data.
+    /// Tab rows keep their own images, so visible icons do not disappear.
+    func trimDecodedImages() {
+        lookups.removeAll()
+        memory.removeAll()
+    }
+
     /// Clear History: every icon kept on disk goes. The tabs open now keep
     /// theirs until they are closed.
     func forgetAll() {
@@ -76,6 +83,7 @@ final class Favicons {
         shyPages.removeAll()
         dropped.removeAll()
         loaded = true
+        trimDecodedImages()
         missing.removeAll()
         failed.removeAll()
         unreachable.removeAll()
@@ -351,17 +359,24 @@ final class Favicons {
             tab.icon = known
             return
         }
-        let busyKey = site + page
+        let shy = tab.shy
+        let busyKey = (shy ? "private|" : "") + site + page
         guard !busy.contains(busyKey), changed || !missing.contains(busyKey) else { return }
         busy.insert(busyKey)
 
-        tab.web.evaluateJavaScript(Favicons.probe) { [weak self, weak tab] answer, _ in
+        let web = tab.web
+        web.evaluateJavaScript(Favicons.probe) { [weak self, weak tab, weak web] answer, _ in
             MainActor.assumeIsolated {
                 guard let self else { return }
+                let isCurrent: @MainActor @Sendable () -> Bool = { [weak tab, weak web] in
+                    guard let tab, let web else { return false }
+                    return tab.built === web && tab.address == url
+                }
+                guard isCurrent() else { self.busy.remove(busyKey); return }
                 let declared = (answer as? [[String: String]]) ?? []
                 let candidates = Favicons.rank(declared, page: url, dark: dark)
-                let shy = tab?.shy ?? false
-                Task { await self.download(candidates, site: site, page: page, dark: dark, shy: shy) }
+                Task { await self.download(candidates, site: site, page: page, dark: dark, shy: shy,
+                                           busyKey: busyKey, isCurrent: isCurrent) }
             }
         }
     }
@@ -378,14 +393,10 @@ final class Favicons {
         return .any
     }
 
-    private func download(_ candidates: [URL], site: String, page: String, dark: Bool, shy: Bool, again: Bool = true) async {
-        let busyKey = site + page
+    private func download(_ candidates: [URL], site: String, page: String, dark: Bool, shy: Bool,
+                          busyKey: String, isCurrent: @MainActor @Sendable () -> Bool, again: Bool = true) async {
         defer { busy.remove(busyKey) }
-        let session = URLSession(configuration: {
-            let config = URLSessionConfiguration.ephemeral
-            config.timeoutIntervalForRequest = 8
-            return config
-        }())
+        guard !shy || isCurrent() else { return }
         var unanswered: [URL] = []
         var asked = false
         for candidate in candidates where !failed.contains(candidate) {
@@ -397,24 +408,43 @@ final class Favicons {
                 return
             }
             asked = true
-            // No answer at all is the network, not the site.
-            guard let (data, response) = try? await session.data(from: candidate) else {
+            let data: Data
+            let mimeType: String?
+            do {
+                if candidate.scheme == "data" {
+                    // rank() normalizes inline icons to a size-checked base64 URL.
+                    let parts = candidate.absoluteString.split(separator: ",", maxSplits: 1)
+                    guard parts.count == 2, let decoded = Data(base64Encoded: String(parts[1])),
+                          decoded.count <= SVGIcons.limit else { continue }
+                    data = decoded
+                    mimeType = parts[0].dropFirst(5).split(separator: ";").first.map(String.init)
+                } else {
+                    let body = try await BoundedFetch.body(request: URLRequest(url: candidate), policy: .siteIcon,
+                                                           limit: 1_999_999, timeout: 8)
+                    data = body.data
+                    mimeType = body.response.mimeType
+                }
+            } catch let error as URLError where [.badServerResponse, .dataLengthExceedsMaximum, .unsupportedURL,
+                                                 .redirectToNonExistentLocation].contains(error.code) {
+                failed.insert(candidate)
+                continue
+            } catch {
                 unanswered.append(candidate)
                 continue
             }
-            guard (response as? HTTPURLResponse).map({ (200..<300).contains($0.statusCode) }) ?? true,
-                  data.count > 60, data.count < 2_000_000
-            else {
+            guard !shy || isCurrent() else { return }
+            guard data.count > 60 else {
                 failed.insert(candidate)
                 continue
             }
             var decoded = await Favicons.square(data)
             // An SVG icon: drawn by WebKit, never by a decoder of this
             // process's own, then read back as the PNG it drew (#680).
-            if decoded == nil, SVGIcons.looksLikeSVG(data, response: response),
+            if decoded == nil, SVGIcons.looksLikeSVG(data, mimeType: mimeType),
                let png = await SVGIcons.shared.png(from: data) {
                 decoded = await Favicons.square(png)
             }
+            guard !shy || isCurrent() else { return }
             guard let image = decoded else {
                 failed.insert(candidate)
                 continue
@@ -432,7 +462,8 @@ final class Favicons {
         if !unanswered.isEmpty {
             if again {
                 try? await Task.sleep(for: .seconds(3))
-                await download(candidates, site: site, page: page, dark: dark, shy: shy, again: false)
+                await download(candidates, site: site, page: page, dark: dark, shy: shy,
+                               busyKey: busyKey, isCurrent: isCurrent, again: false)
             } else {
                 for candidate in unanswered { unreachable[candidate] = Date() + Favicons.backoff }
             }
@@ -728,9 +759,9 @@ final class SVGIcons: NSObject, WKNavigationDelegate {
     private var running = 0
 
     /// An SVG by what the server says it is, or by its first bytes.
-    nonisolated static func looksLikeSVG(_ data: Data, response: URLResponse?) -> Bool {
+    nonisolated static func looksLikeSVG(_ data: Data, mimeType: String?) -> Bool {
         guard data.count <= limit else { return false }
-        if response?.mimeType?.lowercased() == "image/svg+xml" { return true }
+        if mimeType?.lowercased() == "image/svg+xml" { return true }
         let head = String(decoding: data.prefix(1024), as: UTF8.self).lowercased()
         return head.contains("<svg")
     }

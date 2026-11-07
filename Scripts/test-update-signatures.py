@@ -3,14 +3,18 @@
 from pathlib import Path
 import argparse
 import json
+import os
 import subprocess
 import tempfile
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-TOOLS = Path('/private/tmp/Moon107Build/artifacts/sparkle/Sparkle/bin')
+TOOLS = ROOT / '.build/artifacts/sparkle/Sparkle/bin'
 
 def main():
+    scratch = ROOT / '.build'
+    if scratch.is_symlink() or not scratch.is_dir() or scratch.stat().st_uid != os.getuid():
+        raise SystemExit('Resolve Sparkle in a project-owned .build directory first.')
     parser = argparse.ArgumentParser()
     parser.add_argument('--output', type=Path, default=ROOT/'Docs/Validation/update-signature-tests.json')
     args = parser.parse_args()

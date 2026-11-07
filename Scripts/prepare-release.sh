@@ -15,7 +15,7 @@ from urllib.parse import urlsplit
 assert re.fullmatch(r'[A-Z0-9]{10}',sys.argv[1]), 'Invalid team ID'
 u=urlsplit(sys.argv[2]);assert u.scheme=='https' and u.hostname and not u.username and not u.password and not u.query and not u.fragment, 'Use an HTTPS download directory without credentials/query/fragment'
 PY
-sparkle=/private/tmp/Moon107Build/artifacts/sparkle/Sparkle/bin
+sparkle="$PWD/.build/artifacts/sparkle/Sparkle/bin"
 # Building resolves the pinned dependency. This flag marks a release candidate,
 # not proof that its feed/archive has been published.
 MOON_UPDATE_FEED_READY=1 ./build.sh release

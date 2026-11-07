@@ -1,22 +1,22 @@
 {
   "repository": "madetonight/moon-browser",
-  "tag": "v0.4.7-beta",
-  "build": "2026110601",
-  "title": "Moon 0.4.7 beta",
+  "tag": "v0.4.8-beta",
+  "build": "2026110701",
+  "title": "Moon 0.4.8 beta",
   "keep_latest_only": true,
   "assets": [
     {
-      "name": "Moon-0.4.7-arm64.dmg",
-      "size": 5567317,
-      "sha256": "dab0714ba7ef2c1b17a414f315a02d904870b49a7ae492602bd2e3b2bd4e72bc",
-      "blob": "17dd9ac4f8a494eaaada579349aa48c9b411f2f4"
+      "name": "Moon-0.4.8-arm64.dmg",
+      "size": 5169080,
+      "sha256": "a7570c31d7031d79e241c515767025eda8d77208bbfdcd30cdfc52a36e6594f4",
+      "blob": "be39737c063260d8adb4d6d524ae11d98b6dd4bd"
     }
   ],
   "feed": {
     "name": "appcast.xml",
-    "size": 1966,
-    "sha256": "4324c590a8e90cbb616f6fe8d5756322a694b19b12648abc9a4c2acdebad6375",
-    "blob": "c769eb791e3a94c907f487a5dab4491bc3fad654"
+    "size": 2116,
+    "sha256": "80971044a27fd700ffb4e35dcf86fac7b634009ebe603d2a636997fae223d889",
+    "blob": "96bd3ed58df0b3191e6910a34e23716ddae3896e"
   },
-  "notes": "- Give selected sidebar tabs a solid, consistent highlight across sites and split tabs.\n- Keep the highlight at the configured row height when switching or pressing tabs.\n- Show optional reading progress as a small underline on the active sidebar tab.\n\nApple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized. The optional ActivityWatch companion is distributed separately by its authors."
+  "notes": "Meet Nebula. Your voice, in Moon.\n\n- Dictate into text fields with on-device speech and review before inserting.\n- Control tabs, navigation, searches and browser tools with spoken commands.\n- Open Nebula from the sidebar or Edit menu. Hold Control–Shift–Space to speak; customize the shortcut in Settings.\n- Language models are managed by macOS. Audio and transcripts stay out of browsing history.\n\nApple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized. The optional ActivityWatch companion is distributed separately by its authors."
 }

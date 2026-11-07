@@ -140,11 +140,12 @@ enum WhatsNew {
 
     /// Only the current release is shown. Release preparation verifies its version.
     static let notes: [Notes] = [
-        Notes(version: "0.4.7", date: "6 November 2026",
-              headline: "A consistent highlight for sidebar tabs.",
-              new: [],
-              better: ["Reading progress has its own small indicator on the active sidebar tab."],
-              fixed: ["The selected tab has a solid background and keeps the same height when you switch tabs or hold a click."])
+        Notes(version: "0.4.8", date: "7 November 2026",
+              headline: "Meet Nebula. Your voice, in Moon.",
+              new: ["Dictate into text fields with on-device speech, then review before inserting.",
+                    "Control tabs, navigation, searches and browser tools with spoken commands."],
+              better: ["Open Nebula from the sidebar or Edit menu. Hold Control–Shift–Space to speak; customize it in Settings → Shortcuts."],
+              fixed: [])
     ]
 }
 

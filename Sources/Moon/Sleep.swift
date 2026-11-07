@@ -94,6 +94,7 @@ extension Browser {
         source.setEventHandler { [weak self] in
             MainActor.assumeIsolated {
                 guard let self, let event = self.pressure?.data else { return }
+                Favicons.shared.trimDecodedImages()
                 self.sleepIdle(within: event.contains(.critical) ? 0 : 5 * 60)
             }
         }

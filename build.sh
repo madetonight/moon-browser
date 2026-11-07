@@ -2,8 +2,13 @@
 set -euo pipefail
 cd "${0:A:h}"
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
-export CLANG_MODULE_CACHE_PATH=/private/tmp/Moon107Build/ModuleCache
-export SWIFTPM_MODULECACHE_OVERRIDE=/private/tmp/Moon107Build/ModuleCache
+scratch="$PWD/.build"
+[[ ! -L "$scratch" && ( ! -e "$scratch" || -O "$scratch" ) ]] || {
+  print -u2 "The SwiftPM build directory must be owned by you and cannot be a symbolic link."
+  exit 2
+}
+export CLANG_MODULE_CACHE_PATH="$scratch/ModuleCache"
+export SWIFTPM_MODULECACHE_OVERRIDE="$scratch/ModuleCache"
 configuration="${1:-debug}"
 [[ "$configuration" == debug || "$configuration" == release ]] || { print -u2 "Usage: ./build.sh [debug|release]"; exit 2; }
 app_name="${MOON_APP_NAME:-Moon.app}"
@@ -16,10 +21,10 @@ python3 -c 'import re,sys; sys.exit(0 if re.fullmatch(r"[A-Za-z0-9]+(?:[.-][A-Za
   exit 2
 }
 if [[ "${MOON_ASSEMBLE_ONLY:-0}" != 1 ]]; then
-  swift build -c "$configuration" --scratch-path /private/tmp/Moon107Build --cache-path /private/tmp/Moon107Build/Cache --disable-sandbox
+  swift build -c "$configuration" --scratch-path "$scratch" --cache-path "$scratch/Cache" --disable-sandbox
 fi
-binary_dir="$(swift build -c "$configuration" --scratch-path /private/tmp/Moon107Build --show-bin-path --disable-sandbox)"
-framework_source=/private/tmp/Moon107Build/artifacts/sparkle/Sparkle/Sparkle.xcframework/macos-arm64_x86_64/Sparkle.framework
+binary_dir="$(swift build -c "$configuration" --scratch-path "$scratch" --show-bin-path --disable-sandbox)"
+framework_source="$scratch/artifacts/sparkle/Sparkle/Sparkle.xcframework/macos-arm64_x86_64/Sparkle.framework"
 [[ -d "$framework_source" ]] || { print -u2 "Pinned Sparkle framework is missing"; exit 1; }
 mkdir -p "$PWD/build"
 final_app="$PWD/build/$app_name"
@@ -45,8 +50,8 @@ else
   rm -f "$app/Contents/Resources/container-migration.plist"
 fi
 if [[ ! -f build/Moon.icns || Support/MakeIcon.swift -nt build/Moon.icns || Support/MoonIconArtwork.png -nt build/Moon.icns || Scripts/optimize-icon.swift -nt build/Moon.icns ]]; then
-  swift Support/MakeIcon.swift /private/tmp/Moon107Build/Moon.iconset
-  iconutil -c icns /private/tmp/Moon107Build/Moon.iconset -o build/Moon.icns
+  swift Support/MakeIcon.swift "$scratch/Moon.iconset"
+  iconutil -c icns "$scratch/Moon.iconset" -o build/Moon.icns
   swift Scripts/optimize-icon.swift build/Moon.icns
 fi
 cp build/Moon.icns "$app/Contents/Resources/Moon.icns"

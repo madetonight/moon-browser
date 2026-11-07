@@ -48,6 +48,23 @@ final class NavigationPerformanceTests: XCTestCase {
         XCTAssertEqual(controller.userScripts.map(\.source), originals.map(\.source))
     }
 
+    func testFixedScriptsShareDescriptorsWithoutSharingRegistrations() {
+        let first = tab(), second = tab()
+        defer { first.close(); second.close() }
+        let a = first.web.configuration.userContentController
+        let b = second.web.configuration.userContentController
+        let firstForm = a.userScripts.first { $0.source == FormRelay.script }
+        let secondForm = b.userScripts.first { $0.source == FormRelay.script }
+        XCTAssertNotNil(firstForm)
+        XCTAssertTrue(firstForm === secondForm)
+        b.removeAllUserScripts()
+        XCTAssertFalse(a.userScripts.isEmpty)
+        XCTAssertTrue(b.userScripts.isEmpty)
+        second.arm(hiding: "#second { display: none }")
+        XCTAssertFalse(a.userScripts.contains { $0.source == Veiling.style("#second { display: none }") })
+        XCTAssertTrue(b.userScripts.contains { $0.source == Veiling.style("#second { display: none }") })
+    }
+
     func testChangedOptionsAndSiteStylesInvalidateTheInstallation() {
         let tab = tab(); defer { tab.close() }
         let old = AutoScroll.on; defer { AutoScroll.on = old }

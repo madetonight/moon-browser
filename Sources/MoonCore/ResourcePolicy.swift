@@ -3,6 +3,8 @@ import Foundation
 public enum ResourcePolicy: Sendable {
     case chromePackage
     case sameOrigin(URL)
+    case siteIcon
+
     public func allows(_ url: URL) -> Bool {
         guard url.user == nil, url.password == nil, let host = url.host?.lowercased() else { return false }
         switch self {
@@ -12,6 +14,13 @@ public enum ResourcePolicy: Sendable {
         case .sameOrigin(let source):
             func port(_ url: URL) -> Int? { url.port ?? (url.scheme == "https" ? 443 : url.scheme == "http" ? 80 : nil) }
             return ["http", "https"].contains(url.scheme) && url.scheme == source.scheme && host == source.host?.lowercased() && port(url) == port(source)
+        case .siteIcon:
+            return url.scheme == "https" || url.scheme == "http"
         }
+    }
+
+    public func allows(status: Int) -> Bool {
+        if case .siteIcon = self { return (200..<300).contains(status) }
+        return status == 200
     }
 }

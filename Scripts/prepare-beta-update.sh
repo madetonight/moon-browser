@@ -25,7 +25,7 @@ if [[ "$mode" == --plan ]]; then printf '%s\n' "$plan"; exit 0; fi
 [[ "${MOON_ALLOW_SIGNING:-0}" == 1 ]] || { printf '%s\n' 'Beta preparation is paused. Review --plan, then explicitly allow signing with MOON_ALLOW_SIGNING=1. The normal app is unchanged.' >&2; exit 2; }
 version="$(python3 -c 'import json,sys;print(json.loads(sys.argv[1])["version"])' "$plan")"
 prefix="$(python3 -c 'import json,sys;print(json.loads(sys.argv[1])["download_prefix"])' "$plan")"
-sparkle=/private/tmp/Moon107Build/artifacts/sparkle/Sparkle/bin
+sparkle="$PWD/.build/artifacts/sparkle/Sparkle/bin"
 
 # Uses the same installed development certificate as local builds. The existing
 # signed helper cache avoids repeated developer-key signing for Sparkle helpers.

@@ -41,6 +41,12 @@ enum Store {
         testing && ProcessInfo.processInfo.environment["MOON_MEASURE"] != nil
     }
 
+    /// Explicit foreground diagnostics still use a disposable test world.
+    /// Ordinary automated tests retain their off-screen safety guard.
+    static var visibleMeasurement: Bool {
+        measuring && ProcessInfo.processInfo.environment["MOON_MEASURE_VISIBLE"] == "1"
+    }
+
     /// Cookies, sign-ins, caches. WebKit keeps its default store per bundle,
     /// not per folder, so a test run got every site already signed in — and
     /// "sign out of everything" in a test run signed the real browser out.

@@ -107,14 +107,12 @@ final class Bench {
              kSecAttrAccount as String: Store.world.map { "consent (\($0))" } ?? "consent"]
         }
 
-        /// The mark is there — or there is nowhere to keep one: a copy built
-        /// without Moon's provisioning profile has no access group, and
-        /// keeps the switch as it always was.
+        /// Only a verifiable mark restores consent after a restart.
         static var given: Bool {
             var asked = query
             asked[kSecReturnAttributes as String] = true
             let status = SecItemCopyMatching(asked as CFDictionary, nil)
-            return status == errSecSuccess || status == errSecMissingEntitlement
+            return status == errSecSuccess
         }
 
         static func grant() {
@@ -137,7 +135,13 @@ final class Bench {
     func start(for browser: Browser) {
         guard !running else { return }
         self.browser = browser
-        if Store.testing { Bench.watchScreens() }
+        if Store.testing && !Store.visibleMeasurement { Bench.watchScreens() }
+        if Store.visibleMeasurement {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak browser] in
+                browser?.window?.makeKeyAndOrderFront(nil)
+                NSApp.activate()
+            }
+        }
         // Nor App Nap, which a test run behind other windows falls into.
         if Store.testing, !Store.measuring, awake == nil {
             awake = ProcessInfo.processInfo.beginActivity(options: .userInitiated, reason: "Bench")
@@ -270,6 +274,7 @@ final class Bench {
             let caught = MainActor.assumeIsolated { Bench.caught }
             if !caught.isEmpty { answer["onScreen"] = caught }
             var out = (try? JSONSerialization.data(withJSONObject: answer)) ?? Data("{\"error\":\"unwritable answer\"}".utf8)
+            out = MetadataPrivacy.json(out)
             out.append(0x0A)
             out.withUnsafeBytes { raw in
                 var sent = 0
@@ -308,7 +313,9 @@ final class Bench {
         DispatchQueue.main.asyncAfter(deadline: .now() + patience) { answer(["error": "no answer within \(Int(patience)) s"]) }
         // --window N: the Nth window's browser, oldest first; the first
         // window's otherwise.
-        let picked = (request["window"] as? Int).flatMap { n in Browsers.all.indices.contains(n - 1) ? Browsers.all[n - 1] : nil }
+        let picked = (request["window"] as? Int).flatMap { n in
+            n > 0 && Browsers.all.indices.contains(n - 1) ? Browsers.all[n - 1] : nil
+        }
         let live = browser.flatMap { b in Browsers.all.contains { $0 === b } ? b : nil }
         guard let browser = picked ?? live ?? Browsers.primary else {
             answer(["error": "no browser"])
@@ -353,7 +360,13 @@ final class Bench {
         case "tabs":
             // A private tab is nobody's business but yours: a test run has none
             // of yours, so there every tab is listed.
-            answer(["tabs": browser.tabs.filter { Store.testing || !$0.shy }.map(describe)])
+            var result: [String: Any] = ["tabs": browser.tabs.filter { Store.testing || !$0.shy }.map(describe)]
+            if Store.measuring {
+                result["measurement"] = ["visibleRequested": Store.visibleMeasurement,
+                    "appActive": NSApp.isActive, "windowVisible": browser.window?.isVisible == true,
+                    "windowUnoccluded": browser.window?.occlusionState.contains(.visible) == true]
+            }
+            answer(result)
 
         case "open":
             guard let url = (request["url"] as? String).flatMap(Address.url(from:)) else {
@@ -3275,6 +3288,9 @@ final class Bench {
             // Open or close the app's own panels, to reproduce what a person
             // did without a person.
             if let on = request["settings"] as? Bool { browser.tuning = on }
+            if let on = request["nebula"] as? Bool, Store.testing {
+                if on { browser.openNebula() } else { Nebula.shared.dismiss() }
+            }
             if let on = request["passwords"] as? Bool, Store.testing { browser.managing = on }
             if let on = request["welcome"] as? Bool { browser.welcoming = on }
             if let on = request["history"] as? Bool { browser.recalling = on }
@@ -4077,6 +4093,9 @@ final class Bench {
             // The group it is in, by name, whether or not groups are on.
             "group": browser?.group(of: tab).flatMap { id in browser?.tabGroups.first { $0.id == id }?.name } ?? "",
             "loading": tab.loading,
+            "windowAttached": tab.built?.window != nil,
+            "viewAttached": tab.built?.superview != nil,
+            "inactiveSchedulingPolicy": tab.built?.configuration.preferences.inactiveSchedulingPolicy.rawValue ?? -1,
             "hollow": tab.hollow,
             "view": tab.built?.url?.absoluteString ?? "",
             "bench": tab.bench,

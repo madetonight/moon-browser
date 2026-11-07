@@ -3890,6 +3890,7 @@ enum ExtensionShims {
             }
         case "bookmarks.getRecent":
             let count = (first as? Int) ?? 10
+            guard count >= 0 else { throw Unsupported(what: "Bookmark count must be nonnegative.") }
             return flat(browser.bookmarks.roots).filter { !$0.node.isFolder }.suffix(count).reversed()
                 .map { node($0.node, parent: $0.parent, index: $0.index, deep: false) }
         case "bookmarks.search":
@@ -4000,7 +4001,7 @@ enum ExtensionShims {
                  "startTime": ISO8601DateFormatter().string(from: keep.date), "mime": ""] as [String: Any]
             }
         case "downloads.open", "downloads.show":
-            guard let index = first as? Int, browser.loot.kept.indices.contains(index - 1) else { return nil }
+            guard let index = first as? Int, index > 0, browser.loot.kept.indices.contains(index - 1) else { return nil }
             let keep = browser.loot.kept[index - 1]
             if api == "downloads.open" {
                 // As in Chrome, opening asks for its own permission; and only

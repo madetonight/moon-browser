@@ -104,7 +104,7 @@ import UniformTypeIdentifiers
     }
 
     static func duration(_ seconds: Double) -> String {
-        let minutes = max(0, Int(seconds) / 60)
+        guard seconds >= 0, let minutes = Int(exactly: (seconds / 60).rounded(.down)) else { return "—" }
         if minutes == 0 { return seconds > 0 ? "< 1 min" : "0 min" }
         return minutes < 60 ? "\(minutes) min" : "\(minutes / 60) hr \(minutes % 60) min"
     }
@@ -118,7 +118,10 @@ import UniformTypeIdentifiers
 struct OrbitDoor: View {
     @ObservedObject var browser: Browser
     var body: some View {
-        Door(icon: "sparkles", on: browser.orbitOpen, help: "Orbit — Activity") { browser.orbitOpen.toggle() }
+        Door(icon: "sparkles", on: browser.orbitOpen, help: "Orbit — Activity") {
+            Nebula.shared.suspend(in: browser)
+            browser.orbitOpen.toggle()
+        }
             .accessibilityLabel("Orbit Activity")
             .accessibilityIdentifier("orbit.door")
     }

@@ -495,6 +495,8 @@ final class Tab: ObservableObject, Identifiable {
 
     /// True while the caret is in something on the page that takes typing.
     @Published var typing = false
+    /// Frame identity comes from Moon's isolated form relay.
+    var nebulaFrame: WKFrameInfo?
     /// True while the page has taken over the screen: from the moment
     /// WebKit has the page in its own full-screen window until it starts
     /// giving it back (see the fullscreenState watch in `build`), so the
@@ -1056,6 +1058,30 @@ final class Tab: ObservableObject, Identifiable {
     private weak var armedController: WKUserContentController?
     private var installedScripts: [WKUserScript] = []
 
+    /// WKUserScript is an immutable descriptor. Keep one copy of each fixed
+    /// bridge across tabs; registration, execution and handlers stay per view.
+    /// Site styles and extension sources are still built for their own plan.
+    @MainActor private enum FixedScripts {
+        static let drafts = WKUserScript(source: MoonDraftRelay.script, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: Web.world)
+        static let popup = PopupGestureRelay.userScript
+        static let scroll = WKUserScript(source: ScrollRelay.script, injectionTime: .atDocumentEnd, forMainFrameOnly: true, in: Web.world)
+        static let picker = WKUserScript(source: Veiling.picker, injectionTime: .atDocumentStart, forMainFrameOnly: true, in: Web.world)
+        static let forms = WKUserScript(source: FormRelay.script, injectionTime: .atDocumentEnd, forMainFrameOnly: true, in: Web.world)
+        static let icons = WKUserScript(source: IconRelay.script, injectionTime: .atDocumentEnd, forMainFrameOnly: true, in: Web.world)
+        static let autoScroll = WKUserScript(source: AutoScroll.script, injectionTime: .atDocumentEnd, forMainFrameOnly: true, in: Web.world)
+        static let swipe = WKUserScript(source: Swipe.watch, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: Web.world)
+        static let image = WKUserScript(source: ImageRelay.watch, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: Web.world)
+        static let media = WKUserScript(source: MediaKeys.watch, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: Web.world)
+        static let store = WKUserScript(source: StoreRelay.script, injectionTime: .atDocumentEnd, forMainFrameOnly: true, in: Web.world)
+        static let hover = WKUserScript(source: HoveredLink.script, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .defaultClient)
+        static let middle = WKUserScript(source: MiddleRelay.watch, injectionTime: .atDocumentStart, forMainFrameOnly: true, in: Web.world)
+        static let live = WKUserScript(source: LiveRate.script, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .page)
+        static let noPasskeys = WKUserScript(source: FormRelay.withoutPasskeys, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .page)
+        static let passkeyPage = WKUserScript(source: PasskeyRelay.page, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .page)
+        static let passkeyBridge = WKUserScript(source: PasskeyRelay.bridge, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: Web.world)
+        static let translate = WKUserScript(source: PageTranslator.announce, injectionTime: .atDocumentEnd, forMainFrameOnly: false, in: Web.world)
+    }
+
     func arm(hiding css: String, to url: URL? = nil) {
         veils = css
         guard let built else { return }
@@ -1079,63 +1105,38 @@ final class Tab: ObservableObject, Identifiable {
             installedScripts = controller.userScripts
         }
         controller.removeAllUserScripts()
-        controller.addUserScript(WKUserScript(source: MoonDraftRelay.script, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: Web.world))
-        controller.addUserScript(PopupGestureRelay.userScript)
-        controller.addUserScript(
-            WKUserScript(source: ScrollRelay.script, injectionTime: .atDocumentEnd, forMainFrameOnly: true, in: Web.world)
-        )
-        controller.addUserScript(
-            WKUserScript(source: Veiling.picker, injectionTime: .atDocumentStart, forMainFrameOnly: true, in: Web.world)
-        )
-        controller.addUserScript(
-            WKUserScript(source: FormRelay.script, injectionTime: .atDocumentEnd, forMainFrameOnly: true, in: Web.world)
-        )
-        controller.addUserScript(
-            WKUserScript(source: IconRelay.script, injectionTime: .atDocumentEnd, forMainFrameOnly: true, in: Web.world)
-        )
+        controller.addUserScript(FixedScripts.drafts)
+        controller.addUserScript(FixedScripts.popup)
+        controller.addUserScript(FixedScripts.scroll)
+        controller.addUserScript(FixedScripts.picker)
+        controller.addUserScript(FixedScripts.forms)
+        controller.addUserScript(FixedScripts.icons)
         if next.autoScroll {
-            controller.addUserScript(
-                WKUserScript(source: AutoScroll.script, injectionTime: .atDocumentEnd, forMainFrameOnly: true, in: Web.world)
-            )
+            controller.addUserScript(FixedScripts.autoScroll)
         }
         // Every frame: a swipe over an embedded map is the map's, and only the
         // map's own document can say so.
-        controller.addUserScript(
-            WKUserScript(source: Swipe.watch, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: Web.world)
-        )
-        controller.addUserScript(
-            WKUserScript(source: ImageRelay.watch, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: Web.world)
-        )
+        controller.addUserScript(FixedScripts.swipe)
+        controller.addUserScript(FixedScripts.image)
         // Every frame, in Moon's world: a paused video gives the media keys
         // back (see MediaKeys.swift).
-        controller.addUserScript(
-            WKUserScript(source: MediaKeys.watch, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: Web.world)
-        )
+        controller.addUserScript(FixedScripts.media)
         // The store's "Add to Search" only where Moon can add extensions.
         // Before macOS 15.4 it was drawn all the same, and pressing it did
         // nothing at all; Settings › Extensions says what they need instead.
         if #available(macOS 15.4, *) {
-            controller.addUserScript(
-                WKUserScript(source: StoreRelay.script, injectionTime: .atDocumentEnd, forMainFrameOnly: true, in: Web.world)
-            )
+            controller.addUserScript(FixedScripts.store)
         }
         // Only while Settings says so: off, pages get nothing at all.
         if next.hoveredLinks {
-            controller.addUserScript(WKUserScript(
-                source: HoveredLink.script, injectionTime: .atDocumentStart,
-                forMainFrameOnly: false, in: .defaultClient
-            ))
+            controller.addUserScript(FixedScripts.hover)
         }
         // The main frame only: a middle-click on a link inside an ad iframe is
         // that frame's own business, and its link is not this tab's to open.
-        controller.addUserScript(
-            WKUserScript(source: MiddleRelay.watch, injectionTime: .atDocumentStart, forMainFrameOnly: true, in: Web.world)
-        )
+        controller.addUserScript(FixedScripts.middle)
         // Every frame, in the page's own world and ahead of its scripts: a
         // live player's speed nudges go through it (see LiveRate.swift).
-        controller.addUserScript(
-            WKUserScript(source: LiveRate.script, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .page)
-        )
+        controller.addUserScript(FixedScripts.live)
         // Every frame, in the page's own world: a page an extension lists
         // reaches it as chrome.runtime (see ExtensionExternal.swift).
         if let external = next.external {
@@ -1147,24 +1148,12 @@ final class Tab: ObservableObject, Identifiable {
         // functions — and reach Search through a bridge in Moon's, off or on:
         // an extension's page script can carry the patch either way (see
         // Passkeys.swift and ExtensionShims.passkeys).
-        if !next.passkeys {
-            controller.addUserScript(
-                WKUserScript(source: FormRelay.withoutPasskeys, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .page)
-            )
-        } else {
-            controller.addUserScript(
-                WKUserScript(source: PasskeyRelay.page, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .page)
-            )
-        }
-        controller.addUserScript(
-            WKUserScript(source: PasskeyRelay.bridge, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: Web.world)
-        )
+        controller.addUserScript(next.passkeys ? FixedScripts.passkeyPage : FixedScripts.noPasskeys)
+        controller.addUserScript(FixedScripts.passkeyBridge)
         // Every frame but the top, only while Translate Page is switched on:
         // a frame of another site says it's there, to be translated too.
         if next.translation {
-            controller.addUserScript(
-                WKUserScript(source: PageTranslator.announce, injectionTime: .atDocumentEnd, forMainFrameOnly: false, in: Web.world)
-            )
+            controller.addUserScript(FixedScripts.translate)
         }
         // Only while it is on and not paused: otherwise pages get nothing
         // (see Dusk.swift). Before the document, so a site known to be light
@@ -2090,6 +2079,41 @@ final class MiddleRelay: NSObject, WKScriptMessageHandler {
 
 /// A web view that reads the two-finger swipe for itself.
 final class PageView: WKWebView {
+    private var snapshotUsers = 0
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        if window != nil {
+            isHidden = false
+        } else {
+            // A window-to-window transfer is synchronous. Wait one turn so
+            // floating video and calls keep their rendering surface intact.
+            DispatchQueue.main.async { [weak self] in
+                self?.hideIfDetached()
+            }
+        }
+    }
+
+    private func hideIfDetached() {
+        guard window == nil, snapshotUsers == 0, fullscreenState == .notInFullscreen else { return }
+        isHidden = true
+    }
+
+    override func takeSnapshot(with configuration: WKSnapshotConfiguration?,
+                               completionHandler: @escaping (NSImage?, Error?) -> Void) {
+        // Background previews still render on demand. Concurrent requests
+        // share the temporary visibility until the last one completes.
+        snapshotUsers += 1
+        isHidden = false
+        super.takeSnapshot(with: configuration) { [weak self] image, error in
+            if let self {
+                self.snapshotUsers -= 1
+                self.hideIfDetached()
+            }
+            completionHandler(image, error)
+        }
+    }
+
     var onMenuClosed: (() -> Void)?
 
     override func didCloseMenu(_ menu: NSMenu, with event: NSEvent?) {
