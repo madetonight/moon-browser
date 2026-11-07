@@ -4,27 +4,25 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
     <channel>
         <title>Moon</title>
         <item>
-            <title>0.4.6</title>
-            <pubDate>Thu, 05 Nov 2026 10:12:02 -0500</pubDate>
-            <link>https://github.com/madetonight/moon-browser/releases/tag/v0.4.6-beta</link>
-            <sparkle:version>2026110504</sparkle:version>
-            <sparkle:shortVersionString>0.4.6</sparkle:shortVersionString>
+            <title>0.4.7</title>
+            <pubDate>Fri, 06 Nov 2026 21:19:43 -0500</pubDate>
+            <link>https://github.com/madetonight/moon-browser/releases/tag/v0.4.7-beta</link>
+            <sparkle:version>2026110601</sparkle:version>
+            <sparkle:shortVersionString>0.4.7</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
             <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <description sparkle:format="markdown"><![CDATA[# Moon 0.4.6 beta
+            <description sparkle:format="markdown"><![CDATA[# Moon 0.4.7 beta
 
-Orbit’s sidebar summary stays inside the Moon window.
-
-- The summary fits narrow and short windows and follows the sidebar on either edge, including compact and folded layouts.
-- In short windows, activity scrolls while the tracking switch and See more stay in reach.
-- Close the summary by clicking outside, pressing Escape or Command-W, or minimizing the window.
+- Give selected sidebar tabs a solid, consistent highlight across sites and split tabs.
+- Keep the highlight at the configured row height when switching or pressing tabs.
+- Show optional reading progress as a small underline on the active sidebar tab.
 
 Apple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized. The optional ActivityWatch companion is distributed separately by its authors.
 ]]></description>
-            <enclosure url="https://github.com/madetonight/moon-browser/releases/download/v0.4.6-beta/Moon-0.4.6-arm64.dmg" length="5102341" type="application/octet-stream" sparkle:edSignature="hFcaCUXiPBEe6upFUwr85vaIHvhlSKITT7OfybQRx9eGc3QLkGdk4a3nPxt9KMPxM6tSgIilR47K0Z7OJiIWDQ=="></enclosure>
+            <enclosure url="https://github.com/madetonight/moon-browser/releases/download/v0.4.7-beta/Moon-0.4.7-arm64.dmg" length="5567317" type="application/octet-stream" sparkle:edSignature="xoc0PzQpQhoUXVUfZQNfB+gbnCVPYRlrNFd/W/HZ7kJLcPg6afYUiw6+T+NMBqY6SDJn3/JRSGjU3OdnQPEnCg=="></enclosure>
         </item>
     </channel>
 </rss><!-- sparkle-signatures:
-edSignature: emrxrE7x3Y5v29mUXKfs5A8wcpYd3yATI3vxZmtunnSTIdblrIN2K9OXZwNaUQjRqhl1elzKSRQBpS2mHf6HAw==
-length: 1937
+edSignature: qu2EwePgSUv9jE1WggJqMi/SYDWYx8a3I9qBnrhOVCRjbhJFroKX5kfwmLELKQW3ankUUuAkrabCBCRbHsn0CQ==
+length: 1822
 -->
