@@ -495,8 +495,6 @@ final class Tab: ObservableObject, Identifiable {
 
     /// True while the caret is in something on the page that takes typing.
     @Published var typing = false
-    /// Frame identity comes from Moon's isolated form relay.
-    var nebulaFrame: WKFrameInfo?
     /// True while the page has taken over the screen: from the moment
     /// WebKit has the page in its own full-screen window until it starts
     /// giving it back (see the fullscreenState watch in `build`), so the

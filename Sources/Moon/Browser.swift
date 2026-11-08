@@ -172,7 +172,6 @@ final class Browser: NSObject, ObservableObject {
     /// The website translator, available from the sidebar and View menu.
     @Published var translationOpen = false
     @Published var orbitOpen = false
-    @Published var nebulaOpen = false
     /// Every version's notes: Settings › About › What's New…, in a tab.
     var notesShowing: Bool {
         get { pageTab(.notes) != nil }
@@ -3569,7 +3568,6 @@ final class Browser: NSObject, ObservableObject {
         // Settings, History and the rest are tabs now (InternalPages.swift):
         // ⌘W closes them as it closes any tab, and Escape leaves them be.
         if newsShowing { newsShowing = false }
-        else if nebulaOpen { Nebula.shared.dismiss() }
         else if orbitOpen { orbitOpen = false }
         else if translationOpen { translationOpen = false }
         else { return false }

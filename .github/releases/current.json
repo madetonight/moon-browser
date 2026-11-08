@@ -1,22 +1,22 @@
 {
   "repository": "madetonight/moon-browser",
-  "tag": "v0.4.8-beta",
-  "build": "2026110701",
-  "title": "Moon 0.4.8 beta",
+  "tag": "v0.4.9-beta",
+  "build": "2026110702",
+  "title": "Moon 0.4.9 beta",
   "keep_latest_only": true,
   "assets": [
     {
-      "name": "Moon-0.4.8-arm64.dmg",
-      "size": 5169080,
-      "sha256": "a7570c31d7031d79e241c515767025eda8d77208bbfdcd30cdfc52a36e6594f4",
-      "blob": "be39737c063260d8adb4d6d524ae11d98b6dd4bd"
+      "name": "Moon-0.4.9-arm64.dmg",
+      "size": 5113438,
+      "sha256": "8144e9593b010ccada463341eb13bbb2c536cb0c98990d0f125a04a82dfdefe7",
+      "blob": "d3f815490c4cd62279ab08974b26021a9d0f3d9c"
     }
   ],
   "feed": {
     "name": "appcast.xml",
-    "size": 2116,
-    "sha256": "80971044a27fd700ffb4e35dcf86fac7b634009ebe603d2a636997fae223d889",
-    "blob": "96bd3ed58df0b3191e6910a34e23716ddae3896e"
+    "size": 1871,
+    "sha256": "2fc1f5d8569cec3aaa640aa34ae378f5131107d0c2cb7e161e69727a5814836e",
+    "blob": "1550126d79a00bc8ba28b7d7c2829fe37b2a2251"
   },
-  "notes": "Meet Nebula. Your voice, in Moon.\n\n- Dictate into text fields with on-device speech and review before inserting.\n- Control tabs, navigation, searches and browser tools with spoken commands.\n- Open Nebula from the sidebar or Edit menu. Hold Control–Shift–Space to speak; customize the shortcut in Settings.\n- Language models are managed by macOS. Audio and transcripts stay out of browsing history.\n\nApple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized. The optional ActivityWatch companion is distributed separately by its authors."
+  "notes": "A simpler Moon.\n\n- Removed built-in dictation and voice control, including its sidebar button and keyboard shortcut.\n- Cleaned up the sidebar and Edit menu.\n\nApple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized. The optional ActivityWatch companion is distributed separately by its authors."
 }

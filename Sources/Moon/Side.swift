@@ -882,7 +882,6 @@ private struct SideFoot: View {
                 BookmarkDoor(browser: browser, arrowEdge: prefs.sidePosition == .right ? .leading : .trailing)
                 FetchDoor(browser: browser, fetches: fetches, persistent: true)
                 TranslationDoor(browser: browser, arrowEdge: prefs.sidePosition == .right ? .leading : .trailing)
-                NebulaDoor(browser: browser)
                 OrbitDoor(browser: browser)
             }
             .frame(maxWidth: .infinity)
@@ -917,7 +916,6 @@ private struct SideFoot: View {
             BookmarkDoor(browser: browser, arrowEdge: prefs.sidePosition == .right ? .leading : .trailing)
             FetchDoor(browser: browser, fetches: fetches, persistent: true)
             TranslationDoor(browser: browser, arrowEdge: prefs.sidePosition == .right ? .leading : .trailing)
-            NebulaDoor(browser: browser)
             OrbitDoor(browser: browser)
         }
     }
@@ -932,14 +930,14 @@ private struct SideFoot: View {
 
     /// How many doors the foot has, stacked: what the rows stop short of.
     @MainActor static func doors(_ prefs: Preferences, _ fetches: Fetches) -> Int {
-        6  // extensions, bookmarks, downloads, translation, Nebula and Orbit
+        5  // extensions, bookmarks, downloads, translation and Orbit
     }
 
     /// How many pinned extensions fit beside the doors that stay. Every door
     /// is 26 points, with 2 between them.
     private var room: Int {
         let door: CGFloat = 26 + 2
-        let kept = 6  // extensions, bookmarks, downloads, translation, Nebula and Orbit
+        let kept = 5  // extensions, bookmarks, downloads, translation and Orbit
         let free = (availableWidth ?? prefs.sideWidth) - 2 * 10 + 2 - CGFloat(kept) * door
         return max(0, Int((free / door).rounded(.down)))
     }

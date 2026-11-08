@@ -38,7 +38,6 @@ final class FormRelay: NSObject, WKScriptMessageHandler {
                 // Set only when it changes: every assignment to a published
                 // value redraws whatever watches the tab, same value or not.
                 let typing = body["typing"] as? Bool ?? false
-                if typing { tab?.nebulaFrame = message.frameInfo }
                 if tab?.typing != typing { tab?.typing = typing }
                 // Which sign-in box the caret is in, and where it sits on the
                 // page — so a list of accounts can hang from it.

@@ -11,7 +11,6 @@ extension Tab {
 
 extension Browser {
     func openTranslation() {
-        Nebula.shared.suspend(in: self)
         guard active?.canTranslate == true else { return }
         // The View command uses the same icon anchor, even with tabs folded.
         // Reveal it without changing the user's sidebar/folding preference.
