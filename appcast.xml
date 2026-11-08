@@ -4,26 +4,28 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
     <channel>
         <title>Moon</title>
         <item>
-            <title>0.4.9</title>
-            <pubDate>Sat, 07 Nov 2026 23:59:25 -0500</pubDate>
-            <link>https://github.com/madetonight/moon-browser/releases/tag/v0.4.9-beta</link>
-            <sparkle:version>2026110702</sparkle:version>
-            <sparkle:shortVersionString>0.4.9</sparkle:shortVersionString>
+            <title>0.4.10</title>
+            <pubDate>Sun, 08 Nov 2026 00:32:10 -0500</pubDate>
+            <link>https://github.com/madetonight/moon-browser/releases/tag/v0.4.10-beta</link>
+            <sparkle:version>2026110801</sparkle:version>
+            <sparkle:shortVersionString>0.4.10</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
             <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <description sparkle:format="markdown"><![CDATA[# Moon 0.4.9 beta
+            <description sparkle:format="markdown"><![CDATA[# Moon 0.4.10 beta
 
-A simpler Moon.
+Nebula. Just say it.
 
-- Removed built-in dictation and voice control, including its sidebar button and keyboard shortcut.
-- Cleaned up the sidebar and Edit menu.
+- Hold Option–Space, speak, then release to control Moon. The shortcut is customizable in Settings.
+- Say “close all my YouTube tabs”, “switch to Work”, “summarize this page” or “tidy my tabs”. Closing tabs asks for confirmation and preserves pinned tabs.
+- A compact native voice indicator stays inside the Moon window, with live transcription, dictation mode and speech-language controls.
+- Speech runs on this Mac. Page summaries use your configured AI provider; enable Ollama in Settings → AI.
 
 Apple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized. The optional ActivityWatch companion is distributed separately by its authors.
 ]]></description>
-            <enclosure url="https://github.com/madetonight/moon-browser/releases/download/v0.4.9-beta/Moon-0.4.9-arm64.dmg" length="5113438" type="application/octet-stream" sparkle:edSignature="q1Sv5AG/vwuLgJBJbtMaWbRAWwRLUy6qcB7zpaWONDu9DPVcbv9SPH/XmSFAkZyb+Vtki03+3SdHRJj1FSI5CQ=="></enclosure>
+            <enclosure url="https://github.com/madetonight/moon-browser/releases/download/v0.4.10-beta/Moon-0.4.10-arm64.dmg" length="5186036" type="application/octet-stream" sparkle:edSignature="MsPZjiNMdLTX+Ld5b/BREq0YOwtYYiUbWw+CBjGP0JWFi71SGwF+2HZZDRPN9+yjObZlJa0j/8KzY7hcMeaKAg=="></enclosure>
         </item>
     </channel>
 </rss><!-- sparkle-signatures:
-edSignature: MdsQrpasXbZp+DOIYhA+/XoYWTl5GUutXLCpNllrNjIoqfERfkEaEwHqdfmXNo2Zj2y8f9f9c/c6jbuF1dQaBA==
-length: 1727
+edSignature: Hm6Er4PmAHjl6ClQKjCbED8H5ROA8/QDQQJoJHhFyuUd1VYbjpk66YZKYA5STWOMYb32vG4qWMT3KaVvg70SBA==
+length: 2116
 -->
