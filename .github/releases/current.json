@@ -1,22 +1,22 @@
 {
   "repository": "madetonight/moon-browser",
-  "tag": "v0.4.9-beta",
-  "build": "2026110702",
-  "title": "Moon 0.4.9 beta",
+  "tag": "v0.4.10-beta",
+  "build": "2026110801",
+  "title": "Moon 0.4.10 beta",
   "keep_latest_only": true,
   "assets": [
     {
-      "name": "Moon-0.4.9-arm64.dmg",
-      "size": 5113438,
-      "sha256": "8144e9593b010ccada463341eb13bbb2c536cb0c98990d0f125a04a82dfdefe7",
-      "blob": "d3f815490c4cd62279ab08974b26021a9d0f3d9c"
+      "name": "Moon-0.4.10-arm64.dmg",
+      "size": 5186036,
+      "sha256": "a899d788f7133b731dd3248a41d4cce1387b975f0d0641c516f874b19da77eb1",
+      "blob": "ea6ebe194b182f66cd37d7d601f59d5bc3de5f26"
     }
   ],
   "feed": {
     "name": "appcast.xml",
-    "size": 1871,
-    "sha256": "2fc1f5d8569cec3aaa640aa34ae378f5131107d0c2cb7e161e69727a5814836e",
-    "blob": "1550126d79a00bc8ba28b7d7c2829fe37b2a2251"
+    "size": 2260,
+    "sha256": "4bd426580c2844515a44506a288694ce344252b00222ce6dcf5ba147ca54f1c4",
+    "blob": "4ad6d365c053abaddff53fd3d8dd318f0e5238c0"
   },
-  "notes": "A simpler Moon.\n\n- Removed built-in dictation and voice control, including its sidebar button and keyboard shortcut.\n- Cleaned up the sidebar and Edit menu.\n\nApple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized. The optional ActivityWatch companion is distributed separately by its authors."
+  "notes": "Nebula. Just say it.\n\n- Hold Option–Space, speak, then release to control Moon. The shortcut is customizable in Settings.\n- Say “close all my YouTube tabs”, “switch to Work”, “summarize this page” or “tidy my tabs”. Closing tabs asks for confirmation and preserves pinned tabs.\n- A compact native voice indicator stays inside the Moon window, with live transcription, dictation mode and speech-language controls.\n- Speech runs on this Mac. Page summaries use your configured AI provider; enable Ollama in Settings → AI.\n\nApple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized. The optional ActivityWatch companion is distributed separately by its authors."
 }

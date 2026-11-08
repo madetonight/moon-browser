@@ -110,6 +110,8 @@ struct MoonApp: App {
                     .shortcut("edit.find")
                     // On the Settings tab, ⌘F finds a setting.
                     .disabled(!(browser.active?.isWeb ?? false) && browser.active?.page?.kind != .settings)
+                Button("Talk to Nebula…") { browser.openNebula() }
+                    .shortcut("edit.nebula")
                 Button("Find Next") { browser.look(forward: true) }
                     .shortcut("edit.findNext")
                     .disabled(!browser.finding)
@@ -743,6 +745,9 @@ struct ContentView: View {
     /// and goes (What's New).
     @ViewBuilder
     private var panels: some View {
+        if browser.nebulaOpen {
+            NebulaOverlay(browser: browser).ignoresSafeArea()
+        }
         if browser.orbitOpen {
             OrbitSummaryOverlay(browser: browser,
                                 sidebarWidth: browser.prefs.sidebar ? browser.prefs.columnWidth : 0,
@@ -849,6 +854,7 @@ struct ContentView: View {
                 if let window { updateWindowGround(window) }
             }
             .onChange(of: browser.activeID) { _, _ in
+                Nebula.shared.suspend(in: browser)
                 browser.translationOpen = false
                 browser.orbitOpen = false
             }
@@ -862,6 +868,7 @@ struct ContentView: View {
             // buttons, and on a light window they come out nearly white. Ours
             // go on in their place until the app comes back.
             .onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in
+                if Nebula.shared.phase != .preparing { Nebula.shared.suspend(in: browser) }
                 browser.tabSwitcher.cancel()
                 if browser.commandHeld { browser.commandHeld = false }
                 measureLights()
@@ -874,13 +881,20 @@ struct ContentView: View {
             }
             .onReceive(NotificationCenter.default.publisher(for: NSWindow.didResignKeyNotification)) { note in
                 if let window, (note.object as? NSWindow) === window {
+                    if Nebula.shared.phase != .preparing { Nebula.shared.suspend(in: browser) }
                     browser.tabSwitcher.cancel()
                     browser.orbitOpen = false
                     if browser.commandHeld { browser.commandHeld = false }
                 }
             }
             .onReceive(NotificationCenter.default.publisher(for: NSWindow.didMiniaturizeNotification)) { note in
-                if let window, (note.object as? NSWindow) === window { browser.orbitOpen = false }
+                if let window, (note.object as? NSWindow) === window {
+                    browser.orbitOpen = false
+                    Nebula.shared.suspend(in: browser)
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: NSWindow.willCloseNotification)) { note in
+                if let window, (note.object as? NSWindow) === window { Nebula.shared.suspend(in: browser) }
             }
             .onReceive(NotificationCenter.default.publisher(for: NSWindow.willEnterFullScreenNotification)) { note in
                 if let window, (note.object as? NSWindow) === window { browser.fullScreen = true }
@@ -1164,7 +1178,7 @@ struct ContentView: View {
     private func watchKeys() {
         let id = ObjectIdentifier(browser)
         if let old = ContentView.monitors[id] { NSEvent.removeMonitor(old) }
-        ContentView.monitors[id] = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .flagsChanged, .leftMouseDown]) { event in
+        ContentView.monitors[id] = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp, .flagsChanged, .leftMouseDown]) { event in
             // A click on the tab switcher, in this window only (see
             // Browser.clickTabSwitcher), turned into the top-left coordinates
             // SwiftUI's frames are in.
@@ -1179,6 +1193,8 @@ struct ContentView: View {
             // those of windows that aren't a browser's (a panel, the little
             // window).
             guard mine(event) else { return event }
+            if Nebula.shared.handle(event, in: browser) { return nil }
+            if event.type == .keyUp { return event }
             guard event.type == .keyDown else {
                 let held = browser.prefs.showsTabShortcuts && event.modifierFlags.contains(.command)
                 if browser.commandHeld != held { browser.commandHeld = held }

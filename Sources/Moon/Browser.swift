@@ -172,6 +172,7 @@ final class Browser: NSObject, ObservableObject {
     /// The website translator, available from the sidebar and View menu.
     @Published var translationOpen = false
     @Published var orbitOpen = false
+    @Published var nebulaOpen = false
     /// Every version's notes: Settings › About › What's New…, in a tab.
     var notesShowing: Bool {
         get { pageTab(.notes) != nil }
@@ -3568,6 +3569,7 @@ final class Browser: NSObject, ObservableObject {
         // Settings, History and the rest are tabs now (InternalPages.swift):
         // ⌘W closes them as it closes any tab, and Escape leaves them be.
         if newsShowing { newsShowing = false }
+        else if nebulaOpen { Nebula.shared.dismiss() }
         else if orbitOpen { orbitOpen = false }
         else if translationOpen { translationOpen = false }
         else { return false }
@@ -7166,5 +7168,36 @@ extension Browser {
         guard let tab = pageTab(.settings), tab.page?.detail != section.rawValue else { return }
         tab.show(InternalPage(.settings, section.rawValue), stepping: false)
         writeSessionSoon()
+    }
+}
+
+
+extension Browser {
+    /// Voice batches use the same draft checks and reopen history as Clear Tabs.
+    func closeNebulaTabs(_ ids: Set<UUID>) {
+        let going = tabs.filter { ids.contains($0.id) && $0.pin == nil && !$0.bench }
+        guard !going.isEmpty else { return }
+        closingTogether { batch in clear(going, batch: batch) }
+    }
+
+    /// Sort only ordinary, ungrouped rows in their existing slots. Pins,
+    /// groups, private tabs and split pairs keep their exact positions.
+    @discardableResult
+    func tidyNebulaTabs() -> Int {
+        let slots = tabs.indices.filter {
+            let tab = tabs[$0]
+            return tab.pin == nil && !tab.shy && !tab.bench && tab.groupID == nil && split(for: tab) == nil && tab.isWeb
+        }
+        let ordered = slots.enumerated().sorted { lhs, rhs in
+            let left = tabs[lhs.element].pageAddress?.host()?.lowercased() ?? ""
+            let right = tabs[rhs.element].pageAddress?.host()?.lowercased() ?? ""
+            return left == right ? lhs.offset < rhs.offset : left < right
+        }.map { tabs[$0.element] }
+        guard zip(slots, ordered).contains(where: { tabs[$0.0].id != $0.1.id }) else { return 0 }
+        var arranged = tabs
+        for (index, tab) in zip(slots, ordered) { arranged[index] = tab }
+        tabs = arranged
+        writeSession(now: true)
+        return ordered.count
     }
 }

@@ -140,11 +140,12 @@ enum WhatsNew {
 
     /// Only the current release is shown. Release preparation verifies its version.
     static let notes: [Notes] = [
-        Notes(version: "0.4.9", date: "7 November 2026",
-              headline: "A simpler Moon.",
-              new: [],
-              better: ["A cleaner sidebar and Edit menu."],
-              fixed: ["Removed built-in dictation and voice control."])
+        Notes(version: "0.4.10", date: "8 November 2026",
+              headline: "Nebula. Just say it.",
+              new: ["Hold Option–Space, speak, then release to control Moon.",
+                    "Switch spaces, tidy tabs, summarize a page, or close a site's tabs with confirmation."],
+              better: ["A compact voice indicator stays inside the browser window. Dictation and speech language are available from its controls."],
+              fixed: ["The microphone stops when you release the shortcut or leave Moon."])
     ]
 }
 

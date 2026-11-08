@@ -119,6 +119,7 @@ struct OrbitDoor: View {
     @ObservedObject var browser: Browser
     var body: some View {
         Door(icon: "sparkles", on: browser.orbitOpen, help: "Orbit — Activity") {
+            Nebula.shared.suspend(in: browser)
             browser.orbitOpen.toggle()
         }
             .accessibilityLabel("Orbit Activity")
