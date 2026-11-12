@@ -146,6 +146,7 @@ enum WhatsNew {
               better: ["The sidebar slides as one native surface, with a shorter hover delay and smooth reversal when your pointer changes direction.",
                        "Mouse movement reuses the event’s window instead of repeatedly asking macOS to find it."],
               fixed: ["The resize handle no longer flashes over the page as the folded sidebar appears.",
+                      "A downloaded update shows as ready and can bring its installation dialog back into view.",
                       "Update packages keep copied license files writable so macOS can finish clearing their quarantine during installation."])
     ]
 }

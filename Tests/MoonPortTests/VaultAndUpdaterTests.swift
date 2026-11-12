@@ -6,6 +6,12 @@ import XCTest
 /// Nothing here touches the keychain: every CSV row below is one that is
 /// skipped, so nothing is ever saved.
 final class VaultAndUpdaterTests: XCTestCase {
+    @MainActor
+    func testUpdaterReceivesDownloadAndExtractionProgressCallbacks() {
+        for method in ["updater:willDownloadUpdate:withRequest:", "updater:didExtractUpdate:", "userDidCancelDownload:"] {
+            XCTAssertTrue(Updater.shared.responds(to: NSSelectorFromString(method)), "Missing Sparkle callback: \(method)")
+        }
+    }
     func testHostIsTheSiteWithoutWWW() {
         XCTAssertEqual(Vault.host(of: "https://www.example.com/login?next=/"), "example.com")
         XCTAssertEqual(Vault.host(of: "  Example.COM  "), "example.com")

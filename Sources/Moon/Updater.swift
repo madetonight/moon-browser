@@ -133,7 +133,14 @@ final class Updater: NSObject, ObservableObject, SPUUpdaterDelegate {
     }
     func install() { checkByHand() }
     func relaunch() {
-        guard let installAndRelaunch else { checkByHand(); return }
+        guard let installAndRelaunch else {
+            // A manually downloaded update belongs to Sparkle's standard UI.
+            // Bring its ready-to-install dialog forward instead of starting a
+            // second check while the existing installation is still active.
+            if case .ready = stage { controller?.userDriver.showUpdateInFocus() }
+            else { checkByHand() }
+            return
+        }
         installAndRelaunch()
     }
     func openDisk() { checkByHand() }
@@ -148,6 +155,18 @@ final class Updater: NSObject, ObservableObject, SPUUpdaterDelegate {
         stage = updater.automaticallyDownloadsUpdates ? .fetching(next) : .waiting(next)
         status = "Moon \(next.version) is available"
         completion?(next); completion = nil
+    }
+    func updater(_ updater: SPUUpdater, willDownloadUpdate item: SUAppcastItem, with request: NSMutableURLRequest) {
+        stage = .fetching(release(item))
+        status = "Moon \(item.displayVersionString) is downloading…"
+    }
+    func updater(_ updater: SPUUpdater, didExtractUpdate item: SUAppcastItem) {
+        stage = .ready(release(item))
+        status = "Moon \(item.displayVersionString) is ready to install"
+    }
+    func userDidCancelDownload(_ updater: SPUUpdater) {
+        stage = .none
+        status = "Update download canceled"
     }
     func updaterDidNotFindUpdate(_ updater: SPUUpdater) {
         clearTransportRetry(reset: true)
