@@ -140,12 +140,14 @@ enum WhatsNew {
 
     /// Only the current release is shown. Release preparation verifies its version.
     static let notes: [Notes] = [
-        Notes(version: "0.4.10", date: "8 November 2026",
-              headline: "Nebula. Just say it.",
-              new: ["Hold Option–Space, speak, then release to control Moon.",
-                    "Switch spaces, tidy tabs, summarize a page, or close a site's tabs with confirmation."],
-              better: ["A compact voice indicator stays inside the browser window. Dictation and speech language are available from its controls."],
-              fixed: ["The microphone stops when you release the shortcut or leave Moon."])
+        Notes(version: "0.4.11", date: "12 November 2026",
+              headline: "A calmer workspace for your tabs.",
+              new: ["A native assistant workspace with chat bubbles, formatted answers, code blocks, and expandable browser actions. Choose Codex or Gemini."],
+              better: ["A compact composer keeps shared tabs, model choice, and page approvals close at hand. Responses follow smoothly without interrupting manual scrolling.",
+                       "Assistants can read a ready page while its remaining images finish loading."],
+              fixed: ["Codex receives its generated connection folder directly instead of scanning Moon’s protected app data.",
+                      "Website translation preserves icon-font names. Focused cross-origin widgets no longer trigger repeated frame probes.",
+                      "Opening Settings no longer focuses an invisible sidebar close button or draws a stray blue square."])
     ]
 }
 

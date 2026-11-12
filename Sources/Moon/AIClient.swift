@@ -62,7 +62,7 @@ final class AIClient: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
     /// Where a provider's requests may go: its own host, over https, or
     /// this Mac over plain http for the apps that run on it.
     static func allowed(_ url: URL, for provider: AIProvider) -> Bool {
-        guard provider == .ollama else { return false }
+        guard provider == .gemini || (Store.testing && provider == .ollama) else { return false }
         guard let scheme = url.scheme?.lowercased(), let host = url.host()?.lowercased(),
               url.user == nil, url.password == nil
         else { return false }

@@ -137,6 +137,35 @@ for binary in Path(sys.argv[1]).rglob('*'):
         output.chmod(binary.stat().st_mode)
         output.replace(binary)
 PY
+# The optional local Codex launcher is signed separately and starts on demand.
+helper="$app/Contents/Helpers/MoonCodexBridge.app"
+mkdir -p "$helper/Contents/MacOS"
+cp "$binary_dir/MoonCodexBridge" "$helper/Contents/MacOS/MoonCodexBridge"
+strip -u -r "$helper/Contents/MacOS/MoonCodexBridge"
+python3 - "$helper" "$bundle_id" <<'PYCHELPER'
+from pathlib import Path
+import plistlib,sys
+folder=Path(sys.argv[1]);owner=sys.argv[2]
+(folder/'Contents/Info.plist').write_bytes(plistlib.dumps({'CFBundleIdentifier':owner+'.CodexBridge','CFBundleExecutable':'MoonCodexBridge','CFBundleName':'Moon Codex Engine','CFBundlePackageType':'APPL','CFBundleVersion':'1','LSUIElement':True,'CFBundleDocumentTypes':[{'CFBundleTypeName':'Moon connection folder','CFBundleTypeRole':'Editor','LSHandlerRank':'None','LSItemContentTypes':['public.folder']}],'MoonOwnerBundleID':owner}))
+PYCHELPER
+helper_key="$(python3 - "$helper" "$identity" <<'PYCHASH'
+from pathlib import Path
+import hashlib,sys
+p=Path(sys.argv[1]);h=hashlib.sha256(sys.argv[2].encode())
+for name in ['Contents/Info.plist','Contents/MacOS/MoonCodexBridge']:h.update((p/name).read_bytes())
+print(h.hexdigest())
+PYCHASH
+)"
+helper_cache="$PWD/build/.signed-codex-bridges/$helper_key/MoonCodexBridge.app"
+if [[ -d "$helper_cache" ]] && codesign --verify --deep --strict "$helper_cache"; then
+  rm -rf "$helper"
+  ditto "$helper_cache" "$helper"
+else
+  codesign "${sign_args[@]}" "$helper"
+  codesign --verify --deep --strict "$helper"
+  mkdir -p "${helper_cache:h}"
+  ditto "$helper" "$helper_cache"
+fi
 codesign --verify --deep --strict "$app/Contents/Frameworks/Sparkle.framework"
 codesign "${sign_args[@]}" --entitlements "$entitlements" "$app"
 codesign --verify --deep --strict "$app"

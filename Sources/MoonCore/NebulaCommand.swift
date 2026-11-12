@@ -48,10 +48,24 @@ public enum NebulaCommand: Equatable, Sendable {
         }
         if normalized.hasPrefix("open ") {
             var address = String(text.dropFirst(5)).trimmingCharacters(in: .whitespacesAndNewlines)
+            let site = address.lowercased().trimmingCharacters(in: .whitespacesAndNewlines.union(CharacterSet(charactersIn: ".!?")))
+            let sites = ["youtube": "https://www.youtube.com", "you tube": "https://www.youtube.com",
+                         "gmail": "https://mail.google.com", "x": "https://x.com",
+                         "google": "https://www.google.com", "github": "https://github.com",
+                         "chatgpt": "https://chatgpt.com"]
+            if let destination = sites[site], let url = URL(string: destination) { return .open(url) }
             if !address.contains("://") { address = "https://" + address }
-            guard let url = URL(string: address), ["https", "http"].contains(url.scheme?.lowercased() ?? ""),
-                  let host = url.host, host.contains("."), url.user == nil, url.password == nil,
+            guard var parts = URLComponents(string: address), ["https", "http"].contains(parts.scheme?.lowercased() ?? ""),
+                  let originalHost = parts.host, parts.user == nil, parts.password == nil,
                   !address.contains(where: { $0.isWhitespace }) else { return nil }
+            // Speech recognition adds sentence punctuation. A trailing DNS dot
+            // must not turn a spoken site name into a different destination.
+            // Normalize the host only; paths, queries and fragments stay literal.
+            var host = originalHost
+            while host.hasSuffix(".") { host.removeLast() }
+            guard host.contains("."), !host.split(separator: ".", omittingEmptySubsequences: false).contains(where: { $0.isEmpty }) else { return nil }
+            parts.host = host
+            guard let url = parts.url else { return nil }
             return .open(url)
         }
         return nil

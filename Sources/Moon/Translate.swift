@@ -584,6 +584,9 @@ final class PageTranslator {
       function closed(el) {
         if (el.getAttribute('translate') === 'no') return true;
         if (el.classList && el.classList.contains('notranslate')) return true;
+        // These words are glyph identifiers, not prose. Translating them
+        // breaks icon-font ligatures and spills labels over adjacent controls.
+        if (el.matches('.google-symbols,.google-material-icons,.material-icons,.material-icons-outlined,.material-icons-round,.material-icons-sharp,.material-icons-two-tone,.material-symbols-outlined,.material-symbols-rounded,.material-symbols-sharp')) return true;
         var c = el.getAttribute('contenteditable');
         return c !== null && c !== 'false';
       }

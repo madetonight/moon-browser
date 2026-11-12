@@ -172,6 +172,7 @@ struct Command: Identifiable {
         Command("file.print", "Print…", .file, KeyCombo("p")) { $0.printPage() },
 
         Command("edit.find", "Find on Page…", .edit, KeyCombo("f")) { $0.openFind() },
+        Command("tabs.codex", "New Codex Tab", .tabs, nil) { $0.openCodex() },
         Command("edit.nebula", "Talk to Nebula…", .edit,
                 KeyCombo("space", command: false, option: true)) { $0.openNebula() },
         Command("edit.findNext", "Find Next", .edit, KeyCombo("g")) { $0.look(forward: true) },

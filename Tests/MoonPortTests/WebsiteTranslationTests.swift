@@ -33,6 +33,8 @@ final class WebsiteTranslationTests: XCTestCase {
         <textarea id="draft">Brouillon privé</textarea>
         <div contenteditable="true" id="editor">Texte modifiable privé</div>
         <p translate="no" id="keep">Ne pas traduire</p>
+        <span class="google-symbols" id="glyph">personalized_recommendations</span>
+        <span class="material-symbols-outlined" id="glyph2">history</span>
         </body></html>
         """, baseURL: URL(string: "https://translation.invalid"))
         try await wait { web.title == "Translation fixture" && !web.isLoading }
@@ -51,6 +53,8 @@ final class WebsiteTranslationTests: XCTestCase {
         XCTAssertTrue(text?.hasPrefix("[fr→de] Bonjour") == true, text ?? "missing text")
         XCTAssertFalse(text?.contains("[fr→en]") == true, "The second pass must not translate already translated text")
 
+        let glyphs = try await web.evaluateJavaScript("[document.getElementById('glyph').textContent, document.getElementById('glyph2').textContent]") as? [String]
+        XCTAssertEqual(glyphs, ["personalized_recommendations", "history"], "Icon ligatures must survive website translation unchanged")
         let protected = try await web.evaluateJavaScript("[document.getElementById('password').value, document.getElementById('draft').value, document.getElementById('editor').textContent, document.getElementById('keep').textContent]") as? [String]
         XCTAssertEqual(protected, ["synthetic-password", "Brouillon privé", "Texte modifiable privé", "Ne pas traduire"])
         tab.translator?.end(restore: true)
@@ -104,6 +108,8 @@ final class WebsiteTranslationTests: XCTestCase {
 
     func testUnavailableTranslationDoesNotRevealTheSidebar() {
         let browser = Browser(record: WindowRecord())
+        // An explicitly unavailable page; another fixture may have saved a website.
+        browser.active?.show(InternalPage(.settings))
         browser.folded = true
         browser.peeking = false
         browser.openTranslation()

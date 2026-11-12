@@ -469,10 +469,10 @@ final class FormRelay: NSObject, WKScriptMessageHandler {
         if (el.getAttribute && el.getAttribute('role') === 'textbox') return true;
         // A document that types into a frame of its own — Google Docs keeps
         // the caret there. ⌘⇧V is that document's paste, so the frame counts.
-        if (tag === 'iframe') {
-          try { return editable(el.contentDocument && el.contentDocument.activeElement); }
-          catch (e) { return false; }
-        }
+        // Focus inside a frame belongs to that page. Do not probe another
+        // document on every focus/scroll: cross-origin widgets reject it and
+        // log security errors. Preserve the page's editing shortcuts instead.
+        if (tag === 'iframe') return true;
         if (tag !== 'input') return false;
         var kind = (el.type || 'text').toLowerCase();
         return ['text', 'search', 'email', 'url', 'tel', 'password', 'number',

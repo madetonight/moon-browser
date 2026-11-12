@@ -59,9 +59,11 @@ final class NebulaCapture {
         let source = inputFormat
         guard source.sampleRate > 0, source.channelCount > 0 else { throw Failure.audioFormat }
         let conversion = try NebulaAudioConverter(from: source, to: format)
-        let (stream, continuation) = AsyncThrowingStream<AnalyzerInput, Error>.makeStream(bufferingPolicy: .bufferingOldest(8))
+        // Preserve the first words while the analyzer loads, bounded to a few
+        // seconds of audio rather than an unbounded recording.
+        let (stream, continuation) = AsyncThrowingStream<AnalyzerInput, Error>.makeStream(bufferingPolicy: .bufferingOldest(192))
         self.continuation = continuation
-        engine.inputNode.installTap(onBus: 0, bufferSize: 2048, format: source) { buffer, _ in
+        engine.inputNode.installTap(onBus: 0, bufferSize: 1024, format: source) { buffer, _ in
             do {
                 let converted = try conversion.convert(buffer)
                 guard converted.frameLength > 0 else { return }

@@ -23,13 +23,13 @@ enum AI {
 enum AIProvider: String, CaseIterable, Identifiable {
     /// The model downloaded to this Mac, run by Moon's own engine (AIEngine).
     case thisMac
-    case anthropic, openAI, gemini, openRouter
+    case anthropic, openAI, gemini, openRouter, codex
     /// Ollama, on this Mac.
     case ollama
     /// LM Studio, on this Mac.
     case lmStudio
 
-    static var allCases: [AIProvider] { [.ollama] }
+    static var allCases: [AIProvider] { [.codex, .gemini] }
 
     var id: String { rawValue }
 
@@ -38,7 +38,8 @@ enum AIProvider: String, CaseIterable, Identifiable {
         case .thisMac: return "On this Mac"
         case .anthropic: return "Anthropic"
         case .openAI: return "OpenAI"
-        case .gemini: return "Google Gemini"
+        case .gemini: return "Gemini"
+        case .codex: return "Codex"
         case .openRouter: return "OpenRouter"
         case .ollama: return "Ollama"
         case .lmStudio: return "LM Studio"
@@ -56,7 +57,7 @@ enum AIProvider: String, CaseIterable, Identifiable {
         // Never asked over the network: the engine is a program of its own.
         case .thisMac: return URL(string: "http://127.0.0.1:1/")!
         case .anthropic: return URL(string: "https://api.anthropic.com/v1/")!
-        case .openAI: return URL(string: "https://api.openai.com/v1/")!
+        case .codex, .openAI: return URL(string: "https://api.openai.com/v1/")!
         case .gemini: return URL(string: "https://generativelanguage.googleapis.com/v1beta/")!
         case .openRouter: return URL(string: "https://openrouter.ai/api/v1/")!
         case .ollama: return URL(string: "http://127.0.0.1:11434/v1/")!
@@ -80,7 +81,7 @@ enum AIProvider: String, CaseIterable, Identifiable {
         case .openAI: return "gpt-5.4-mini"
         case .gemini: return "gemini-3.8-flash"
         case .openRouter: return "google/gemini-3.8-flash"
-        case .ollama, .lmStudio: return ""
+        case .codex, .ollama, .lmStudio: return ""
         }
     }
 
@@ -98,13 +99,9 @@ enum AIProvider: String, CaseIterable, Identifiable {
 
 /// The keys, in the keychain and nowhere else.
 ///
-/// The data protection keychain, under Moon's own access group: only apps
-/// signed as Search, with its provisioning profile, can read or write them.
-/// This Mac only, readable while it is unlocked, never synced, and each kept
-/// for its provider's host (account "provider@host"). A copy of Search built
-/// without that profile — from source, or for testing — has no access group,
-/// and keeps no key at all rather than one somewhere weaker. Test runs keep
-/// theirs in memory, for the run.
+/// Each key is kept as an app-controlled macOS Keychain item, scoped to
+/// its provider's exact host. It is never kept in settings, logs or page
+/// scripts. Test runs keep synthetic keys in memory for the run.
 ///
 /// A key is read the moment a request needs it and let go with the request:
 /// never in the settings file, a published value, a log line or an error.
@@ -120,12 +117,13 @@ enum AIKeys {
 
     private static func query(_ provider: AIProvider) -> [String: Any] {
         [kSecClass as String: kSecClassGenericPassword,
-         kSecUseDataProtectionKeychain as String: true,
          kSecAttrService as String: service,
          kSecAttrAccount as String: account(provider)]
     }
 
-    /// Whether a key can be kept at all by this copy of Search.
+    /// The signed app uses macOS Keychain's app access controls, matching
+    /// Moon's existing credential and Orbit stores. No provisioning group
+    /// or plaintext fallback is needed for an open-source local build.
     static var available: Bool {
         if Store.testing { return true }
         var asked = query(.anthropic)
@@ -135,7 +133,7 @@ enum AIKeys {
 
     static func save(_ key: String, for provider: AIProvider) -> Saved {
         let key = key.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !key.isEmpty, !provider.isLocal else { return .failed }
+        guard !key.isEmpty, !provider.isLocal, provider != .codex else { return .failed }
         if Store.testing {
             rehearsal[account(provider)] = key
             return .kept
@@ -143,7 +141,7 @@ enum AIKeys {
         SecItemDelete(query(provider) as CFDictionary)
         var item = query(provider)
         item[kSecValueData as String] = Data(key.utf8)
-        item[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+        item[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlocked
         item[kSecAttrSynchronizable as String] = false
         item[kSecAttrLabel as String] = "Moon — \(provider.name) key"
         // The last four, to tell keys apart in Settings without reading one.

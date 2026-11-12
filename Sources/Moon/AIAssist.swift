@@ -200,7 +200,16 @@ extension Browser {
         // A private tab leaves nothing behind anywhere, a provider included.
         let shy = tab.shy || tab.built.map { !$0.configuration.websiteDataStore.isPersistent } == true
         guard !shy || provider.isLocal else {
-            announce("In a private tab, only an AI on this Mac")
+            announce("AI is unavailable in private tabs")
+            return
+        }
+        if provider == .codex {
+            let workspace = openCodex()
+            let session = workspace.codex ?? CodexSession(browser: self, tab: workspace.id)
+            workspace.codex = session
+            if let address = tab.pageAddress { session.share(tab, origin: address) }
+            session.draft = summary ? "Summarize the shared page and its main points." : ""
+            session.submitWhenReady = summary
             return
         }
         if provider == .thisMac, AIEngine.shared.state != .ready {
@@ -441,7 +450,11 @@ struct AISettings: View {
                     }
                     if let provider = prefs.aiProvider {
                         Rule()
-                        if provider == .thisMac { onThisMac } else if provider.isLocal { localModel(provider) } else { key(provider); Rule(); cloudModel(provider) }
+                        if provider == .codex {
+                            Line("ChatGPT account", "Codex connects through its local engine. Sign in from a Codex tab; only the tabs you share are available") {
+                                Pill("Open Codex") { browser.openCodex() }
+                            }
+                        } else if provider == .thisMac { onThisMac } else if provider.isLocal { localModel(provider) } else { key(provider); Rule(); cloudModel(provider) }
                     }
                 }
                 .onChange(of: prefs.aiProvider) { _, _ in
@@ -487,6 +500,7 @@ struct AISettings: View {
 
     private var place: String {
         guard let provider = prefs.aiProvider else { return "A provider you have a key with, or an app on this Mac" }
+        if provider == .codex { return "Your ChatGPT account, through the official Codex engine. Shared page text goes to OpenAI" }
         return provider.isLocal
             ? "Nothing leaves this Mac. Also in private tabs"
             : "Your key, kept in this Mac's keychain, sent only to \(provider.host). Never from a private tab"

@@ -38,6 +38,8 @@ final class Nebula: ObservableObject {
     @Published private(set) var pendingTabs: [UUID] = []
     private var pendingSpace: UUID?
     private var actionTask: Task<Void, Never>?
+    private var resolvedLocales: [String: Locale] = [:]
+    private var readyModels: Set<String> = []
 
 
     var busy: Bool { phase == .preparing || phase == .listening || phase == .finishing || phase == .working }
@@ -59,6 +61,8 @@ final class Nebula: ObservableObject {
         let supported = await SpeechTranscriber.supportedLocales
         languages = supported.map(\.identifier).sorted()
         if let match = await SpeechTranscriber.supportedLocale(equivalentTo: Locale(identifier: language)) {
+            resolvedLocales[language] = match
+            resolvedLocales[match.identifier] = match
             language = match.identifier
         }
     }
@@ -75,8 +79,12 @@ final class Nebula: ObservableObject {
         setupTask = Task { [self] in
             do {
                 guard SpeechTranscriber.isAvailable else { throw Failure.unavailable }
-                guard let locale = await SpeechTranscriber.supportedLocale(equivalentTo: Locale(identifier: language))
-                else { throw Failure.language }
+                let locale: Locale
+                if let cached = resolvedLocales[language] { locale = cached }
+                else {
+                    guard let supported = await SpeechTranscriber.supportedLocale(equivalentTo: Locale(identifier: language)) else { throw Failure.language }
+                    locale = supported; resolvedLocales[language] = supported
+                }
                 if mode == .dictate {
                     if targetTask == nil, let browser { targetTask = Task { await NebulaTarget.capture(in: browser) } }
                     target = await targetTask?.value
@@ -88,9 +96,12 @@ final class Nebula: ObservableObject {
                 guard granted else { throw Failure.permission }
                 guard generation == turn else { return }
                 let transcriber = SpeechTranscriber(locale: locale, preset: .progressiveTranscription)
-                if let request = try await AssetInventory.assetInstallationRequest(supporting: [transcriber]) {
-                    status = "Downloading Apple’s speech model for this language…"
-                    try await request.downloadAndInstall()
+                if !readyModels.contains(locale.identifier) {
+                    if let request = try await AssetInventory.assetInstallationRequest(supporting: [transcriber]) {
+                        status = "Downloading Apple’s speech model for this language…"
+                        try await request.downloadAndInstall()
+                    }
+                    readyModels.insert(locale.identifier)
                 }
                 try Task.checkCancellation()
                 guard generation == turn, (NSApp.isActive && browser?.window?.isKeyWindow == true) || Store.testing
@@ -99,9 +110,14 @@ final class Nebula: ObservableObject {
                 guard let format = await SpeechAnalyzer.bestAvailableAudioFormat(
                     compatibleWith: [transcriber], considering: capture.inputFormat) else { throw Failure.unavailable }
                 let analyzer = SpeechAnalyzer(modules: [transcriber],
-                    options: .init(priority: .userInitiated, modelRetention: .whileInUse))
+                    options: .init(priority: .userInitiated, modelRetention: .lingering))
                 self.analyzer = analyzer
-                try await analyzer.prepareToAnalyze(in: format)
+                let context = AnalysisContext()
+                let sites = browser?.displayedTabs.filter { !$0.shy && !$0.bench && $0.page == nil }.prefix(24).flatMap {
+                    [String($0.label.prefix(80)), $0.pageAddress?.host() ?? ""]
+                } ?? []
+                context.contextualStrings[.general] = ["Moon", "Nebula", "YouTube", "Gmail", "Google", "GitHub"] + sites
+                try await analyzer.setContext(context)
                 try Task.checkCancellation()
                 guard generation == turn, browser?.window?.isKeyWindow == true || Store.testing else { throw CancellationError() }
                 guard wantsCapture else {
@@ -147,8 +163,11 @@ final class Nebula: ObservableObject {
     private func receive(_ text: String, final: Bool) {
         let segment = text.trimmingCharacters(in: .whitespacesAndNewlines)
         let combined = [committed, segment].filter { !$0.isEmpty }.joined(separator: " ")
-        transcript = String(combined.prefix(16_000))
-        if final { committed = transcript }
+        let bounded = String(combined.prefix(16_000))
+        transcript = NebulaTranscript.withoutTrailingPeriod(bounded)
+        // Keep sentence boundaries between recognition segments, while the
+        // displayed and inserted transcript never has an automatic final dot.
+        if final { committed = bounded }
         if combined.count > 16_000 { fail(Failure.timeout) }
     }
 
@@ -208,6 +227,7 @@ final class Nebula: ObservableObject {
     }
 
     private func fail(_ error: Error) {
+        readyModels = []
         let words = transcript
         cancel()
         transcript = words
@@ -254,6 +274,7 @@ final class Nebula: ObservableObject {
 
     func apply() async {
         guard !busy, let browser, browser.nebulaOpen else { return }
+        transcript = NebulaTranscript.withoutTrailingPeriod(transcript)
         if mode == .dictate {
             guard let target else { status = Failure.field.localizedDescription; return }
             phase = .working
@@ -261,7 +282,18 @@ final class Nebula: ObservableObject {
             else { phase = .review; status = "The field changed. Copy your words and choose the field again." }
             return
         }
-        guard let command else { status = "Try “new tab”, “switch to Work” or “search for…”"; return }
+        guard let request = NebulaRequest.resolve(transcript) else { status = "No speech detected. Hold the shortcut and try again."; return }
+        let command: NebulaCommand
+        switch request {
+        case .command(let resolved): command = resolved
+        case .googleSearch(let query):
+            guard let url = NebulaRequest.googleURL(for: query) else { return }
+            dismiss(); browser.open(url, foreground: true, from: browser.active)
+            return
+        case .unsupportedAddress:
+            status = "Say a website name or web address. Local files and sign-in details aren't opened by voice."
+            return
+        }
         if command == .closeTab || { if case .closeMatching = command { return true }; return false }() {
             let matches: [Tab]
             if case .closeMatching(let name) = command { matches = matchingTabs(name, in: browser).filter { $0.pin == nil } }
@@ -315,7 +347,7 @@ final class Nebula: ObservableObject {
                 "window.scrollBy({top: (up ? -1 : 1) * innerHeight * 0.75, behavior: 'smooth'});",
                 arguments: ["up": up], in: nil, in: Web.world) { _ in }
         case .search(let query):
-            if let url = browser.searchURL(for: query) { browser.open(url, foreground: true, from: browser.active) }
+            if let url = NebulaRequest.googleURL(for: query) { browser.open(url, foreground: true, from: browser.active) }
         case .open(let url): browser.open(url, foreground: true, from: browser.active)
         case .summarize: browser.summarizePage()
         case .tidy:

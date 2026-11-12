@@ -27,6 +27,34 @@ final class NebulaTests: XCTestCase {
         XCTAssertFalse(key.map(KeyCombo.isReserved) ?? true)
     }
 
+    func testOrdinarySpeechOpensGoogleAndDismissesTheInstructionStrip() async throws {
+        _ = NSApplication.shared
+        let browser = Browser(record: WindowRecord())
+        let nebula = Nebula()
+        nebula.mode = .control
+        nebula.open(in: browser)
+        defer { nebula.dismiss(); browser.closeAll() }
+        nebula.transcript = "Lloyd Television guitarist."
+        await nebula.apply()
+        let destination = try XCTUnwrap(browser.active?.pageAddress)
+        XCTAssertEqual(destination.host, "www.google.com")
+        XCTAssertEqual(URLComponents(url: destination, resolvingAgainstBaseURL: false)?.queryItems?.first?.value, "Lloyd Television guitarist")
+        XCTAssertFalse(browser.nebulaOpen)
+    }
+
+    func testConversationalSpeechOpensTheRequestedWebsite() async throws {
+        _ = NSApplication.shared
+        let browser = Browser(record: WindowRecord())
+        let nebula = Nebula()
+        nebula.mode = .control
+        nebula.open(in: browser)
+        defer { nebula.dismiss(); browser.closeAll() }
+        nebula.transcript = "Could you please take me to YouTube."
+        await nebula.apply()
+        XCTAssertEqual(browser.active?.pageAddress?.host, "www.youtube.com")
+        XCTAssertFalse(browser.nebulaOpen)
+    }
+
     func testBatchCloseNeedsConfirmationAndExcludesSpoofedTitlesAndPins() async throws {
         _ = NSApplication.shared
         let browser = Browser(record: WindowRecord())

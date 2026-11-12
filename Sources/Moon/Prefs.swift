@@ -593,7 +593,10 @@ final class Preferences: ObservableObject {
     }
     /// Where its answers come from. None until you choose.
     @Published var aiProvider: AIProvider? {
-        didSet { if aiProvider != .ollama { aiProvider = .ollama }; store.set("ollama", forKey: "ai.provider") }
+        didSet {
+            if let value = aiProvider, !AIProvider.allCases.contains(value) { aiProvider = .codex; return }
+            store.set(aiProvider?.rawValue, forKey: "ai.provider")
+        }
     }
     /// The model asked for at each provider, where it isn't the default.
     @Published private(set) var aiModels: [String: String] {
@@ -757,7 +760,7 @@ final class Preferences: ObservableObject {
         let keepsSite = home == nil && peek == nil ? true : (home ?? false) || (peek ?? false)
         pinsGoHome = keepsSite
         ai = AI.shipped && store.bool(forKey: "ai")
-        aiProvider = .ollama
+        aiProvider = store.string(forKey: "ai.provider").flatMap(AIProvider.init(rawValue:)).flatMap { AIProvider.allCases.contains($0) ? $0 : nil } ?? .codex
         aiModels = store.dictionary(forKey: "ai.models") as? [String: String] ?? [:]
         commandBar = store.bool(forKey: "commandbar")
         floatingNewTab = store.bool(forKey: "newtab.floating")

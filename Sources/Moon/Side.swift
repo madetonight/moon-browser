@@ -882,6 +882,7 @@ private struct SideFoot: View {
                 BookmarkDoor(browser: browser, arrowEdge: prefs.sidePosition == .right ? .leading : .trailing)
                 FetchDoor(browser: browser, fetches: fetches, persistent: true)
                 TranslationDoor(browser: browser, arrowEdge: prefs.sidePosition == .right ? .leading : .trailing)
+                CodexDoor(browser: browser)
                 NebulaDoor(browser: browser)
                 OrbitDoor(browser: browser)
             }
@@ -917,6 +918,7 @@ private struct SideFoot: View {
             BookmarkDoor(browser: browser, arrowEdge: prefs.sidePosition == .right ? .leading : .trailing)
             FetchDoor(browser: browser, fetches: fetches, persistent: true)
             TranslationDoor(browser: browser, arrowEdge: prefs.sidePosition == .right ? .leading : .trailing)
+            CodexDoor(browser: browser)
             NebulaDoor(browser: browser)
             OrbitDoor(browser: browser)
         }
@@ -932,14 +934,14 @@ private struct SideFoot: View {
 
     /// How many doors the foot has, stacked: what the rows stop short of.
     @MainActor static func doors(_ prefs: Preferences, _ fetches: Fetches) -> Int {
-        6  // extensions, bookmarks, downloads, translation, Nebula and Orbit
+        7  // extensions, bookmarks, downloads, translation, Codex, Nebula and Orbit
     }
 
     /// How many pinned extensions fit beside the doors that stay. Every door
     /// is 26 points, with 2 between them.
     private var room: Int {
         let door: CGFloat = 26 + 2
-        let kept = 6  // extensions, bookmarks, downloads, translation, Nebula and Orbit
+        let kept = 7  // extensions, bookmarks, downloads, translation, Codex, Nebula and Orbit
         let free = (availableWidth ?? prefs.sideWidth) - 2 * 10 + 2 - CGFloat(kept) * door
         return max(0, Int((free / door).rounded(.down)))
     }
@@ -1225,6 +1227,13 @@ private struct SideRow: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                // Hover-only chrome must not become the window's initial
+                // keyboard target when a native page (such as Settings) opens.
+                // Closing by keyboard remains available through ⌘W; the
+                // visible button keeps its accessibility action and label.
+                .focusable(false)
+                .focusEffectDisabled()
+                .disabled(!hovering)
                 .accessibilityLabel(tab.pin != nil ? "Put pinned tab away" : "Close tab")
                 .accessibilityHidden(!hovering)
                 .help(tab.pin != nil ? "Put pinned tab away" : "Close tab")

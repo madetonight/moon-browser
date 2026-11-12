@@ -110,6 +110,7 @@ struct MoonApp: App {
                     .shortcut("edit.find")
                     // On the Settings tab, ⌘F finds a setting.
                     .disabled(!(browser.active?.isWeb ?? false) && browser.active?.page?.kind != .settings)
+                Button("New Codex Tab") { browser.openCodex() }
                 Button("Talk to Nebula…") { browser.openNebula() }
                     .shortcut("edit.nebula")
                 Button("Find Next") { browser.look(forward: true) }

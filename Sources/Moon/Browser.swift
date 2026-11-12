@@ -7201,3 +7201,21 @@ extension Browser {
         return ordered.count
     }
 }
+
+
+extension Browser {
+    @discardableResult
+    func openCodex() -> Tab {
+        if websitePopup { return tabDestination.openCodex() }
+        let tab = Tab(configuration: Web.configuration(space: spaceID))
+        prepare(tab)
+        tabs.insert(tab, at: placeForNew())
+        tab.show(InternalPage(.codex))
+        if launching { dismiss() }
+        editing = false
+        typed = ""
+        select(tab)
+        writeSessionSoon()
+        return tab
+    }
+}
