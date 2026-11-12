@@ -1,22 +1,22 @@
 {
   "repository": "madetonight/moon-browser",
-  "tag": "v0.4.10-beta",
-  "build": "2026110801",
-  "title": "Moon 0.4.10 beta",
+  "tag": "v0.4.11-beta",
+  "build": "2026111205",
+  "title": "Moon 0.4.11 beta",
   "keep_latest_only": true,
   "assets": [
     {
-      "name": "Moon-0.4.10-arm64.dmg",
-      "size": 5186036,
-      "sha256": "a899d788f7133b731dd3248a41d4cce1387b975f0d0641c516f874b19da77eb1",
-      "blob": "ea6ebe194b182f66cd37d7d601f59d5bc3de5f26"
+      "name": "Moon-0.4.11-arm64.dmg",
+      "size": 5484769,
+      "sha256": "5967454088868dea7d555b78d93721fa38734851f180f93b5478e56f58a0c260",
+      "blob": "8f48c3acfda10730ef7abdee026b950731ed6ae0"
     }
   ],
   "feed": {
     "name": "appcast.xml",
-    "size": 2260,
-    "sha256": "4bd426580c2844515a44506a288694ce344252b00222ce6dcf5ba147ca54f1c4",
-    "blob": "4ad6d365c053abaddff53fd3d8dd318f0e5238c0"
+    "size": 2742,
+    "sha256": "7de9da52f250162a52f4e24556049c5ae9b136358f189048c6a7c55f08270335",
+    "blob": "bc0aaace15fbf3a7ed83f875b9610297b415a741"
   },
-  "notes": "Nebula. Just say it.\n\n- Hold Option–Space, speak, then release to control Moon. The shortcut is customizable in Settings.\n- Say “close all my YouTube tabs”, “switch to Work”, “summarize this page” or “tidy my tabs”. Closing tabs asks for confirmation and preserves pinned tabs.\n- A compact native voice indicator stays inside the Moon window, with live transcription, dictation mode and speech-language controls.\n- Speech runs on this Mac. Page summaries use your configured AI provider; enable Ollama in Settings → AI.\n\nApple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized. The optional ActivityWatch companion is distributed separately by its authors."
+  "notes": "# Moon 0.4.11 beta\n\nA calmer workspace for your tabs.\n\n- Open a native assistant workspace from the Codex sidebar button. Choose between Codex and Gemini.\n- Share specific website tabs for reading, comparison, and approved page interaction. Private tabs, cookies, passwords, and unshared sites are excluded.\n- Codex uses the official local CLI and a separate ChatGPT sign-in. Gemini uses a Google AI Studio key saved locally in Keychain.\n- A compact composer, formatted chat responses, code copying, and expandable browser actions keep the assistant native to Moon.\n- Codex receives only its generated connection folder through macOS; it no longer scans Moon’s protected app data.\n- Read ready pages without waiting for all their images. Preserve icon-font names during translation and avoid repeated cross-origin focus probes.\n- Hold Option–Space for Nebula’s compact listening strip, then release to act.\n- Fix the stray blue focus square in the sidebar when opening Settings, while preserving close-button hit targets and selection.\n\nApple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized. The optional ActivityWatch companion is distributed separately by its authors.\n"
 }
