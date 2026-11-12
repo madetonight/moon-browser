@@ -148,6 +148,28 @@ final class SidebarPressTests: XCTestCase {
 
     // What else a press in the column does, checked when it landed (#625).
 
+    func testCloseTargetNeverTakesKeyboardFocusAndOnlyActsWhileVisible() async throws {
+        _ = NSApplication.shared
+        var closed = 0
+        let host = NSHostingView(rootView: CloseClick(armed: true, reservesSpace: true) { closed += 1 })
+        let window = makeWindow(root: Color.clear, width: 30, height: 28)
+        window.contentView = host
+        try await settle()
+        func target(_ view: NSView) -> NSView? {
+            if view.accessibilityRole() == .button && view.accessibilityLabel() == "Close tab" { return view }
+            return view.subviews.lazy.compactMap { target($0) }.first
+        }
+        let control = try XCTUnwrap(target(host))
+        XCTAssertFalse(control.acceptsFirstResponder)
+        XCTAssertEqual(control.focusRingType, .none)
+        XCTAssertTrue(control.accessibilityPerformPress())
+        XCTAssertEqual(closed, 1)
+        host.rootView = CloseClick(armed: false, reservesSpace: true) { closed += 1 }
+        try await settle()
+        XCTAssertFalse(control.isAccessibilityElement())
+        XCTAssertFalse(control.accessibilityPerformPress())
+        XCTAssertEqual(closed, 1)
+    }
     func testPressOnTheCrossLeavesTheRowAlone() async throws {
         // The cross itself answers only under a real pointer (onHover), which
         // a hidden test can't give; that it closes is checked by hand. Here:
@@ -355,10 +377,17 @@ final class SidebarPressTests: XCTestCase {
         activationPolicy = NSApp.activationPolicy()
         NSApp.setActivationPolicy(.prohibited)
         let prefs = Shared.prefs
+        let layout = (prefs.sideIcons, prefs.sidePosition, prefs.sideHides, prefs.sideWidth, prefs.liquidGlass)
         let previous = (prefs.sidebar, prefs.usesTabGroups, prefs.splitView, prefs.listsPins, prefs.roomyTabs, prefs.liquidGlass)
         restorePreferences = {
+            (prefs.sideIcons, prefs.sidePosition, prefs.sideHides, prefs.sideWidth, prefs.liquidGlass) = layout
             (prefs.sidebar, prefs.usesTabGroups, prefs.splitView, prefs.listsPins, prefs.roomyTabs, prefs.liquidGlass) = previous
         }
+        prefs.sideIcons = false
+        prefs.sidePosition = .left
+        prefs.sideHides = false
+        prefs.sideWidth = Metrics.side
+        prefs.liquidGlass = false
         let browser = Browser(record: WindowRecord())
         browsers.append(browser)
         browser.prefs.sidebar = true
@@ -402,12 +431,18 @@ final class SidebarPressTests: XCTestCase {
     }
 
     private func settle() async throws {
-        try await Task.sleep(for: .milliseconds(250))
+        // Finish the hosting view's layout before sending pointer coordinates.
+        // A hosted runner can still be installing gesture/view geometry after
+        // the first off-screen SwiftUI layout transaction.
+        for window in windows { window.contentView?.layoutSubtreeIfNeeded() }
+        try await Task.sleep(for: .milliseconds(400))
+        for window in windows { window.contentView?.layoutSubtreeIfNeeded() }
     }
 
     private func send(_ type: NSEvent.EventType, at point: NSPoint, in window: NSWindow, clicks: Int = 1) async throws {
+        window.contentView?.layoutSubtreeIfNeeded()
         window.sendEvent(try event(type, at: point, in: window, clicks: clicks))
-        try await Task.sleep(for: .milliseconds(30))
+        try await Task.sleep(for: .milliseconds(60))
     }
 
     private func event(_ type: NSEvent.EventType, at point: NSPoint, in window: NSWindow, clicks: Int = 1) throws -> NSEvent {

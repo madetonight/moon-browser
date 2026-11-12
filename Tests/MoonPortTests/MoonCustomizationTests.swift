@@ -11,12 +11,15 @@ final class MoonCustomizationTests: XCTestCase {
         XCTAssertFalse(Web.userAgentName.contains("Chrome"))
     }
 
-    func testOnlyLocalOllamaIsAvailable() {
-        XCTAssertEqual(AIProvider.allCases, [.ollama])
-        XCTAssertTrue(AIClient.allowed(URL(string: "http://127.0.0.1:11434/v1/chat/completions")!, for: .ollama))
-        XCTAssertFalse(AIClient.allowed(URL(string: "http://127.0.0.1:9000/v1/chat/completions")!, for: .ollama))
+    func testOnlyCodexAndGeminiAreOfferedAndRemoteKeysStayOnGoogle() {
+        XCTAssertEqual(AIProvider.allCases, [.codex, .gemini])
+        XCTAssertTrue(AIClient.allowed(AIProvider.gemini.base.appendingPathComponent("chat/completions"), for: .gemini))
+        for text in ["http://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+                     "https://example.com/v1/chat/completions",
+                     "https://user:secret@generativelanguage.googleapis.com/v1beta/openai/chat/completions"] {
+            XCTAssertFalse(AIClient.allowed(URL(string: text)!, for: .gemini))
+        }
         XCTAssertFalse(AIClient.allowed(URL(string: "https://api.openai.com/v1/chat/completions")!, for: .openAI))
-        XCTAssertFalse(AIClient.allowed(URL(string: "https://example.com/v1/chat/completions")!, for: .ollama))
     }
 
     func testLibraryMigrationKeepsWindowsPinsAndLocalFiles() throws {

@@ -9,5 +9,6 @@ A calmer workspace for your tabs.
 - Codex receives only its generated connection folder through macOS; it no longer scans Moon’s protected app data.
 - Read ready pages without waiting for all their images. Preserve icon-font names during translation and avoid repeated cross-origin focus probes.
 - Hold Option–Space for Nebula’s compact listening strip, then release to act.
+- Fix the stray blue focus square in the sidebar when opening Settings, while preserving close-button hit targets and selection.
 
 Apple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized. The optional ActivityWatch companion is distributed separately by its authors.

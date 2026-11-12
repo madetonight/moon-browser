@@ -1211,32 +1211,24 @@ private struct SideRow: View {
         }
         .overlay(alignment: .trailing) {
             if interactive, !editing {
-                Button {
-                    if hovering { close() }
-                } label: {
-                    // Keep one stable target while the pointer moves between
-                    // rows. Pinned rows are put down rather than removed.
-                    Image(systemName: tab.pin != nil ? "minus" : "xmark")
-                        .font(.system(size: 8, weight: .semibold))
-                        .foregroundStyle(Palette.ink)
-                        .frame(width: 15, height: 15)
-                        .background(Palette.ink.opacity(0.07), in: Circle())
-                        .opacity(hovering ? 1 : 0)
-                        .modifier(TabHoverFade(hovering: hovering))
-                        .frame(width: 30, height: prefs.sideRow)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                // Hover-only chrome must not become the window's initial
-                // keyboard target when a native page (such as Settings) opens.
-                // Closing by keyboard remains available through ⌘W; the
-                // visible button keeps its accessibility action and label.
-                .focusable(false)
-                .focusEffectDisabled()
-                .disabled(!hovering)
-                .accessibilityLabel(tab.pin != nil ? "Put pinned tab away" : "Close tab")
-                .accessibilityHidden(!hovering)
-                .help(tab.pin != nil ? "Put pinned tab away" : "Close tab")
+                // The same native, non-focusable target as horizontal tabs.
+                // Reserve its hit area even between hover updates so a close
+                // press cannot fall through and select the row underneath.
+                Image(systemName: tab.pin != nil ? "minus" : "xmark")
+                    .font(.system(size: 8, weight: .semibold))
+                    .foregroundStyle(Palette.ink)
+                    .frame(width: 15, height: 15)
+                    .background(Palette.ink.opacity(0.07), in: Circle())
+                    .opacity(hovering ? 1 : 0)
+                    .modifier(TabHoverFade(hovering: hovering))
+                    .frame(width: 30, height: prefs.sideRow)
+                    .overlay {
+                        CloseClick(armed: hovering, reservesSpace: true,
+                                   label: tab.pin != nil ? "Put pinned tab away" : "Close tab",
+                                   onPress: { selectedOnPress = true }, act: close)
+                            .frame(width: 30, height: prefs.sideRow)
+                    }
+                    .help(tab.pin != nil ? "Put pinned tab away" : "Close tab")
             }
         }
         .animation(Motion.quick, value: tab.loading)

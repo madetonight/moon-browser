@@ -1504,18 +1504,39 @@ struct OneClick: ViewModifier {
 /// button; to anything else it isn't there, and the tab goes on as before.
 struct CloseClick: NSViewRepresentable {
     let armed: Bool
+    var reservesSpace = false
+    var label = "Close tab"
+    var onPress: () -> Void = {}
     let act: () -> Void
 
-    func makeNSView(context: Context) -> NSView { Cross() }
+    func makeNSView(context: Context) -> NSView {
+        let view = Cross()
+        view.focusRingType = .none
+        return view
+    }
 
     func updateNSView(_ view: NSView, context: Context) {
-        (view as? Cross)?.armed = armed
-        (view as? Cross)?.act = act
+        guard let view = view as? Cross else { return }
+        view.armed = armed
+        view.reservesSpace = reservesSpace
+        view.act = act
+        view.onPress = onPress
+        view.setAccessibilityElement(armed)
+        view.setAccessibilityRole(.button)
+        view.setAccessibilityLabel(label)
     }
 
     private final class Cross: NSView {
         var armed = false
+        var reservesSpace = false
         var act: () -> Void = {}
+        var onPress: () -> Void = {}
+        override var acceptsFirstResponder: Bool { false }
+        override func accessibilityPerformPress() -> Bool {
+            guard armed else { return false }
+            act()
+            return true
+        }
         private var pressed = false
 
         /// Never the window's to drag from: the press is the cross's.
@@ -1524,14 +1545,20 @@ struct CloseClick: NSViewRepresentable {
         /// Asked about every event over the cross, the pointer moving included;
         /// only a left press, while the cross shows, is this view's.
         override func hitTest(_ point: NSPoint) -> NSView? {
-            guard armed, let event = NSApp.currentEvent,
-                  event.type == .leftMouseDown, event.modifierFlags.intersection([.command, .control, .option, .shift]).isEmpty
-            else { return nil }
+            guard armed || reservesSpace else { return nil }
+            // AppKit also queries hit targets outside application-event
+            // dispatch. A missing currentEvent must not erase this hit area.
+            if let event = NSApp.currentEvent {
+                guard event.type == .leftMouseDown,
+                      event.modifierFlags.intersection([.command, .control, .option, .shift]).isEmpty
+                else { return nil }
+            }
             return super.hitTest(point)
         }
 
         override func mouseDown(with event: NSEvent) {
             pressed = true
+            onPress()
         }
 
         /// On the release, and only if it is still over the cross: a press
@@ -1539,7 +1566,7 @@ struct CloseClick: NSViewRepresentable {
         override func mouseUp(with event: NSEvent) {
             guard pressed else { return }
             pressed = false
-            if bounds.contains(convert(event.locationInWindow, from: nil)) { act() }
+            if armed && bounds.contains(convert(event.locationInWindow, from: nil)) { act() }
         }
     }
 }

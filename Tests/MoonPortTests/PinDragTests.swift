@@ -281,12 +281,19 @@ final class PinDragTests: XCTestCase {
         activationPolicy = NSApp.activationPolicy()
         NSApp.setActivationPolicy(.prohibited)
         let prefs = Shared.prefs
+        let layout = (prefs.sideIcons, prefs.sidePosition, prefs.sideHides, prefs.sideWidth, prefs.liquidGlass)
         let previous = (prefs.sidebar, prefs.usesTabGroups, prefs.splitView, prefs.listsPins, prefs.roomyTabs,
                         prefs.usesSpaces, prefs.sharesPins)
         restorePreferences = {
+            (prefs.sideIcons, prefs.sidePosition, prefs.sideHides, prefs.sideWidth, prefs.liquidGlass) = layout
             (prefs.sidebar, prefs.usesTabGroups, prefs.splitView, prefs.listsPins, prefs.roomyTabs,
              prefs.usesSpaces, prefs.sharesPins) = previous
         }
+        prefs.sideIcons = false
+        prefs.sidePosition = .left
+        prefs.sideHides = false
+        prefs.sideWidth = Metrics.side
+        prefs.liquidGlass = false
         let browser = Browser(record: WindowRecord())
         browsers.append(browser)
         browser.prefs.sidebar = true
@@ -319,7 +326,12 @@ final class PinDragTests: XCTestCase {
     }
 
     private func settle() async throws {
-        try await Task.sleep(for: .milliseconds(250))
+        // Finish the hosting view's layout before sending pointer coordinates.
+        // A hosted runner can still be installing gesture/view geometry after
+        // the first off-screen SwiftUI layout transaction.
+        for window in windows { window.contentView?.layoutSubtreeIfNeeded() }
+        try await Task.sleep(for: .milliseconds(400))
+        for window in windows { window.contentView?.layoutSubtreeIfNeeded() }
     }
 
     /// Down at `start`, through `points` a few points at a time, and up at
