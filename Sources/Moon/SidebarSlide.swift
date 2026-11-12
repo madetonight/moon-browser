@@ -40,6 +40,9 @@ final class SlidingSidebarView: NSView {
         super.init(frame: frame)
         wantsLayer = true
         host.sizingOptions = []
+        // Fold already spans the titlebar. A second hosting safe area would
+        // push the whole sidebar down while the native window buttons stay put.
+        host.safeAreaRegions = []
         host.wantsLayer = true
         addSubview(host)
     }
