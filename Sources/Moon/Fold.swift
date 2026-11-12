@@ -268,7 +268,7 @@ struct Fold: View {
     /// edge stopped opening it.
     private func follow() {
         guard folding, let window = pointer.window, window.isVisible else { return pass() }
-        let screen = NSEvent.mouseLocation
+        let screen = pointer.eventScreenPoint ?? NSEvent.mouseLocation
         let point = window.convertPoint(fromScreen: screen)
         let size = window.frame.size
         let inWindow = point.x >= 0 && point.x < size.width && point.y >= 0 && point.y < size.height
@@ -514,6 +514,7 @@ private final class Pointer {
     /// Local mouse events already identify the receiving window. Asking the
     /// WindowServer again on every high-frequency move stalls the UI thread.
     private(set) var eventWindowNumber: Int?
+    private(set) var eventScreenPoint: NSPoint?
     /// The pointer is over the window, or just went off the column's edge from
     /// it and hasn't gone further.
     var crossing = false
@@ -531,11 +532,12 @@ private final class Pointer {
         // lasts, and no longer.
         accepted = window.acceptsMouseMovedEvents
         window.acceptsMouseMovedEvents = true
-        local = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged]) { event in
+        local = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged, .leftMouseDown, .leftMouseUp]) { event in
             MainActor.assumeIsolated {
                 // Drag events retain their original receiver even over another
                 // window; only ordinary mouse moves can replace a hit query.
-                self.eventWindowNumber = event.type == .mouseMoved && event.windowNumber > 0 ? event.windowNumber : nil
+                self.eventWindowNumber = event.type != .leftMouseDragged && event.windowNumber > 0 ? event.windowNumber : nil
+                self.eventScreenPoint = event.window?.convertPoint(toScreen: event.locationInWindow)
                 moved()
             }
             return event
@@ -543,6 +545,7 @@ private final class Pointer {
         global = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged]) { _ in
             MainActor.assumeIsolated {
                 self.eventWindowNumber = nil
+                self.eventScreenPoint = nil
                 moved()
             }
         }
@@ -555,6 +558,7 @@ private final class Pointer {
         local = nil
         global = nil
         eventWindowNumber = nil
+        eventScreenPoint = nil
         window?.acceptsMouseMovedEvents = accepted
     }
 }

@@ -26,6 +26,30 @@ final class SidebarPressTests: XCTestCase {
         super.setUp()
     }
 
+    func testFoldedSidebarKeepsFullWindowHeightAndRevealsItsLiveHost() async throws {
+        let browser = makeBrowser()
+        browser.folded = true
+        let window = makeWindow(root: Fold(browser: browser, prefs: browser.prefs), width: 900, height: 600)
+        browser.window = window
+        try await settle()
+        func surface(in view: NSView) -> SlidingSidebarView? {
+            if let slide = view as? SlidingSidebarView { return slide }
+            return view.subviews.lazy.compactMap { surface(in: $0) }.first
+        }
+        let slide = try XCTUnwrap(surface(in: XCTUnwrap(window.contentView)))
+        XCTAssertEqual(slide.bounds.size, NSSize(width: 900, height: 600))
+        XCTAssertEqual(slide.host.frame.maxX, 0)
+        browser.peek(true)
+        try await settle()
+        XCTAssertEqual(slide.host.frame.minX, 0)
+        XCTAssertEqual(slide.host.frame.height, 600)
+        XCTAssertNotNil(slide.hitTest(NSPoint(x: 40, y: 100)))
+        XCTAssertNil(slide.hitTest(NSPoint(x: 450, y: 100)))
+        browser.peek(false)
+        try await settle()
+        XCTAssertEqual(slide.host.frame.maxX, 0)
+    }
+
     func testSelectsOnPressWithoutEditingOnRelease() async throws {
         let browser = makeBrowser()
         let first = browser.tabs[0]
