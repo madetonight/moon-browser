@@ -4,32 +4,30 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
     <channel>
         <title>Moon</title>
         <item>
-            <title>0.4.11</title>
-            <pubDate>Thu, 12 Nov 2026 13:44:50 -0500</pubDate>
-            <link>https://github.com/madetonight/moon-browser/releases/tag/v0.4.11-beta</link>
-            <sparkle:version>2026111205</sparkle:version>
-            <sparkle:shortVersionString>0.4.11</sparkle:shortVersionString>
+            <title>0.4.12</title>
+            <pubDate>Thu, 12 Nov 2026 18:22:16 -0500</pubDate>
+            <link>https://github.com/madetonight/moon-browser/releases/tag/v0.4.12-beta</link>
+            <sparkle:version>2026111208</sparkle:version>
+            <sparkle:shortVersionString>0.4.12</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
             <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <description sparkle:format="markdown"><![CDATA[# Moon 0.4.11 beta
+            <description sparkle:format="markdown"><![CDATA[# Moon 0.4.12 beta
 
-A calmer workspace for your tabs.
+A smoother sidebar, right on cue.
 
-- Open a native assistant workspace from the Codex sidebar button. Choose between Codex and Gemini.
-- Share specific website tabs for reading, comparison, and approved page interaction. Private tabs, cookies, passwords, and unshared sites are excluded.
-- Codex uses the official local CLI and a separate ChatGPT sign-in. Gemini uses a Google AI Studio key saved locally in Keychain.
-- A compact composer, formatted chat responses, code copying, and expandable browser actions keep the assistant native to Moon.
-- Codex receives only its generated connection folder through macOS; it no longer scans Moon’s protected app data.
-- Read ready pages without waiting for all their images. Preserve icon-font names during translation and avoid repeated cross-origin focus probes.
-- Hold Option–Space for Nebula’s compact listening strip, then release to act.
-- Fix the stray blue focus square in the sidebar when opening Settings, while preserving close-button hit targets and selection.
+- Move the live sidebar as one native surface instead of animating its controls through the browser’s view hierarchy.
+- Shorten the hover delay and preserve smooth reversal when the pointer changes direction.
+- Reuse mouse events’ window information to avoid repeated window lookups during movement.
+- Stop the resize handle flashing over the page during sidebar reveals. Resizing remains available.
+- Show a downloaded update as ready and bring its installation dialog back into view instead of leaving a downloading message behind.
+- Keep copied license resources writable so the signed updater can remove quarantine during installation.
 
 Apple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized. The optional ActivityWatch companion is distributed separately by its authors.
 ]]></description>
-            <enclosure url="https://github.com/madetonight/moon-browser/releases/download/v0.4.11-beta/Moon-0.4.11-arm64.dmg" length="5484769" type="application/octet-stream" sparkle:edSignature="72ku0MMJxX2DPByywjMSKwuCrB3Im+Lze9E8UkoV78zoBmYMIDhrxYbWTd+qLSBvOjkzjLWIIhISoV+gd2U3AQ=="></enclosure>
+            <enclosure url="https://github.com/madetonight/moon-browser/releases/download/v0.4.12-beta/Moon-0.4.12-arm64.dmg" length="5489268" type="application/octet-stream" sparkle:edSignature="W02i5QzDu4tH6QQug0h8R2WHnIgTpZ1qjpZ0wvxcfgnTXPNLMPJTlYT94pIgZ7xzuVcEfCTzusp9EPojwYN4Cg=="></enclosure>
         </item>
     </channel>
 </rss><!-- sparkle-signatures:
-edSignature: Ww86wiidoBp58TN6Ing4XhhW5888OHkt/alKrKoiN1Km4bmRiKYyEy8vEGg+sWmWY9wPFx7txobCoeXtJ2qmBw==
-length: 2598
+edSignature: ijje5mUf9ZJoKW+I55zsN8ngFelP1tNGWpMLUCmTIGXxKXRq3prw6aMQ591gPp0JDGVjF2TLKXusXQzBsCtwBQ==
+length: 2255
 -->
