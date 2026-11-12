@@ -1546,9 +1546,10 @@ struct CloseClick: NSViewRepresentable {
         /// only a left press, while the cross shows, is this view's.
         override func hitTest(_ point: NSPoint) -> NSView? {
             guard armed || reservesSpace else { return nil }
-            // AppKit also queries hit targets outside application-event
-            // dispatch. A missing currentEvent must not erase this hit area.
-            if let event = NSApp.currentEvent {
+            // The sidebar reserves this whole button-shaped target, including
+            // queries outside event dispatch. currentEvent may be nil or stale;
+            // validate the actual mouseDown instead of erasing its hit area.
+            if !reservesSpace, let event = NSApp.currentEvent {
                 guard event.type == .leftMouseDown,
                       event.modifierFlags.intersection([.command, .control, .option, .shift]).isEmpty
                 else { return nil }
@@ -1557,8 +1558,8 @@ struct CloseClick: NSViewRepresentable {
         }
 
         override func mouseDown(with event: NSEvent) {
-            pressed = true
-            onPress()
+            pressed = event.modifierFlags.intersection([.command, .control, .option, .shift]).isEmpty
+            if pressed { onPress() }
         }
 
         /// On the release, and only if it is still over the cross: a press
