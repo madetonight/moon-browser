@@ -140,14 +140,13 @@ enum WhatsNew {
 
     /// Only the current release is shown. Release preparation verifies its version.
     static let notes: [Notes] = [
-        Notes(version: "0.4.11", date: "12 November 2026",
-              headline: "A calmer workspace for your tabs.",
-              new: ["A native assistant workspace with chat bubbles, formatted answers, code blocks, and expandable browser actions. Choose Codex or Gemini."],
-              better: ["A compact composer keeps shared tabs, model choice, and page approvals close at hand. Responses follow smoothly without interrupting manual scrolling.",
-                       "Assistants can read a ready page while its remaining images finish loading."],
-              fixed: ["Codex receives its generated connection folder directly instead of scanning Moon’s protected app data.",
-                      "Website translation preserves icon-font names. Focused cross-origin widgets no longer trigger repeated frame probes.",
-                      "Opening Settings no longer focuses an invisible sidebar close button or draws a stray blue square."])
+        Notes(version: "0.4.12", date: "12 November 2026",
+              headline: "A smoother sidebar, right on cue.",
+              new: [],
+              better: ["The sidebar slides as one native surface, with a shorter hover delay and smooth reversal when your pointer changes direction.",
+                       "Mouse movement reuses the event’s window instead of repeatedly asking macOS to find it."],
+              fixed: ["The resize handle no longer flashes over the page as the folded sidebar appears.",
+                      "Update packages keep copied license files writable so macOS can finish clearing their quarantine during installation."])
     ]
 }
 

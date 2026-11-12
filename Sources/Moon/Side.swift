@@ -194,7 +194,9 @@ struct SideBar: View {
     /// can be taken before it is. Edge to edge, the pill sits on the page's
     /// hairline; as cards, in the gap before the page.
     private var edge: some View {
-        EdgeGrip(lit: onEdge || grabbed != nil)
+        // A transient sidebar has no divider on the page. Its resize affordance
+        // must not flash as that moving divider crosses the pointer.
+        EdgeGrip(lit: grabbed != nil || (onEdge && !browser.folded))
             .offset(x: onFrame ? 0 : onRight ? -4 : 4)
             .frame(width: 9)
             .frame(maxHeight: .infinity)

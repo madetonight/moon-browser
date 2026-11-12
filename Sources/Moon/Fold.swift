@@ -86,7 +86,7 @@ struct Fold: View {
     /// How long the pointer rests on the edge before a column folded for
     /// good comes out. Long enough to cross the edge, short enough not to be
     /// waited for.
-    private static let dwell: TimeInterval = 0.045
+    private static let dwell: TimeInterval = 0.016
 
     var body: some View {
         ZStack(alignment: onRight ? .topTrailing : .topLeading) {
@@ -140,11 +140,11 @@ struct Fold: View {
                     // screen, the whole screen's, and the slide lagged there.
                     // Glass owns its shadow, with no opaque plane beneath it.
                     // The flat surface's shadow follows the same rounded inset.
-                    SideBar(browser: browser, prefs: prefs, onFrame: browser.asCards)
-                        .modifier(FoldShadow(x: onRight ? -4 : 4, behind: true, strength: browser.peeking ? 1 : 0,
+                    SidebarSlide(shown: browser.peeking, width: prefs.columnWidth, onRight: onRight) {
+                        SideBar(browser: browser, prefs: prefs, onFrame: browser.asCards)
+                        .modifier(FoldShadow(x: onRight ? -4 : 4, behind: true, strength: 1,
                                              sidebar: true, glass: prefs.liquidGlass && !reduceTransparency, onRight: onRight))
-                        .offset(x: browser.peeking ? 0 : (onRight ? prefs.columnWidth : -prefs.columnWidth))
-                        .allowsHitTesting(browser.peeking)
+                    }
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity,
@@ -289,7 +289,7 @@ struct Fold: View {
             // Only this window counts, not another app's window over it. One
             // of this app's own windows, such as a popover opened from the
             // column, counts as the column.
-            let top = NSWindow.windowNumber(at: screen, belowWindowWithWindowNumber: 0)
+            let top = pointer.eventWindowNumber ?? NSWindow.windowNumber(at: screen, belowWindowWithWindowNumber: 0)
             let onWindow = top == window.windowNumber
             let onOwnPanel = !onWindow && NSApp.windows.contains { $0.windowNumber == top }
             let reach = prefs.sidebar ? prefs.columnWidth : Metrics.strip
@@ -307,7 +307,7 @@ struct Fold: View {
                   !(prefs.sidebar && window.styleMask.contains(.fullScreen) && size.height - point.y < Fold.fullScreenCorner) {
             // Which window is under the pointer is asked only here, at the
             // edge: another app's window over it doesn't bring the column out.
-            guard NSWindow.windowNumber(at: screen, belowWindowWithWindowNumber: 0) == window.windowNumber
+            guard (pointer.eventWindowNumber ?? NSWindow.windowNumber(at: screen, belowWindowWithWindowNumber: 0)) == window.windowNumber
             else { return pass() }
             if arriving == nil { arrive() }
         } else if overshot {
@@ -511,6 +511,9 @@ private struct FoldShadow: ViewModifier {
 @MainActor
 private final class Pointer {
     weak var window: NSWindow?
+    /// Local mouse events already identify the receiving window. Asking the
+    /// WindowServer again on every high-frequency move stalls the UI thread.
+    private(set) var eventWindowNumber: Int?
     /// The pointer is over the window, or just went off the column's edge from
     /// it and hasn't gone further.
     var crossing = false
@@ -529,11 +532,19 @@ private final class Pointer {
         accepted = window.acceptsMouseMovedEvents
         window.acceptsMouseMovedEvents = true
         local = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged]) { event in
-            MainActor.assumeIsolated { moved() }
+            MainActor.assumeIsolated {
+                // Drag events retain their original receiver even over another
+                // window; only ordinary mouse moves can replace a hit query.
+                self.eventWindowNumber = event.type == .mouseMoved && event.windowNumber > 0 ? event.windowNumber : nil
+                moved()
+            }
             return event
         }
         global = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged]) { _ in
-            MainActor.assumeIsolated { moved() }
+            MainActor.assumeIsolated {
+                self.eventWindowNumber = nil
+                moved()
+            }
         }
     }
 
@@ -543,6 +554,7 @@ private final class Pointer {
         if let global { NSEvent.removeMonitor(global) }
         local = nil
         global = nil
+        eventWindowNumber = nil
         window?.acceptsMouseMovedEvents = accepted
     }
 }

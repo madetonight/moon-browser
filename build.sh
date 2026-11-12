@@ -43,6 +43,9 @@ cp "$binary_dir/Moon" "$app/Contents/MacOS/Moon"
 strip -u -r "$app/Contents/MacOS/Moon"
 for resource in Search-1.0.7-LICENSE Sparkle-LICENSE Moon.sdef; do cp "Support/$resource" "$app/Contents/Resources/$resource"; done
 cp LICENSE THIRD_PARTY_NOTICES.md "$app/Contents/Resources/"
+# Sparkle removes quarantine after extraction. A read-only copied license
+# prevents that operation even when the app and archive signatures are valid.
+chmod 644 "$app/Contents/Resources/"{Search-1.0.7-LICENSE,Sparkle-LICENSE,Moon.sdef,LICENSE,THIRD_PARTY_NOTICES.md}
 cp Support/Info.plist "$app/Contents/Info.plist"
 if [[ "$bundle_id" == org.moonbrowser.Moon ]]; then
   cp Support/container-migration.plist "$app/Contents/Resources/container-migration.plist"

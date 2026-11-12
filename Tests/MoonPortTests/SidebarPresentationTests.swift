@@ -1,5 +1,6 @@
 import AppKit
 import QuartzCore
+import SwiftUI
 import XCTest
 @testable import Moon
 
@@ -11,6 +12,40 @@ final class SidebarPresentationTests: XCTestCase {
             XCTAssertEqual(insets.leading, insets.trailing)
             XCTAssertEqual(insets.top, insets.bottom)
             XCTAssertEqual(insets.leading, 8)
+        }
+    }
+
+    func testSidebarSlidesItsExistingSurfaceAndKeepsPageHitTestingClear() {
+        let surface = SlidingSidebarView(frame: NSRect(x: 0, y: 0, width: 900, height: 600))
+        let window = NSWindow(contentRect: surface.frame, styleMask: .borderless, backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
+        window.contentView = surface
+        windows.append(window)
+        let originalHost = surface.host
+        for right in [false, true] {
+            surface.update(content: AnyView(Color.gray), shown: false, width: 240, onRight: right, reduced: false)
+            XCTAssertNil(surface.hitTest(NSPoint(x: 5, y: 100)))
+            surface.update(content: AnyView(Color.gray), shown: true, width: 240, onRight: right, reduced: false)
+            XCTAssertTrue(surface.host === originalHost)
+            XCTAssertEqual(surface.host.frame.minX, right ? 660 : 0)
+            XCTAssertNotNil(surface.host.layer?.animation(forKey: "sidebarSlide"))
+            XCTAssertNil(surface.hitTest(NSPoint(x: 450, y: 100)), "The overlay must not intercept the webpage")
+            surface.update(content: AnyView(Color.gray), shown: false, width: 240, onRight: right, reduced: false)
+            XCTAssertEqual(surface.host.frame.minX, right ? 900 : -240)
+            surface.update(content: AnyView(Color.gray), shown: true, width: 240, onRight: right, reduced: true)
+            XCTAssertNil(surface.host.layer?.animation(forKey: "sidebarSlide"))
+            XCTAssertEqual(surface.host.frame.minX, right ? 660 : 0)
+        }
+    }
+
+    func testSidebarResizesWithoutLeavingAStaleSlideOrDetachedSurface() {
+        let surface = SlidingSidebarView(frame: NSRect(x: 0, y: 0, width: 900, height: 600))
+        surface.update(content: AnyView(Color.gray), shown: true, width: 240, onRight: true, reduced: false)
+        for size in [NSSize(width: 640, height: 420), NSSize(width: 1600, height: 1000)] {
+            surface.frame.size = size
+            surface.layout()
+            XCTAssertEqual(surface.host.frame, NSRect(x: size.width - 240, y: 0, width: 240, height: size.height))
+            XCTAssertNil(surface.host.layer?.animation(forKey: "sidebarSlide"))
         }
     }
     private var windows: [NSWindow] = []
