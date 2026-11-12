@@ -1,22 +1,22 @@
 {
   "repository": "madetonight/moon-browser",
-  "tag": "v0.4.11-beta",
-  "build": "2026111205",
-  "title": "Moon 0.4.11 beta",
+  "tag": "v0.4.12-beta",
+  "build": "2026111208",
+  "title": "Moon 0.4.12 beta",
   "keep_latest_only": true,
   "assets": [
     {
-      "name": "Moon-0.4.11-arm64.dmg",
-      "size": 5484769,
-      "sha256": "5967454088868dea7d555b78d93721fa38734851f180f93b5478e56f58a0c260",
-      "blob": "8f48c3acfda10730ef7abdee026b950731ed6ae0"
+      "name": "Moon-0.4.12-arm64.dmg",
+      "size": 5489268,
+      "sha256": "274b911e67cd1118d91adca9ec17f9e7dd8cfb654393d7c41a02ed88b6e9fda3",
+      "blob": "882c38238e8b1ee20dba8ef6093e08cc525289d3"
     }
   ],
   "feed": {
     "name": "appcast.xml",
-    "size": 2742,
-    "sha256": "7de9da52f250162a52f4e24556049c5ae9b136358f189048c6a7c55f08270335",
-    "blob": "bc0aaace15fbf3a7ed83f875b9610297b415a741"
+    "size": 2399,
+    "sha256": "15c6f93b1a34196ed443f1e7712fe8d43b0209ea44f0c53ccc996166ec5c31d6",
+    "blob": "ccd4ea354ab20986ccd2bf4f7570fc3f4b4d0e23"
   },
-  "notes": "# Moon 0.4.11 beta\n\nA calmer workspace for your tabs.\n\n- Open a native assistant workspace from the Codex sidebar button. Choose between Codex and Gemini.\n- Share specific website tabs for reading, comparison, and approved page interaction. Private tabs, cookies, passwords, and unshared sites are excluded.\n- Codex uses the official local CLI and a separate ChatGPT sign-in. Gemini uses a Google AI Studio key saved locally in Keychain.\n- A compact composer, formatted chat responses, code copying, and expandable browser actions keep the assistant native to Moon.\n- Codex receives only its generated connection folder through macOS; it no longer scans Moon’s protected app data.\n- Read ready pages without waiting for all their images. Preserve icon-font names during translation and avoid repeated cross-origin focus probes.\n- Hold Option–Space for Nebula’s compact listening strip, then release to act.\n- Fix the stray blue focus square in the sidebar when opening Settings, while preserving close-button hit targets and selection.\n\nApple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized. The optional ActivityWatch companion is distributed separately by its authors.\n"
+  "notes": "# Moon 0.4.12 beta\n\nA smoother sidebar, right on cue.\n\n- Move the live sidebar as one native surface instead of animating its controls through the browser’s view hierarchy.\n- Shorten the hover delay and preserve smooth reversal when the pointer changes direction.\n- Reuse mouse events’ window information to avoid repeated window lookups during movement.\n- Stop the resize handle flashing over the page during sidebar reveals. Resizing remains available.\n- Show a downloaded update as ready and bring its installation dialog back into view instead of leaving a downloading message behind.\n- Keep copied license resources writable so the signed updater can remove quarantine during installation.\n\nApple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized. The optional ActivityWatch companion is distributed separately by its authors.\n"
 }
