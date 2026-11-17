@@ -4,32 +4,28 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
     <channel>
         <title>Moon</title>
         <item>
-            <title>0.4.13</title>
-            <pubDate>Mon, 16 Nov 2026 22:15:13 -0500</pubDate>
-            <link>https://github.com/madetonight/moon-browser/releases/tag/v0.4.13-beta</link>
-            <sparkle:version>2026111603</sparkle:version>
-            <sparkle:shortVersionString>0.4.13</sparkle:shortVersionString>
+            <title>0.4.14</title>
+            <pubDate>Mon, 16 Nov 2026 23:24:58 -0500</pubDate>
+            <link>https://github.com/madetonight/moon-browser/releases/tag/v0.4.14-beta</link>
+            <sparkle:version>2026111604</sparkle:version>
+            <sparkle:shortVersionString>0.4.14</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
             <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <description sparkle:format="markdown"><![CDATA[# Moon 0.4.13 beta
+            <description sparkle:format="markdown"><![CDATA[# Moon 0.4.14 beta
 
-Move freely. Speak naturally. Browse privately.
+Your spaces, within easy reach.
 
-- Swipe left to move forward or instantly create a space, and right to return. Automatic names, quiet page dots, and optional renaming keep setup out of the way.
-- Move between spaces without losing the original tabs or active page. New spaces share existing website sign-ins automatically.
-- Hold Option–Space for Nebula. English and Spanish commands and context-aware dictation no longer require a mode or language picker.
-- Nebula stays off the sidebar mini dock. Microphone capture still stops on release, cancellation, or leaving Moon.
-- Quick force-click a web link for a short description; hold a force-click for a full page preview, with native haptic feedback on supported trackpads.
-- Open a Ghost window with Shift–Command–N, or a Ghost tab from File. Ghost uses temporary website storage and stays out of history, saved sessions and reopen lists.
-- Control–Option–Command–H closes Ghost browsing. Private tabs deny precise location permission by default; websites can still see your IP address.
+- Rename or delete a space from its sidebar name or page dot. No need to switch to horizontal tabs.
+- Hover a space and press Option–Command–Delete to request deletion.
+- The confirmation identifies the target space. Default browsing is protected, and shared website sign-ins, history and bookmarks are preserved.
+- Keep left-swipe creation, right-swipe return, and the minimal page dots. A single default browsing space shows no label or dots.
 
-Apple silicon, macOS 26 or later. English and Spanish speech uses Apple’s on-device models. This Moon beta is Apple Development signed and is not Apple-notarized.
-
+Apple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized.
 ]]></description>
-            <enclosure url="https://github.com/madetonight/moon-browser/releases/download/v0.4.13-beta/Moon-0.4.13-arm64.dmg" length="5513700" type="application/octet-stream" sparkle:edSignature="16Ve6NtUuMKpBWI8N2mBrhtRgGuY7S6A7lTDVTksdr/OSrgKJ7fDGo5glRZpgrYFCfB4uleZxhzY0i67tO9pAA=="></enclosure>
+            <enclosure url="https://github.com/madetonight/moon-browser/releases/download/v0.4.14-beta/Moon-0.4.14-arm64.dmg" length="5554767" type="application/octet-stream" sparkle:edSignature="rMAUFiCWFAuELKfzqXj5JHeV6lm4RKwX73gU5IyDLDuzR9I7iwx/JMAy1mtZiByWVJEfqQGVpbHhDu0X43a3Ag=="></enclosure>
         </item>
     </channel>
 </rss><!-- sparkle-signatures:
-edSignature: jz26PTvrot/AkVfrGwbjHU4b9yflOLxQWIehLAB0ydvFptyBRYNDLnW+fQpgoCUUdZZ6d91YfK+nmuUD+9u/BA==
-length: 2571
+edSignature: Qbak1aXbzgRJQp1xFlte1KIkewWEKmFCS7wQIWQt1gEVj0+n51QDf9UaSZgHPToBRIgTkeXIRAK0iwnLNGAWDw==
+length: 1979
 -->
