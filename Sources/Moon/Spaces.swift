@@ -279,11 +279,14 @@ extension Browser {
 
     /// ⌃1–⌃9, and the menu on the space's dot.
     func switchSpace(to id: UUID) {
+        guard !ghostWindow else { return }
         guard prefs.usesSpaces else { return }
         enter(id)
     }
 
     func enter(_ id: UUID) {
+        guard !ghostWindow else { return }
+        spaceSlideToken = UUID()
         guard id != spaceID, let to = spaces.firstIndex(where: { $0.id == id }) else { return }
         // Which way the icon at the foot turns over: the way the spaces lie.
         if !makingSpace { spaceStep = to > (spaces.firstIndex { $0.id == spaceID } ?? 0) ? 1 : -1 }
@@ -357,6 +360,7 @@ extension Browser {
     /// A new space — signed in where the others are, or starting afresh with
     /// its own cookies and sign-ins. By default it starts empty and on screen.
     func addSpace(named name: String, icon: String? = nil, sharesSignIns: Bool = true) {
+        guard !ghostWindow else { return }
         makingSpace = false
         let made = Space(id: UUID(), name: name, colour: 0, icon: icon ?? freeIcon, sharesSignIns: sharesSignIns,
                          profile: profileID == Profile.personalID ? nil : profileID)
@@ -377,25 +381,34 @@ extension Browser {
         Spaces.write(spaces, profile: profileID)
     }
 
-    /// "New Space…": the card for a new space, in the column or the bar.
+    /// Create immediately; names and other organization can be changed later.
     func askForSpace(then onCreated: ((Space) -> Void)? = nil) {
+        guard !ghostWindow else { return }
         afterSpaceCreated = onCreated
-        // In place, where the next space would come in, in the column or the
-        // bar alike; a question only while the tabs are folded out of sight.
-        if !folded || peeking {
-            let here = spaces.firstIndex { $0.id == spaceID } ?? 0
-            SpaceSwipe.shared.start(for: self)
-            SpaceSwipe.shared.slide(self, to: spaces.count, from: here)
-        } else {
-            Ask.newSpace(
-                then: { name, shared in self.addSpace(named: name, sharesSignIns: shared) },
-                cancelled: { self.cancelSpaceCreation() }
-            )
-        }
+        addInstantSpace()
+    }
+
+    func addInstantSpace() {
+        guard !ghostWindow else { return }
+        prefs.usesSpaces = true
+        if spaces.first?.name == "Personal" { spaces[0].name = "Space 1" }
+        var number = spaces.count + 1
+        while spaces.contains(where: { $0.name == "Space \(number)" }) { number += 1 }
+        let name = "Space \(number)"
+        addSpace(named: name)
+        announce("\(name) created")
+    }
+
+    func spaceLabel(_ space: Space) -> String {
+        space.id == homeSpaceID && space.name == "Personal" ? "Space 1" : space.name
     }
 
     func cancelSpaceCreation() {
+        spaceSlideToken = UUID()
         afterSpaceCreated = nil
+        makingSpace = false
+        newSpaceSwipe = false
+        spaceSwipe = 0
     }
 
     func renameSpace(_ id: UUID, to name: String) {
@@ -665,30 +678,6 @@ enum Ask {
         }
     }
 
-    /// A new space's name, and whether it keeps the sign-ins the others
-    /// have — for when the column isn't there to hold the card.
-    static func newSpace(then: @escaping (String, Bool) -> Void, cancelled: @escaping () -> Void) {
-        let alert = NSAlert()
-        alert.messageText = "New Space"
-        alert.informativeText = "Its own tabs. Signed in where your other spaces are, unless it starts afresh."
-        let field = NSTextField(frame: NSRect(x: 0, y: 30, width: 260, height: 24))
-        field.placeholderString = "Work"
-        let fresh = NSButton(checkboxWithTitle: "Start signed out, with its own cookies", target: nil, action: nil)
-        fresh.frame = NSRect(x: 0, y: 0, width: 260, height: 22)
-        let box = NSView(frame: NSRect(x: 0, y: 0, width: 260, height: 56))
-        box.addSubview(field)
-        box.addSubview(fresh)
-        alert.accessoryView = box
-        alert.addButton(withTitle: "Create")
-        alert.addButton(withTitle: "Cancel")
-        alert.window.initialFirstResponder = field
-        show(alert) { ok in
-            let name = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard ok, !name.isEmpty else { cancelled(); return }
-            then(name, fresh.state != .on)
-        }
-    }
-
     /// `returnCancels`: Return is Cancel's, for a yes that can't be undone.
     static func sure(_ title: String, detail: String, confirm: String, returnCancels: Bool = false, then: @escaping () -> Void) {
         if Store.testing, let yes = testing {
@@ -747,5 +736,66 @@ extension Browser {
     func forget(space id: UUID) {
         for tab in parked.removeValue(forKey: id)?.tabs ?? [] { tab.close() }
         record.rows[id.uuidString] = nil
+    }
+}
+
+
+/// Quiet page indicators, with naming kept out of the creation gesture.
+struct SpacePager: View {
+    @ObservedObject var browser: Browser
+    var compact = false
+
+    var body: some View {
+        VStack(spacing: 0) {
+            if !compact {
+                Text(browser.spaceLabel(browser.space))
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(Palette.muted)
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity)
+                    .contextMenu { rename }
+            }
+            ScrollViewReader { reader in
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 0) {
+                        ForEach(browser.spaces) { space in
+                            Button {
+                                browser.cancelSpaceCreation()
+                                browser.switchSpace(to: space.id)
+                            } label: {
+                                Circle()
+                                    .fill(space.id == browser.spaceID ? Palette.ink : .clear)
+                                    .overlay(Circle().strokeBorder(space.id == browser.spaceID ? Palette.ink : Palette.muted.opacity(0.65), lineWidth: 1))
+                                    .frame(width: 6, height: 6)
+                                    .frame(width: 20, height: 20)
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            .id(space.id)
+                            .accessibilityLabel(browser.spaceLabel(space))
+                            .accessibilityAddTraits(space.id == browser.spaceID ? .isSelected : [])
+                            .help(browser.spaceLabel(space))
+                            .contextMenu {
+                                Button("Rename Space…") { rename(space) }
+                            }
+                        }
+                    }
+                }
+                .frame(width: min(CGFloat(browser.spaces.count) * 20, compact ? 40 : max(40, browser.prefs.columnWidth - 40)), height: 20)
+                .onChange(of: browser.spaceID, initial: true) { _, id in reader.scrollTo(id, anchor: .center) }
+            }
+        }
+        .frame(height: compact ? 24 : 34)
+        .frame(maxWidth: .infinity)
+    }
+
+    private var rename: some View {
+        Button("Rename Space…") { rename(browser.space) }
+    }
+
+    private func rename(_ space: Space) {
+        Ask.name("Rename Space", placeholder: browser.spaceLabel(space), initial: browser.spaceLabel(space), confirm: "Rename") {
+            browser.renameSpace(space.id, to: $0)
+        }
     }
 }

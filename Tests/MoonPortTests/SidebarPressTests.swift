@@ -402,11 +402,12 @@ final class SidebarPressTests: XCTestCase {
         NSApp.setActivationPolicy(.prohibited)
         let prefs = Shared.prefs
         let layout = (prefs.sideIcons, prefs.sidePosition, prefs.sideHides, prefs.sideWidth, prefs.liquidGlass)
-        let previous = (prefs.sidebar, prefs.usesTabGroups, prefs.splitView, prefs.listsPins, prefs.roomyTabs, prefs.liquidGlass)
+        let previous = (prefs.sidebar, prefs.usesTabGroups, prefs.splitView, prefs.listsPins, prefs.roomyTabs, prefs.usesSpaces)
         restorePreferences = {
             (prefs.sideIcons, prefs.sidePosition, prefs.sideHides, prefs.sideWidth, prefs.liquidGlass) = layout
-            (prefs.sidebar, prefs.usesTabGroups, prefs.splitView, prefs.listsPins, prefs.roomyTabs, prefs.liquidGlass) = previous
+            (prefs.sidebar, prefs.usesTabGroups, prefs.splitView, prefs.listsPins, prefs.roomyTabs, prefs.usesSpaces) = previous
         }
+        prefs.usesSpaces = false
         prefs.sideIcons = false
         prefs.sidePosition = .left
         prefs.sideHides = false

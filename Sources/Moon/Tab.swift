@@ -557,6 +557,7 @@ final class Tab: ObservableObject, Identifiable {
     var onZoom: ((Tab, CGFloat) -> Void)?
     /// The resolved address under the pointer, or nil when it leaves a link.
     var onLink: ((Tab, String?) -> Void)?
+    var onForceLink: ((Tab, URL, Bool, NSPoint) -> Void)?
     /// The page took the keys (see PageView.onKeys).
     var onKeys: ((Tab) -> Void)?
 
@@ -881,6 +882,9 @@ final class Tab: ObservableObject, Identifiable {
         web.onPull = { [weak self] pull in self?.pull = pull }
         web.leave = leave
         web.onTouch = { [weak self] in self?.uncover() }
+        web.onForceLink = { [weak self] url, preview, point in
+            if let self { self.onForceLink?(self, url, preview, point) }
+        }
         web.onMenuClosed = { [weak self] in self?.popupGesture.menuClosed() }
         web.onKeys = { [weak self] in if let self { self.onKeys?(self) } }
         web.searchName = { [weak self] in self?.searchName?() }
@@ -1820,6 +1824,7 @@ final class Tab: ObservableObject, Identifiable {
         codex?.close(); codex = nil
         onZoom = nil
         onLink = nil
+        onForceLink = nil
         onPick = nil
         onPickEnd = nil
         onSignIn = nil
@@ -2081,13 +2086,20 @@ final class MiddleRelay: NSObject, WKScriptMessageHandler {
 
 /// A web view that reads the two-finger swipe for itself.
 final class PageView: WKWebView {
+    var forceLink: URL?
+    var forceLinkFrame: WKFrameInfo?
+    var suppressedForceLink: (url: URL, until: Date)?
+    var onForceLink: ((URL, Bool, NSPoint) -> Void)?
+    private lazy var linkPressure = LinkPressure(view: self)
     private var snapshotUsers = 0
 
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
         if window != nil {
+            linkPressure.watch()
             isHidden = false
         } else {
+            linkPressure.stop()
             // A window-to-window transfer is synchronous. Wait one turn so
             // floating video and calls keep their rendering surface intact.
             DispatchQueue.main.async { [weak self] in

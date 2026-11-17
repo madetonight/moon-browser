@@ -584,6 +584,7 @@ struct SettingsPanel: View {
                         .opacity(draftProblem == nil ? 1 : 0.4)
                 }
             }
+        case "links.forceClick": Switch(on: $prefs.forceClickLinks)
         case "links.little": Switch(on: $prefs.littleLinks)
         case "reader.twins": Switch(on: $prefs.readsTwins)
         case "reader.follows": Switch(on: $prefs.readerFollowsLook)
@@ -647,6 +648,7 @@ struct SettingsPanel: View {
         case "sites.keep": Switch(on: Binding(get: { !prefs.keepsSignIns }, set: { prefs.keepsSignIns = !$0 }))
         case "privacy.clickIDs": Switch(on: $prefs.removesClickIDs)
         case "privacy.gpc": Switch(on: $prefs.sendsPrivacySignal)
+        case "ghost.location": GhostLocationSwitch()
         case "notifications.ask": Switch(on: $prefs.siteNotifications)
         case "privacy.forget": Pill("Forget choices") { browser.forgetCaptureChoices() }
         case "clear.history": Pill("Clear") { browser.clearHistory() }

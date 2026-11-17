@@ -11,7 +11,44 @@ public enum NebulaCommand: Equatable, Sendable {
     public static func parse(_ transcript: String) -> Self? {
         let text = transcript.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty, text.count <= 2_000 else { return nil }
-        let normalized = text.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: ".!?"))
+        let normalized = text.lowercased().folding(options: .diacriticInsensitive, locale: Locale(identifier: "es"))
+            .trimmingCharacters(in: CharacterSet(charactersIn: ".!?¿¡"))
+        let spanish: [String: Self] = [
+            "nueva pestana": .newTab, "abre una nueva pestana": .newTab,
+            "nueva pestana privada": .newPrivateTab, "nueva pestana fantasma": .newPrivateTab,
+            "cierra esta pestana": .closeTab, "cerrar pestana": .closeTab, "cierra la pestana": .closeTab,
+            "atras": .back, "vuelve atras": .back, "adelante": .forward,
+            "recarga": .reload, "recarga la pagina": .reload, "actualiza la pagina": .reload,
+            "siguiente pestana": .nextTab, "pestana anterior": .previousTab,
+            "muestra los marcadores": .bookmarks, "muestra las descargas": .downloads,
+            "traduce esta pagina": .translate, "abre orbit": .orbit,
+            "guarda esta pagina": .bookmark, "silencia esta pestana": .mute,
+            "aumenta el zoom": .zoomIn, "reduce el zoom": .zoomOut, "restablece el zoom": .resetZoom,
+            "baja": .scroll(up: false), "sube": .scroll(up: true),
+            "resume esta pagina": .summarize, "resume esto": .summarize,
+            "organiza mis pestanas": .tidy, "ordena mis pestanas": .tidy
+        ]
+        if let action = spanish[normalized] { return action }
+        for prefix in ["busca en google ", "busca ", "buscar "] where normalized.hasPrefix(prefix) {
+            let query = String(text.dropFirst(prefix.count)).trimmingCharacters(in: .whitespacesAndNewlines)
+            return query.isEmpty ? nil : .search(query)
+        }
+        for prefix in ["cambia al espacio ", "cambia de espacio a "] where normalized.hasPrefix(prefix) {
+            return .switchSpace(String(text.dropFirst(prefix.count)).trimmingCharacters(in: .whitespacesAndNewlines))
+        }
+        for prefix in ["cambia a ", "ve a la pestana "] where normalized.hasPrefix(prefix) {
+            return .switchTab(String(text.dropFirst(prefix.count)).trimmingCharacters(in: .whitespacesAndNewlines))
+        }
+        for prefix in ["abre ", "abrir ", "ve a ", "llevame a "] where normalized.hasPrefix(prefix) {
+            let address = String(text.dropFirst(prefix.count))
+                .replacingOccurrences(of: " punto ", with: ".", options: .caseInsensitive)
+            return parse("open " + address)
+        }
+        if normalized.hasPrefix("cierra todas las pestanas de ") || normalized.hasPrefix("cierra mis pestanas de ") {
+            let prefix = normalized.hasPrefix("cierra todas") ? "cierra todas las pestanas de " : "cierra mis pestanas de "
+            let name = String(normalized.dropFirst(prefix.count)).trimmingCharacters(in: .whitespacesAndNewlines)
+            return name.isEmpty ? nil : .closeMatching(name)
+        }
         for prefix in ["close all of my ", "close all my ", "close all ", "close my "] where normalized.hasPrefix(prefix) && normalized.hasSuffix(" tabs") {
             let name = String(normalized.dropFirst(prefix.count).dropLast(5)).trimmingCharacters(in: .whitespacesAndNewlines)
             return name.isEmpty ? nil : .closeMatching(name)

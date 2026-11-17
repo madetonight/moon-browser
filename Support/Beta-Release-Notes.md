@@ -1,12 +1,14 @@
-# Moon 0.4.12 beta
+# Moon 0.4.13 beta
 
-A smoother sidebar, right on cue.
+Move freely. Speak naturally. Browse privately.
 
-- Move the live sidebar as one native surface instead of animating its controls through the browser’s view hierarchy.
-- Shorten the hover delay and preserve smooth reversal when the pointer changes direction.
-- Reuse mouse events’ window information to avoid repeated window lookups during movement.
-- Stop the resize handle flashing over the page during sidebar reveals. Resizing remains available.
-- Show a downloaded update as ready and bring its installation dialog back into view instead of leaving a downloading message behind.
-- Keep copied license resources writable so the signed updater can remove quarantine during installation.
+- Swipe left to move forward or instantly create a space, and right to return. Automatic names, quiet page dots, and optional renaming keep setup out of the way.
+- Move between spaces without losing the original tabs or active page. New spaces share existing website sign-ins automatically.
+- Hold Option–Space for Nebula. English and Spanish commands and context-aware dictation no longer require a mode or language picker.
+- Nebula stays off the sidebar mini dock. Microphone capture still stops on release, cancellation, or leaving Moon.
+- Quick force-click a web link for a short description; hold a force-click for a full page preview, with native haptic feedback on supported trackpads.
+- Open a Ghost window with Shift–Command–N, or a Ghost tab from File. Ghost uses temporary website storage and stays out of history, saved sessions and reopen lists.
+- Control–Option–Command–H closes Ghost browsing. Private tabs deny precise location permission by default; websites can still see your IP address.
 
-Apple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized. The optional ActivityWatch companion is distributed separately by its authors.
+Apple silicon, macOS 26 or later. English and Spanish speech uses Apple’s on-device models. This Moon beta is Apple Development signed and is not Apple-notarized.
+

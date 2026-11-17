@@ -31,7 +31,6 @@ final class NebulaTests: XCTestCase {
         _ = NSApplication.shared
         let browser = Browser(record: WindowRecord())
         let nebula = Nebula()
-        nebula.mode = .control
         nebula.open(in: browser)
         defer { nebula.dismiss(); browser.closeAll() }
         nebula.transcript = "Lloyd Television guitarist."
@@ -46,7 +45,6 @@ final class NebulaTests: XCTestCase {
         _ = NSApplication.shared
         let browser = Browser(record: WindowRecord())
         let nebula = Nebula()
-        nebula.mode = .control
         nebula.open(in: browser)
         defer { nebula.dismiss(); browser.closeAll() }
         nebula.transcript = "Could you please take me to YouTube."
@@ -74,7 +72,6 @@ final class NebulaTests: XCTestCase {
         browser.insert(youtube, at: 0); browser.insert(spoof, at: 1); browser.insert(pinned, at: 2)
         browser.pin(pinned)
         let nebula = Nebula()
-        nebula.mode = .control
         nebula.open(in: browser)
         defer { nebula.dismiss() }
         nebula.transcript = "close all my YouTube tabs"

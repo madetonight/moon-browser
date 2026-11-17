@@ -96,7 +96,7 @@ enum Browsers {
     /// under (#204); a test run's own.
     static let sceneID = Store.world.map { "search (\($0))" } ?? "search"
 
-    static var primary: Browser? { all.first }
+    static var primary: Browser? { all.first { !$0.ghostWindow } }
     static var front: Browser? { Front.shared.browser ?? all.last }
     /// The browser to act on when a menu or a link needs one.
     static var acting: Browser { front ?? SceneSlot.shared.browser }
@@ -119,7 +119,7 @@ enum Browsers {
         register(browser)
         browser.shut = false
         Front.shared.set(browser)
-        Spaces.current = browser.spaceID
+        if !browser.ghostWindow { Spaces.current = browser.spaceID }
         if #available(macOS 15.4, *) { Extensions.shared.focused(browser) }
     }
 
@@ -130,7 +130,7 @@ enum Browsers {
     /// new one, with one empty tab, in the space of the window in front.
     static func newWindow() {
         if bringBack() { return }
-        if let kept = all.first(where: { !$0.isOpen }) {
+        if let kept = all.first(where: { !$0.isOpen && !$0.ghostWindow }) {
             show(kept)
             return
         }
@@ -338,7 +338,7 @@ enum Browsers {
         // kept as they are for the next one (see Profiles.swift).
         let owned = browser.usesFiles && !browser.isPopup
         if owned { browser.leaveFiles() }
-        if remembered {
+        if remembered, !browser.ghostWindow {
             closed.append((record(of: browser, rows: true), Date()))
             if closed.count > 10 { closed.removeFirst(closed.count - 10) }
         }
@@ -351,7 +351,7 @@ enum Browsers {
             Front.shared.set(all.last { $0.isOpen && !$0.isPopup } ?? all.last { !$0.isPopup })
         }
         if browser.inScene { SceneSlot.shared.refresh() }
-        if owned, let heir = all.first(where: { $0.profileID == browser.profileID && !$0.isPopup }) { heir.takeFiles() }
+        if owned, let heir = all.first(where: { $0.profileID == browser.profileID && !$0.isPopup && !$0.ghostWindow }) { heir.takeFiles() }
         if wasPrimary, let next = primary { next.becomePrimary() }
         save(now: true)
     }
@@ -393,7 +393,7 @@ enum Browsers {
     private static var file: URL { Store.file("windows.json") }
 
     /// The windows that are written down, oldest first: popups never come back.
-    static var saved: [Browser] { all.filter { !$0.isPopup } }
+    static var saved: [Browser] { all.filter { !$0.isPopup && !$0.ghostWindow } }
 
     /// windows.json: the oldest window's frame and space first, then every
     /// other window whole.

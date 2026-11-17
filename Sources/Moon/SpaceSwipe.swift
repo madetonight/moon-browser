@@ -59,7 +59,7 @@ final class SpaceSwipe {
     /// The mouse's back and forward buttons over the tabs: the space before,
     /// or the one after. Over the page they stay the page's back and forward
     /// (PageView.otherMouseDown). Past the last space, as with the wheel,
-    /// the card for a new one.
+    /// an empty new page.
     ///
     /// Most mice send them as buttons 3 and 4. A Logitech mouse set up with
     /// Logi Options+, Logitech's own driver, doesn't: it turns them into the
@@ -74,14 +74,10 @@ final class SpaceSwipe {
         case .swipe where event.deltaX != 0: step = event.deltaX > 0 ? -1 : 1
         default: return false
         }
-        guard let browser = Browsers.browser(for: event.window), !browser.isPopup,
+        guard let browser = Browsers.browser(for: event.window), !browser.isPopup, !browser.ghostWindow,
               !browser.folded || browser.peeking, overTabs(event, in: browser) else { return false }
         self.browser = browser
-        if event.type == .swipe, event.deltaX > 0, browser.prefs.sidebar, !browser.makingSpace {
-            createFromRight(browser)
-            return true
-        }
-        guard browser.prefs.usesSpaces else { return false }
+        guard browser.prefs.usesSpaces || (browser.prefs.sidebar && step > 0) else { return false }
         let here = browser.makingSpace ? browser.spaces.count : (browser.spaces.firstIndex { $0.id == browser.spaceID } ?? 0)
         let target = here + step
         if target >= 0, target <= browser.spaces.count { slide(browser, to: target, from: here) }
@@ -106,7 +102,7 @@ final class SpaceSwipe {
         if event.phase == .began || !event.hasPreciseScrollingDeltas, let over = Browsers.browser(for: event.window) {
             browser = over
         }
-        guard let browser, !browser.isPopup, browser.prefs.usesSpaces || browser.prefs.sidebar,
+        guard let browser, !browser.isPopup, !browser.ghostWindow, browser.prefs.usesSpaces || browser.prefs.sidebar,
               !browser.folded || browser.peeking else { return false }
         // A mouse wheel over the tabs: a notch along the spaces' axis — up or down
         // in the bar, sideways in the column — brings one space. In the column
@@ -122,7 +118,7 @@ final class SpaceSwipe {
             notched = now
             guard rested else { return true }
             let here = browser.makingSpace ? browser.spaces.count : (browser.spaces.firstIndex { $0.id == browser.spaceID } ?? 0)
-            let target = here + (step < 0 ? 1 : -1)
+            let target = here + (browser.prefs.sidebar ? (step < 0 ? 1 : -1) : (step < 0 ? 1 : -1))
             if target >= 0, target <= browser.spaces.count { slide(browser, to: target, from: here) }
             return true
         }
@@ -183,8 +179,8 @@ final class SpaceSwipe {
             axis = abs(gathered.width) > abs(gathered.height) * 1.5 ? .across : .along
         }
         guard axis == .across else { return false }
-        guard browser.prefs.usesSpaces || (browser.prefs.sidebar && gathered.width > 0) else { return false }
-        browser.newSpaceSwipe = browser.prefs.sidebar && gathered.width > 0 && !browser.makingSpace
+        guard browser.prefs.usesSpaces || (browser.prefs.sidebar && gathered.width < 0) else { return false }
+        browser.newSpaceSwipe = browser.prefs.sidebar && gathered.width < 0 && !browser.makingSpace && browser.spaceID == browser.spaces.last?.id
         browser.spaceSwipe = resisted(gathered.width, in: browser)
         return true
     }
@@ -200,13 +196,9 @@ final class SpaceSwipe {
         defer { tracking = false }
         guard let browser, axis == .across else { return }
         let travel = gathered.width
-        if !cancelled, browser.prefs.sidebar, !browser.makingSpace, travel >= Self.enough(for: browser) {
-            createFromRight(browser)
-            return
-        }
         let here = browser.makingSpace ? browser.spaces.count : (browser.spaces.firstIndex { $0.id == browser.spaceID } ?? 0)
-        // Fingers to the left, or up, bring what is next.
-        let target = cancelled || abs(travel) < SpaceSwipe.enough(for: browser) ? here : here + (travel < 0 ? 1 : -1)
+        // Sidebar: left advances, right returns. The top strip uses vertical paging.
+        let target = cancelled || abs(travel) < SpaceSwipe.enough(for: browser) ? here : here + (browser.prefs.sidebar ? (travel < 0 ? 1 : -1) : (travel < 0 ? 1 : -1))
         guard target != here, target >= 0, target <= browser.spaces.count else {
             withAnimation(Motion.settle) { browser.spaceSwipe = 0 } completion: {
                 if browser.spaceSwipe == 0 { browser.newSpaceSwipe = false }
@@ -220,41 +212,41 @@ final class SpaceSwipe {
     private func resisted(_ travel: CGFloat, in browser: Browser) -> CGFloat {
         if browser.newSpaceSwipe { return travel }
         let here = browser.makingSpace ? browser.spaces.count : (browser.spaces.firstIndex { $0.id == browser.spaceID } ?? 0)
-        let blocked = (travel > 0 && here == 0) || (travel < 0 && here == browser.spaces.count)
+        let blocked = browser.prefs.sidebar ? (travel > 0 && here == 0) : (travel > 0 && here == 0)
         return blocked ? travel / 4 : travel
     }
 
     /// The pages carry on the way the fingers went until the next one is
     /// where this one was; then it becomes the one on screen, in the same
     /// frame and without anything moving — it was already there. One past
-    /// the last space is the card for a new one.
-    private func createFromRight(_ browser: Browser) {
-        browser.prefs.usesSpaces = true
-        let here = browser.spaces.firstIndex { $0.id == browser.spaceID } ?? 0
-        slide(browser, to: browser.spaces.count, from: here, creatingFromRight: true)
-    }
-
-    func slide(_ browser: Browser, to target: Int, from here: Int, creatingFromRight: Bool = false) {
+    /// the last space is an empty new page.
+    func slide(_ browser: Browser, to target: Int, from here: Int) {
         if browser.makingSpace, target != browser.spaces.count {
             browser.cancelSpaceCreation()
         }
+        let turn = UUID()
+        browser.spaceSlideToken = turn
+        let creating = target == browser.spaces.count
+        let destination = browser.spaces.indices.contains(target) ? browser.spaces[target].id : nil
         // A page is the column's width, or the bar's height.
         let width = browser.prefs.sidebar ? browser.prefs.columnWidth : Metrics.strip
-        browser.newSpaceSwipe = creatingFromRight
-        let away: CGFloat = creatingFromRight ? 1 : target > here ? -1 : 1
+        browser.newSpaceSwipe = browser.prefs.sidebar && creating
+        let away: CGFloat = target > here ? -1 : 1
         browser.spaceStep = target > here ? 1 : -1
         resting = Date().addingTimeInterval(SpaceSwipe.rest)
         withAnimation(.easeOut(duration: 0.22), completionCriteria: .removed) {
             browser.spaceSwipe = away * width
         } completion: {
+            guard browser.spaceSlideToken == turn else { return }
             var still = Transaction()
             still.disablesAnimations = true
             withTransaction(still) {
-                if target == browser.spaces.count {
-                    browser.makingSpace = true
-                } else {
+                if creating {
+                    browser.addInstantSpace()
+                } else if let destination, browser.spaces.contains(where: { $0.id == destination }) {
                     browser.makingSpace = false
-                    browser.switchSpace(to: browser.spaces[target].id)
+                    browser.prefs.usesSpaces = true
+                    browser.switchSpace(to: destination)
                 }
                 browser.spaceSwipe = 0
                 browser.newSpaceSwipe = false
@@ -263,148 +255,11 @@ final class SpaceSwipe {
     }
 }
 
-// MARK: - the card
-
-/// A new space, made where the next one would have been: its name, its
-/// icon, and on its way. Escape, Cancel or two fingers back leave it.
+/// An empty neighboring page during the swipe; creation never asks for setup.
 struct NewSpaceCard: View {
     @ObservedObject var browser: Browser
-    /// In the bar across the top: one row, the height of the tabs.
     var inline = false
-    @State private var name = ""
-    @State private var icon = "briefcase"
-    @State private var choosing = false
-    /// Signed in where the other spaces are, or starting afresh.
-    @State private var shared = true
-    @State private var hovering = false
-    @FocusState private var typing: Bool
-
-    private var saying: String {
-        shared ? "Signed in wherever your other spaces are." : "Its own cookies and sign-ins, starting from none."
-    }
-
     var body: some View {
-        Group {
-            if inline {
-                // The bar's row: the icon, the name, the sign-ins, and on its way.
-                HStack(spacing: 8) {
-                    pick(size: 13, box: CGSize(width: 28, height: 26))
-                    field
-                        .frame(width: 170)
-                    Segmented(options: [(true, "Signed in"), (false, "Signed out")], selection: $shared)
-                        .fixedSize()
-                        .help(saying)
-                    Pill("Cancel") { cancel() }
-                    Pill("Create", filled: true) { create() }
-                }
-                .frame(height: Metrics.strip)
-            } else {
-                VStack(spacing: 12) {
-                    pick(size: 20, box: CGSize(width: 44, height: 40))
-                    VStack(spacing: 4) {
-                        Text("New space")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(Palette.ink)
-                        Text("Its own tabs.")
-                            .font(.system(size: 11))
-                            .foregroundStyle(Palette.muted)
-                            .multilineTextAlignment(.center)
-                    }
-                    field
-                    // Most people want Google and the rest to know them here too;
-                    // some want a clean slate.
-                    VStack(spacing: 6) {
-                        Segmented(options: [(true, "Signed in"), (false, "Signed out")], selection: $shared, wide: true)
-                        Text(saying)
-                            .font(.system(size: 11))
-                            .foregroundStyle(Palette.muted)
-                            .multilineTextAlignment(.center)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    HStack(spacing: 8) {
-                        Pill("Cancel") { cancel() }
-                        Pill("Create", filled: true) { create() }
-                    }
-                }
-                .padding(16)
-                .frame(maxWidth: .infinity)
-            }
-        }
-        .onAppear {
-            icon = browser.freeIcon
-            DispatchQueue.main.async { typing = true }
-        }
-        .onExitCommand(perform: cancel)
-    }
-
-    /// The space's icon, and a click on it for the others: they aren't all
-    /// laid out in the card.
-    private func pick(size: CGFloat, box: CGSize) -> some View {
-        Button { choosing = true } label: {
-            Image(systemName: icon)
-                .font(.system(size: size, weight: .medium))
-                .foregroundStyle(Palette.ink)
-                .frame(width: box.width, height: box.height)
-                .background(
-                    RoundedRectangle(cornerRadius: inline ? 8 : 10, style: .continuous)
-                        .fill(hovering || choosing ? Palette.hover : .clear)
-                )
-                .contentShape(Rectangle())
-                .id(icon)
-                .transition(.opacity)
-        }
-        .buttonStyle(.plain)
-        .onHover { hovering = $0 }
-        .help(inline ? "New space — choose its icon" : "Choose an icon")
-        .popover(isPresented: $choosing, arrowEdge: .bottom) { icons }
-    }
-
-    private var field: some View {
-        TextField(inline ? "New space" : "Name", text: $name)
-            .textFieldStyle(.plain)
-            .font(.system(size: inline ? 12.5 : 13))
-            .padding(.horizontal, 10)
-            .frame(height: inline ? 26 : 30)
-            .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Palette.wash))
-            .focused($typing)
-            .onSubmit(create)
-    }
-
-    /// Every icon, a few to a row, the chosen one on a grey of its own;
-    /// picking one puts the list away.
-    private var icons: some View {
-        LazyVGrid(columns: Array(repeating: GridItem(.fixed(28), spacing: 4), count: 6), spacing: 4) {
-            ForEach(Array(zip(Spaces.icons, Spaces.iconNames)), id: \.0) { symbol, name in
-                Image(systemName: symbol)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(symbol == icon ? Palette.ink : Palette.muted)
-                    .frame(width: 28, height: 28)
-                    .background(
-                        RoundedRectangle(cornerRadius: 7, style: .continuous)
-                            .fill(symbol == icon ? Palette.wash : .clear)
-                    )
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        withAnimation(Motion.quick) { icon = symbol }
-                        choosing = false
-                        typing = true
-                    }
-                    .help(name)
-            }
-        }
-        .padding(10)
-    }
-
-    private func create() {
-        let named = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !named.isEmpty else { typing = true; return }
-        browser.addSpace(named: named, icon: icon, sharesSignIns: shared)
-    }
-
-    /// Back to the space it was made from, the way it came.
-    private func cancel() {
-        browser.cancelSpaceCreation()
-        let back = browser.spaces.firstIndex { $0.id == browser.spaceID } ?? 0
-        SpaceSwipe.shared.slide(browser, to: back, from: browser.spaces.count)
+        Color.clear.frame(width: inline ? 180 : nil, height: inline ? Metrics.strip : nil)
     }
 }

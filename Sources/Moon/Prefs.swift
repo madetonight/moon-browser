@@ -450,10 +450,16 @@ final class Preferences: ObservableObject {
     }
     /// Where a link goes, at the bottom of the page while the pointer is on
     /// it (see StatusLine.swift). On unless turned off.
+    @Published var forceClickLinks: Bool {
+        didSet {
+            store.set(forceClickLinks, forKey: "links.forceClick")
+            HoveredLink.on = forceClickLinks || showsLinks
+        }
+    }
     @Published var showsLinks: Bool {
         didSet {
             store.set(showsLinks, forKey: "links.show")
-            HoveredLink.on = showsLinks
+            HoveredLink.on = showsLinks || forceClickLinks
         }
     }
     /// A back or forward swipe held once armed shows the pages that way to
@@ -793,8 +799,10 @@ final class Preferences: ObservableObject {
         bookmarksBar = store.bool(forKey: "bookmarks.bar")
         alwaysShowsDownloads = store.bool(forKey: "downloads.button")
         let links = store.object(forKey: "links.show") as? Bool ?? true
+        let forceLinks = store.object(forKey: "links.forceClick") as? Bool ?? true
+        forceClickLinks = forceLinks
         showsLinks = links
-        HoveredLink.on = links
+        HoveredLink.on = links || forceLinks
         let dusk = store.bool(forKey: "pages.dusk")
         darkensPages = dusk
         Dusk.shared.on = dusk

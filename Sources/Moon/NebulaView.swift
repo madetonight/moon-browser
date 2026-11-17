@@ -72,26 +72,6 @@ struct NebulaPanel: View {
             if nebula.phase == .confirming {
                 Button("Close \(nebula.pendingTabs.count)", role: .destructive, action: nebula.confirmClose)
                     .controlSize(.small)
-            } else if !nebula.busy {
-                Menu {
-                    Picker("Use your voice to", selection: $nebula.mode) {
-                        Text("Control Moon").tag(Nebula.Mode.control)
-                        Text("Dictate into a field").tag(Nebula.Mode.dictate)
-                    }
-                    Picker("Speech language", selection: $nebula.language) {
-                        if !nebula.languages.contains(nebula.language) { Text(nebula.language).tag(nebula.language) }
-                        ForEach(nebula.languages, id: \.self) {
-                            Text(Locale.current.localizedString(forIdentifier: $0) ?? $0).tag($0)
-                        }
-                    }
-                    if !nebula.transcript.isEmpty {
-                        Button("Copy your words") {
-                            NSPasteboard.general.clearContents()
-                            NSPasteboard.general.setString(nebula.transcript, forType: .string)
-                        }
-                    }
-                } label: { Image(systemName: "slider.horizontal.3") }
-                .menuStyle(.borderlessButton).fixedSize().accessibilityLabel("Nebula controls")
             }
             Button(action: nebula.dismiss) { Image(systemName: "xmark").font(.system(size: 10, weight: .medium)) }
                 .buttonStyle(.plain).foregroundStyle(.secondary)

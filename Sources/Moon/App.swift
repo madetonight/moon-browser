@@ -70,8 +70,11 @@ struct MoonApp: App {
                 }
                 Button("New Tab") { browser.launch() }
                     .shortcut("file.newTab")
-                Button("New Private Tab") { browser.newShyTab() }
+                Button("New Ghost Window") { Browsers.newGhostWindow() }
                     .shortcut("file.newPrivateTab")
+                Button("New Ghost Tab") { browser.newShyTab() }
+                Button("Close All Ghost Browsing") { Browsers.ghostPanic() }
+                    .shortcut("file.ghostPanic")
                 Button(browser.reopenTitle) { browser.reopen() }
                     .shortcut("file.reopen")
                     .disabled(browser.ghosts.isEmpty && Browsers.lastClosedAt == nil)
@@ -813,6 +816,7 @@ struct ContentView: View {
                 if fullscreenTab == nil { Fold(browser: browser, prefs: browser.prefs) }
             }
             .overlay(alignment: .bottom) { bars }
+            .overlay { LinkInsightOverlay(browser: browser) }
             .overlay {
                 // Over the page only: the column, the strip and the bookmarks
                 // bar stay as they are, uncovered and in reach.
@@ -1365,7 +1369,7 @@ struct ContentView: View {
         if let popup = Browsers.browser(for: event.window), popup.isPopup {
             if popup.websitePopup, let combo = KeyCombo(event: event) {
                 if combo == ShortcutStore.shared.key(for: "file.newTab") { popup.newTab(); return true }
-                if combo == ShortcutStore.shared.key(for: "file.newPrivateTab") { popup.newShyTab(); return true }
+                if combo == ShortcutStore.shared.key(for: "file.newPrivateTab") { Browsers.newGhostWindow(); return true }
             }
             let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
             if event.keyCode == 53, flags.isEmpty, popup.asking != nil {
@@ -1638,7 +1642,7 @@ struct ContentView: View {
             guard browser.prefs.darkensPages else { return false }
             browser.toggleDusk()
         case "n" where shifted:
-            browser.newShyTab()
+            Browsers.newGhostWindow()
         // Shown, or brought forward if open: never a second one, and never
         // closed by the key that opened it — ⌘W does that, as for any tab.
         case "y" where !shifted:

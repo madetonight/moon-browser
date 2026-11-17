@@ -140,14 +140,14 @@ enum WhatsNew {
 
     /// Only the current release is shown. Release preparation verifies its version.
     static let notes: [Notes] = [
-        Notes(version: "0.4.12", date: "12 November 2026",
-              headline: "A smoother sidebar, right on cue.",
-              new: [],
-              better: ["The sidebar slides as one native surface, with a shorter hover delay and smooth reversal when your pointer changes direction.",
-                       "Mouse movement reuses the event’s window instead of repeatedly asking macOS to find it."],
-              fixed: ["The resize handle no longer flashes over the page as the folded sidebar appears.",
-                      "A downloaded update shows as ready and can bring its installation dialog back into view.",
-                      "Update packages keep copied license files writable so macOS can finish clearing their quarantine during installation."])
+        Notes(version: "0.4.13", date: "16 November 2026",
+              headline: "Move freely. Speak naturally. Browse privately.",
+              new: ["Ghost windows and tabs keep browsing data temporary, with a panic shortcut and precise-location blocking.",
+                    "Quick force-click a link for a short description, or hold to preview its page."],
+              better: ["Nebula is shortcut-first, understands English and Spanish, and chooses commands or focused-field dictation without a mode picker.",
+                       "Swipe left to move forward or create an empty space instantly; swipe right to return. Quiet page dots show your place, with optional renaming later."],
+              fixed: ["Default browsing has no space name or page dots until a second space exists. New spaces need no setup form.",
+                      "Switching spaces preserves your original tabs and active page."])
     ]
 }
 

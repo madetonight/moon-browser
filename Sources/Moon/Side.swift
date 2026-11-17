@@ -141,6 +141,10 @@ struct SideBar: View {
 
             VStack {
                 Spacer()
+                if prefs.usesSpaces && browser.spaces.count > 1 && !browser.ghostWindow {
+                    SpacePager(browser: browser, compact: icons)
+                        .padding(.horizontal, surfaceInsets.leading + 10)
+                }
                 foot
                     .padding(.leading, surfaceInsets.leading)
                     .padding(.trailing, surfaceInsets.trailing)
@@ -238,15 +242,18 @@ struct SideBar: View {
                 .offset(x: swipe)
             // Only while the fingers are bringing one in: the one they are
             // bringing, a page's width away.
-            if swipe > 0, browser.newSpaceSwipe {
-                newSpacePage.offset(x: swipe - width)
-            } else if swipe > 0, at > 0 {
-                page(at - 1, pill: before)
-                    .offset(x: swipe - width)
-            }
-            if swipe < 0, at < browser.spaces.count {
+            if browser.makingSpace, swipe != 0 {
+                page(browser.spaces.firstIndex { $0.id == browser.spaceID } ?? 0, pill: before)
+                    .offset(x: swipe + (swipe < 0 ? width : -width))
+            } else if swipe < 0, browser.newSpaceSwipe {
+                newSpacePage.offset(x: swipe + width)
+            } else if swipe < 0, at + 1 < browser.spaces.count {
                 page(at + 1, pill: after)
                     .offset(x: swipe + width)
+            }
+            if swipe > 0, at > 0 {
+                page(at - 1, pill: before)
+                    .offset(x: swipe - width)
             }
         }
         // Each page owns its margins. Compensating again here shifts rows
@@ -264,6 +271,9 @@ struct SideBar: View {
                 newSpacePage
             } else if browser.spaces[index].id == browser.spaceID {
                 VStack(alignment: .leading, spacing: 0) {
+                    if browser.ghostWindow {
+                        GhostHeading().padding(.bottom, 8)
+                    }
                     if !browser.squarePins.isEmpty || ghostSquare != nil {
                         pinned
                             .padding(.bottom, 10)
@@ -411,7 +421,7 @@ struct SideBar: View {
     private var rowsEnd: CGFloat {
         let pins = browser.squarePins.count
         let pinBlock = pins == 0 ? 0 : (pinCells(pins).map(\.maxY).max() ?? 0) + 10
-        return top + pinBlock + rowsHeight
+        return top + (browser.ghostWindow ? 36 : 0) + pinBlock + rowsHeight
     }
 
     /// The pinned rows, the loose tabs and the row that makes another, added
@@ -841,7 +851,7 @@ struct SideBar: View {
     /// one above the other.
     private var footHeight: CGFloat {
         (icons ? CGFloat(SideFoot.doors(prefs, browser.fetches)) * 28 + 8
-            : (SideFoot.needsTwoRows(width: pageWidth, doors: SideFoot.doors(prefs, browser.fetches)) ? 64 : 36)) + surfaceInsets.bottom
+            : (SideFoot.needsTwoRows(width: pageWidth, doors: SideFoot.doors(prefs, browser.fetches)) ? 64 : 36)) + surfaceInsets.bottom + (prefs.usesSpaces && browser.spaces.count > 1 && !browser.ghostWindow ? (icons ? 32 : 42) : 0)
     }
 
     @ViewBuilder
@@ -885,7 +895,6 @@ private struct SideFoot: View {
                 FetchDoor(browser: browser, fetches: fetches, persistent: true)
                 TranslationDoor(browser: browser, arrowEdge: prefs.sidePosition == .right ? .leading : .trailing)
                 CodexDoor(browser: browser)
-                NebulaDoor(browser: browser)
                 OrbitDoor(browser: browser)
             }
             .frame(maxWidth: .infinity)
@@ -921,7 +930,6 @@ private struct SideFoot: View {
             FetchDoor(browser: browser, fetches: fetches, persistent: true)
             TranslationDoor(browser: browser, arrowEdge: prefs.sidePosition == .right ? .leading : .trailing)
             CodexDoor(browser: browser)
-            NebulaDoor(browser: browser)
             OrbitDoor(browser: browser)
         }
     }
@@ -936,7 +944,7 @@ private struct SideFoot: View {
 
     /// How many doors the foot has, stacked: what the rows stop short of.
     @MainActor static func doors(_ prefs: Preferences, _ fetches: Fetches) -> Int {
-        7  // extensions, bookmarks, downloads, translation, Codex, Nebula and Orbit
+        6  // extensions, bookmarks, downloads, translation, Codex and Orbit
     }
 
     /// How many pinned extensions fit beside the doors that stay. Every door

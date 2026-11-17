@@ -11,7 +11,7 @@ public enum NebulaRequest: Equatable, Sendable {
         guard !text.isEmpty, text.count <= 2_000 else { return nil }
         for _ in 0..<3 {
             let cleaned = text.replacingOccurrences(
-                of: #"^(?:(?:hey\s+)?nebula[,\s]+|(?:can|could|would)\s+you\s+(?:please\s+)?|please\s+)"#,
+                of: #"^(?:(?:(?:hey|hola)\s+)?n[eé]bula[,\s]+|(?:can|could|would)\s+you\s+(?:please\s+)?|please\s+|(?:puedes\s+)?por\s+favor\s+|puedes\s+)"#,
                 with: "", options: [.regularExpression, .caseInsensitive])
             if cleaned == text { break }
             text = cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -21,7 +21,7 @@ public enum NebulaRequest: Equatable, Sendable {
         if let command = NebulaCommand.parse(text) { return .command(command) }
 
         let lower = text.lowercased()
-        for prefix in ["take me to ", "navigate to ", "go to ", "visit ", "launch ", "open "] where lower.hasPrefix(prefix) {
+        for prefix in ["abre ", "abrir ", "ve a ", "llévame a ", "llevame a ", "take me to ", "navigate to ", "go to ", "visit ", "launch ", "open "] where lower.hasPrefix(prefix) {
             let destination = String(text.dropFirst(prefix.count)).trimmingCharacters(in: .whitespacesAndNewlines)
             guard !destination.isEmpty else { return nil }
             let spokenAddress = destination.replacingOccurrences(of: #"\s+dot\s+"#, with: ".", options: [.regularExpression, .caseInsensitive])

@@ -161,7 +161,8 @@ struct Command: Identifiable {
 
         Command("file.newWindow", "New Window", .file, KeyCombo("n")) { _ in Browsers.newWindow() },
         Command("file.newTab", "New Tab", .file, KeyCombo("t")) { $0.launch() },
-        Command("file.newPrivateTab", "New Private Tab", .file, KeyCombo("n", shift: true)) { $0.newShyTab() },
+        Command("file.newPrivateTab", "New Ghost Window", .file, KeyCombo("n", shift: true)) { _ in Browsers.newGhostWindow() },
+        Command("file.ghostPanic", "Close All Ghost Browsing", .file, KeyCombo("h", option: true, control: true)) { _ in Browsers.ghostPanic() },
         Command("file.reopen", "Reopen Closed Tab", .file, KeyCombo("t", shift: true)) { $0.reopen() },
         Command("file.openAddress", "Open Address…", .file, KeyCombo("l")) { $0.edit() },
         Command("file.closeTab", "Close Tab", .file, KeyCombo("w")) { $0.closeFront() },

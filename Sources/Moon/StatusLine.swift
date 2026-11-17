@@ -4,8 +4,8 @@ import WebKit
 
 // Where a link goes, at the bottom of the page while the pointer is on it.
 //
-// Off unless turned on in Settings › General. Off, not a line of it reaches
-// a page: the listener is only put into pages while the switch is on.
+// One passive relay supports the status bubble and force-click insights. It
+// is installed only while at least one of those features is enabled.
 
 /// Reports the destination under the pointer to the tab that owns the page.
 /// WebKit retains this relay; the tab is weak so closing it releases the page.
@@ -36,6 +36,7 @@ final class HoveredLink: NSObject, WKScriptMessageHandler {
 
         // The composed path reaches links inside open shadow trees, where `target` stops at the host.
         function linkIn(path) {
+            state.anchor = null;
             for (const node of path) {
                 if (node.nodeType !== 1 || (node.localName !== 'a' && node.localName !== 'area')) continue;
                 // An SVG link's href is an object, and its address may be relative.
@@ -44,7 +45,9 @@ final class HoveredLink: NSObject, WKScriptMessageHandler {
                 try {
                     const address = new URL(href, node.baseURI).href;
                     // A script link goes nowhere worth showing.
-                    return address.startsWith('javascript:') ? '' : address.slice(0, 600);
+                    if (address.startsWith('javascript:')) return '';
+                    state.anchor = node;
+                    return address.slice(0, 600);
                 } catch {
                     return '';
                 }
@@ -65,6 +68,7 @@ final class HoveredLink: NSObject, WKScriptMessageHandler {
         guard let address = message.body as? String else { return }
         MainActor.assumeIsolated {
             guard let tab, message.webView === tab.built else { return }
+            (tab.built as? PageView)?.forceLinkFrame = address.isEmpty ? nil : message.frameInfo
             tab.onLink?(tab, address.isEmpty ? nil : address)
         }
     }

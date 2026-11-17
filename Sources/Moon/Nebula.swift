@@ -8,16 +8,8 @@ import MoonCore
 @MainActor
 final class Nebula: ObservableObject {
     static let shared = Nebula()
-    enum Mode: String, CaseIterable { case dictate = "Dictate", control = "Control" }
     enum Phase { case ready, preparing, listening, finishing, review, confirming, working }
-
-    @Published var mode = Mode(rawValue: Store.settings.string(forKey: "nebula.mode") ?? "") ?? .control {
-        didSet { Store.settings.set(mode.rawValue, forKey: "nebula.mode") }
-    }
-    @Published var language = Store.settings.string(forKey: "nebula.language") ?? Locale.current.identifier {
-        didSet { Store.settings.set(language, forKey: "nebula.language") }
-    }
-    @Published private(set) var languages: [String] = []
+    @Published private(set) var languages: [String] = ["en-US", "es-ES"]
     @Published private(set) var phase = Phase.ready
     @Published var transcript = ""
     @Published private(set) var status = "Hold the shortcut, speak, then release."
@@ -34,6 +26,8 @@ final class Nebula: ObservableObject {
     private var heldCode: UInt16?
     private var heldFlags: NSEvent.ModifierFlags = []
     private var committed = ""
+    private struct Lane { var committed = ""; var text = ""; var confidence = 0.0 }
+    private var lanes: [String: Lane] = [:]
     private var wantsCapture = false
     @Published private(set) var pendingTabs: [UUID] = []
     private var pendingSpace: UUID?
@@ -51,19 +45,17 @@ final class Nebula: ObservableObject {
         dismiss()
         self.browser = browser
         // Capture the destination before a native control in the card takes focus.
-        if mode == .dictate { targetTask = Task { await NebulaTarget.capture(in: browser) } }
+        targetTask = Task { await NebulaTarget.capture(in: browser) }
         browser.translationOpen = false
         browser.orbitOpen = false
         browser.nebulaOpen = true
     }
 
     func loadLanguages() async {
-        let supported = await SpeechTranscriber.supportedLocales
-        languages = supported.map(\.identifier).sorted()
-        if let match = await SpeechTranscriber.supportedLocale(equivalentTo: Locale(identifier: language)) {
-            resolvedLocales[language] = match
-            resolvedLocales[match.identifier] = match
-            language = match.identifier
+        for id in ["en-US", "es-ES"] {
+            if let locale = await SpeechTranscriber.supportedLocale(equivalentTo: Locale(identifier: id)) {
+                resolvedLocales[id] = locale
+            }
         }
     }
 
@@ -71,7 +63,7 @@ final class Nebula: ObservableObject {
         guard !busy, browser?.nebulaOpen == true else { return }
         pendingTabs = []; pendingSpace = nil
         wantsCapture = true
-        transcript = ""; committed = ""
+        transcript = ""; committed = ""; lanes = [:]
         status = "Preparing on-device speech…"
         phase = .preparing
         let turn = UUID()
@@ -79,37 +71,33 @@ final class Nebula: ObservableObject {
         setupTask = Task { [self] in
             do {
                 guard SpeechTranscriber.isAvailable else { throw Failure.unavailable }
-                let locale: Locale
-                if let cached = resolvedLocales[language] { locale = cached }
-                else {
-                    guard let supported = await SpeechTranscriber.supportedLocale(equivalentTo: Locale(identifier: language)) else { throw Failure.language }
-                    locale = supported; resolvedLocales[language] = supported
-                }
-                if mode == .dictate {
-                    if targetTask == nil, let browser { targetTask = Task { await NebulaTarget.capture(in: browser) } }
-                    target = await targetTask?.value
-                    guard target != nil else { throw Failure.field }
-                }
+                await loadLanguages()
+                guard let english = resolvedLocales["en-US"], let spanish = resolvedLocales["es-ES"] else { throw Failure.language }
+                if targetTask == nil, let browser { targetTask = Task { await NebulaTarget.capture(in: browser) } }
+                target = await targetTask?.value
                 try Task.checkCancellation()
                 let granted = await AVCaptureDevice.requestAccess(for: .audio)
                 try Task.checkCancellation()
                 guard granted else { throw Failure.permission }
                 guard generation == turn else { return }
-                let transcriber = SpeechTranscriber(locale: locale, preset: .progressiveTranscription)
-                if !readyModels.contains(locale.identifier) {
-                    if let request = try await AssetInventory.assetInstallationRequest(supporting: [transcriber]) {
-                        status = "Downloading Apple’s speech model for this language…"
+                let transcribers = [english, spanish].map {
+                    SpeechTranscriber(locale: $0, transcriptionOptions: [], reportingOptions: [.volatileResults],
+                                      attributeOptions: [.transcriptionConfidence])
+                }
+                if ![english, spanish].allSatisfy({ readyModels.contains($0.identifier) }) {
+                    if let request = try await AssetInventory.assetInstallationRequest(supporting: transcribers) {
+                        status = "Preparing English and Spanish on-device speech…"
                         try await request.downloadAndInstall()
                     }
-                    readyModels.insert(locale.identifier)
+                    readyModels.formUnion([english.identifier, spanish.identifier])
                 }
                 try Task.checkCancellation()
                 guard generation == turn, (NSApp.isActive && browser?.window?.isKeyWindow == true) || Store.testing
                 else { throw CancellationError() }
                 let capture = NebulaCapture()
                 guard let format = await SpeechAnalyzer.bestAvailableAudioFormat(
-                    compatibleWith: [transcriber], considering: capture.inputFormat) else { throw Failure.unavailable }
-                let analyzer = SpeechAnalyzer(modules: [transcriber],
+                    compatibleWith: transcribers, considering: capture.inputFormat) else { throw Failure.unavailable }
+                let analyzer = SpeechAnalyzer(modules: transcribers,
                     options: .init(priority: .userInitiated, modelRetention: .lingering))
                 self.analyzer = analyzer
                 let context = AnalysisContext()
@@ -131,13 +119,22 @@ final class Nebula: ObservableObject {
                 }
                 self.capture = capture
                 resultsTask = Task { [weak self] in
-                    do {
-                        for try await result in transcriber.results {
-                            guard let self, self.generation == turn else { return }
-                            self.receive(String(result.text.characters), final: result.isFinal)
+                    await withTaskGroup(of: Void.self) { group in
+                        for (index, transcriber) in transcribers.enumerated() {
+                            group.addTask { @MainActor [weak self] in
+                                do {
+                                    for try await result in transcriber.results {
+                                        guard let self, self.generation == turn else { return }
+                                        let confidence = result.text.runs.compactMap { $0.transcriptionConfidence }
+                                        let mean = confidence.isEmpty ? 0.5 : confidence.reduce(0, +) / Double(confidence.count)
+                                        self.receive(String(result.text.characters), final: result.isFinal,
+                                                     lane: index == 0 ? "en" : "es", confidence: mean)
+                                    }
+                                } catch {
+                                    if let self, self.generation == turn, !Task.isCancelled { self.fail(error) }
+                                }
+                            }
                         }
-                    } catch {
-                        if let self, self.generation == turn, !Task.isCancelled { self.fail(error) }
                     }
                 }
                 phase = .listening
@@ -160,15 +157,18 @@ final class Nebula: ObservableObject {
         }
     }
 
-    private func receive(_ text: String, final: Bool) {
+    private func receive(_ text: String, final: Bool, lane id: String, confidence: Double) {
+        var lane = lanes[id] ?? Lane()
         let segment = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        let combined = [committed, segment].filter { !$0.isEmpty }.joined(separator: " ")
-        let bounded = String(combined.prefix(16_000))
-        transcript = NebulaTranscript.withoutTrailingPeriod(bounded)
-        // Keep sentence boundaries between recognition segments, while the
-        // displayed and inserted transcript never has an automatic final dot.
-        if final { committed = bounded }
-        if combined.count > 16_000 { fail(Failure.timeout) }
+        let combined = [lane.committed, segment].filter { !$0.isEmpty }.joined(separator: " ")
+        guard combined.count <= 16_000 else { fail(Failure.timeout); return }
+        lane.text = NebulaTranscript.withoutTrailingPeriod(combined)
+        lane.confidence = confidence
+        if final { lane.committed = combined }
+        lanes[id] = lane
+        // Both languages hear the same audio. Do not concatenate competing
+        // transcriptions or act on a partial result from the wrong language.
+        transcript = lanes.values.filter { !$0.text.isEmpty }.max { $0.confidence < $1.confidence }?.text ?? ""
     }
 
     func stop() {
@@ -221,7 +221,7 @@ final class Nebula: ObservableObject {
         capture?.stop(); capture = nil
         if let analyzer { Task { await analyzer.cancelAndFinishNow() } }
         analyzer = nil
-        transcript = ""; committed = ""
+        transcript = ""; committed = ""; lanes = [:]
         phase = .ready
         status = "Hold the shortcut, speak, then release."
     }
@@ -275,10 +275,9 @@ final class Nebula: ObservableObject {
     func apply() async {
         guard !busy, let browser, browser.nebulaOpen else { return }
         transcript = NebulaTranscript.withoutTrailingPeriod(transcript)
-        if mode == .dictate {
-            guard let target else { status = Failure.field.localizedDescription; return }
+        if let target, NebulaIntent.shouldDictate(transcript) {
             phase = .working
-            if await target.insert(transcript) { dismiss() }
+            if await target.insert(NebulaIntent.dictationText(transcript)) { dismiss() }
             else { phase = .review; status = "The field changed. Copy your words and choose the field again." }
             return
         }
@@ -359,7 +358,6 @@ final class Nebula: ObservableObject {
 
     func runExample(_ words: String) {
         guard !busy else { return }
-        mode = .control
         transcript = words
         phase = .review
         actionTask = Task { [weak self] in await self?.apply() }
@@ -398,7 +396,7 @@ final class Nebula: ObservableObject {
         var errorDescription: String? {
             switch self {
             case .unavailable: "On-device speech is unavailable on this Mac."
-            case .language: "Choose a language supported by on-device speech."
+            case .language: "English and Spanish on-device speech are unavailable on this Mac."
             case .field: "Focus a text field, then open Nebula again. Password fields are excluded."
             case .permission: "Enable Moon’s microphone access in System Settings → Privacy & Security → Microphone."
             case .timeout: "Transcription took too long. Your words are available for review."

@@ -50,7 +50,7 @@ struct TabBar: View {
                     // after a switch.
                     // The profile, once there is more than one (see Profiles.swift).
                     if Profiles.shared.several { ProfileBadge(browser: browser) }
-                    if browser.prefs.usesSpaces { SpaceDot(browser: browser).zIndex(1) }
+                    if browser.prefs.usesSpaces && browser.spaces.count > 1 { SpaceDot(browser: browser).zIndex(1) }
 
                     // The tabs, in a run of their own. While they fit, it is
                     // exactly as wide as they are and nothing about the row
@@ -427,7 +427,7 @@ struct TabBar: View {
     }
 
     /// What the space's dot takes before the tabs, when there are spaces.
-    private var dot: CGFloat { browser.prefs.usesSpaces ? SpaceDot.width + Metrics.tabGap : 0 }
+    private var dot: CGFloat { browser.prefs.usesSpaces && browser.spaces.count > 1 ? SpaceDot.width + Metrics.tabGap : 0 }
 
     /// Every loose tab is the same width, so the cross is always in the same
     /// place. Past a dozen or so they start giving ground; too narrow for a

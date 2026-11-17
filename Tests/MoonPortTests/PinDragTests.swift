@@ -289,6 +289,7 @@ final class PinDragTests: XCTestCase {
             (prefs.sidebar, prefs.usesTabGroups, prefs.splitView, prefs.listsPins, prefs.roomyTabs,
              prefs.usesSpaces, prefs.sharesPins) = previous
         }
+        prefs.usesSpaces = false
         prefs.sideIcons = false
         prefs.sidePosition = .left
         prefs.sideHides = false

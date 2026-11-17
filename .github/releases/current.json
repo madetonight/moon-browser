@@ -1,22 +1,22 @@
 {
   "repository": "madetonight/moon-browser",
-  "tag": "v0.4.12-beta",
-  "build": "2026111208",
-  "title": "Moon 0.4.12 beta",
+  "tag": "v0.4.13-beta",
+  "build": "2026111603",
+  "title": "Moon 0.4.13 beta",
   "keep_latest_only": true,
   "assets": [
     {
-      "name": "Moon-0.4.12-arm64.dmg",
-      "size": 5489268,
-      "sha256": "274b911e67cd1118d91adca9ec17f9e7dd8cfb654393d7c41a02ed88b6e9fda3",
-      "blob": "882c38238e8b1ee20dba8ef6093e08cc525289d3"
+      "name": "Moon-0.4.13-arm64.dmg",
+      "size": 5513700,
+      "sha256": "5839a19a9fab5e67b2e7d8d25e4a89c0f7d48863938657be7a82b58862bf560f",
+      "blob": "0d989f73642ff55b706b2f7100e5b9bb4c99156f"
     }
   ],
   "feed": {
     "name": "appcast.xml",
-    "size": 2399,
-    "sha256": "15c6f93b1a34196ed443f1e7712fe8d43b0209ea44f0c53ccc996166ec5c31d6",
-    "blob": "ccd4ea354ab20986ccd2bf4f7570fc3f4b4d0e23"
+    "size": 2715,
+    "sha256": "a2429f607f2038c405d2402f6b94c83f131db3789a31da423d296d563a466c3f",
+    "blob": "2d5ff5581a838d0c52b0d79fecb11e4b7b4cce7a"
   },
-  "notes": "# Moon 0.4.12 beta\n\nA smoother sidebar, right on cue.\n\n- Move the live sidebar as one native surface instead of animating its controls through the browser’s view hierarchy.\n- Shorten the hover delay and preserve smooth reversal when the pointer changes direction.\n- Reuse mouse events’ window information to avoid repeated window lookups during movement.\n- Stop the resize handle flashing over the page during sidebar reveals. Resizing remains available.\n- Show a downloaded update as ready and bring its installation dialog back into view instead of leaving a downloading message behind.\n- Keep copied license resources writable so the signed updater can remove quarantine during installation.\n\nApple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized. The optional ActivityWatch companion is distributed separately by its authors.\n"
+  "notes": "# Moon 0.4.13 beta\n\nMove freely. Speak naturally. Browse privately.\n\n- Swipe left to move forward or instantly create a space, and right to return. Automatic names, quiet page dots, and optional renaming keep setup out of the way.\n- Move between spaces without losing the original tabs or active page. New spaces share existing website sign-ins automatically.\n- Hold Option–Space for Nebula. English and Spanish commands and context-aware dictation no longer require a mode or language picker.\n- Nebula stays off the sidebar mini dock. Microphone capture still stops on release, cancellation, or leaving Moon.\n- Quick force-click a web link for a short description; hold a force-click for a full page preview, with native haptic feedback on supported trackpads.\n- Open a Ghost window with Shift–Command–N, or a Ghost tab from File. Ghost uses temporary website storage and stays out of history, saved sessions and reopen lists.\n- Control–Option–Command–H closes Ghost browsing. Private tabs deny precise location permission by default; websites can still see your IP address.\n\nApple silicon, macOS 26 or later. English and Spanish speech uses Apple’s on-device models. This Moon beta is Apple Development signed and is not Apple-notarized.\n\n"
 }
