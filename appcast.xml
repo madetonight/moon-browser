@@ -4,28 +4,27 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
     <channel>
         <title>Moon</title>
         <item>
-            <title>0.4.15</title>
-            <pubDate>Tue, 17 Nov 2026 09:23:10 -0500</pubDate>
-            <link>https://github.com/madetonight/moon-browser/releases/tag/v0.4.15-beta</link>
-            <sparkle:version>2026111701</sparkle:version>
-            <sparkle:shortVersionString>0.4.15</sparkle:shortVersionString>
+            <title>0.4.16</title>
+            <pubDate>Tue, 17 Nov 2026 16:50:53 -0500</pubDate>
+            <link>https://github.com/madetonight/moon-browser/releases/tag/v0.4.16-beta</link>
+            <sparkle:version>2026111702</sparkle:version>
+            <sparkle:shortVersionString>0.4.16</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
             <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <description sparkle:format="markdown"><![CDATA[# Moon 0.4.15 beta
+            <description sparkle:format="markdown"><![CDATA[# Moon 0.4.16 beta
 
-Floating video that follows your choice.
+Smoother switching between Spaces.
 
-- Transfer the floating video window and its controls reliably between playing tabs.
-- Cancel stale requests when switching rapidly, closing a tab or turning Picture in Picture off.
-- Select visible videos instead of hidden preload players and recover when a site replaces its video element.
-- Add a Picture in Picture switch in Browsing settings. Existing users keep their current behavior unless they switch it off locally.
+- The sidebar follows your swipe and settles into place. Swipe left from the last space to make a new one, or swipe right to go back.
+- Click a page dot or use a keyboard shortcut for the same slide. When multiple spaces are open, the sidebar names the current space above its tabs.
+- Folder icons make collapsible Tab Groups easier to spot.
 
 Apple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized.
 ]]></description>
-            <enclosure url="https://github.com/madetonight/moon-browser/releases/download/v0.4.15-beta/Moon-0.4.15-arm64.dmg" length="5573645" type="application/octet-stream" sparkle:edSignature="v0pi0idkHZEDpUIFEjsU5MNKI47zilKQFh92mglk68tZmU76BbtJgzOIx0hrSmohUX1M9sF0CCMYq2t4PfZuCQ=="></enclosure>
+            <enclosure url="https://github.com/madetonight/moon-browser/releases/download/v0.4.16-beta/Moon-0.4.16-arm64.dmg" length="5591756" type="application/octet-stream" sparkle:edSignature="NdqGH0MQCgurkQMCOSP+q58YxVmlRtdx4x+nddMddtjC11uJEl2mD03jkTG17EFwS1IzNP0n6RbagP1Wf+AIDw=="></enclosure>
         </item>
     </channel>
 </rss><!-- sparkle-signatures:
-edSignature: rgxHzv6Pbn1Viqsy4MAtDLmh0WzUJvB9m0lWDbKJuT9N/Z7ZKVLsf4UgGHhJU6r876pXZpSmglFZwdgREcbZDQ==
-length: 1965
+edSignature: SGSP3/dWg7vcnmGQ8htQeURKT5RNmlWXmaQHIZ3DF0zBPB4v/WCpg9jwTi7PXIuJ2ZlcBo+50wnoUKqEX90HAw==
+length: 1875
 -->
