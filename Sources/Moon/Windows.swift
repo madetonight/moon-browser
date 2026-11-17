@@ -70,6 +70,7 @@ final class SceneSlot: ObservableObject {
         browser.inScene = true
         self.browser = browser
         Browsers.register(browser)
+        SpaceComparison.seed(browser)
     }
 
     /// Its browser gone with its window: the next time the scene shows, a

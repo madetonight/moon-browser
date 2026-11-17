@@ -21,6 +21,7 @@ struct MoonApp: App {
     private var browser: Browser { front.browser ?? SceneSlot.shared.browser }
 
     init() {
+        SpaceComparison.prepare()
         MoonMigration.run()
         DispatchQueue.main.async {
             _ = Orbit.shared
@@ -47,6 +48,7 @@ struct MoonApp: App {
         Window("Moon", id: Browsers.sceneID) {
             SceneRoot(slot: SceneSlot.shared)
                 .frame(minWidth: 640, minHeight: 420)
+                .onAppear { SpaceComparison.arrange() }
         }
         .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 1180, height: 780)

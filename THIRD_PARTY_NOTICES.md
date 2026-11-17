@@ -52,3 +52,12 @@ available under MPL-2.0: https://github.com/ActivityWatch/activitywatch.
 They are not bundled with Moon. Orbit uses the public loopback API and displays
 the locally served interface in an isolated WebKit store for advanced tools.
 
+
+## Zen Browser workspace comparison
+
+`Sources/Moon/ZenSpaceSwitcher.swift` adapts cyclic workspace navigation and
+workspace strip layout metrics from Zen Browser's `ZenSpaceManager.mjs` and
+`zen-workspaces.css` at https://github.com/zen-browser/desktop/tree/dev/src/zen/spaces.
+This file is available under the Mozilla Public License 2.0; the license is
+included as `Support/Zen-Workspaces-MPL-2.0.txt`. The Moon comparison uses native
+SwiftUI/AppKit controls and does not embed Firefox's XUL runtime.

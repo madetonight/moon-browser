@@ -117,3 +117,42 @@ final class SpaceCreationSwipeTests: XCTestCase {
         }
     }
 }
+
+@MainActor
+final class SpaceDeletionActionsTests: XCTestCase {
+    func testOnlyTargetSpaceIsDeletedAndDefaultIsProtected() {
+        _ = NSApplication.shared
+        let browser = Browser(record: WindowRecord())
+        let saved = Spaces.read(profile: browser.profileID)
+        let wasEnabled = browser.prefs.usesSpaces
+        defer { Ask.testing = nil; browser.closeAll(); Spaces.write(saved, profile: browser.profileID); browser.prefs.usesSpaces = wasEnabled }
+        browser.prefs.usesSpaces = true
+        browser.spaces = [browser.space]
+        Spaces.write(browser.spaces, profile: browser.profileID)
+        let home = browser.spaceID
+        browser.addSpace(named: "Keep")
+        let keep = browser.spaceID
+        browser.addSpace(named: "Delete this")
+        let remove = browser.spaceID
+        browser.switchSpace(to: keep)
+        XCTAssertFalse(browser.canDeleteSpace(home))
+        Ask.testing = false
+        browser.requestDeleteSpace(remove)
+        XCTAssertTrue(browser.spaces.contains { $0.id == remove })
+        Ask.testing = true
+        browser.requestDeleteSpace(remove)
+        XCTAssertFalse(browser.spaces.contains { $0.id == remove })
+        XCTAssertTrue(browser.spaces.contains { $0.id == keep })
+        XCTAssertEqual(browser.spaceID, keep)
+        browser.requestDeleteSpace(home)
+        XCTAssertTrue(browser.spaces.contains { $0.id == home })
+        browser.requestDeleteSpace(remove)
+        XCTAssertEqual(browser.spaces.count, 2)
+    }
+
+    func testZenCyclicNavigationAndEmptyList() {
+        XCTAssertEqual(ZenSpaceNavigation.destination(from: 2, offset: 1, count: 3), 0)
+        XCTAssertEqual(ZenSpaceNavigation.destination(from: 0, offset: -1, count: 3), 2)
+        XCTAssertEqual(ZenSpaceNavigation.destination(from: 0, offset: 1, count: 0), 0)
+    }
+}

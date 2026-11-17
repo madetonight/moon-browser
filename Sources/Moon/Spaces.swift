@@ -434,6 +434,20 @@ extension Browser {
     /// and the one that can't be deleted.
     var homeSpaceID: UUID { spaces.first?.id ?? Space.firstID }
 
+    func canDeleteSpace(_ id: UUID) -> Bool {
+        !ghostWindow && id != Space.firstID && id != homeSpaceID && spaces.contains { $0.id == id }
+    }
+
+    func requestDeleteSpace(_ id: UUID) {
+        guard canDeleteSpace(id), let space = spaces.first(where: { $0.id == id }) else { return }
+        let detail = space.sharesSignIns == true
+            ? "Its tabs will close. Shared website sign-ins, history and bookmarks stay."
+            : "Its tabs will close, and its own cookies and sign-ins will be erased. History and bookmarks stay."
+        Ask.sure("Delete “\(spaceLabel(space))”?", detail: detail, confirm: "Delete", returnCancels: true) { [weak self] in
+            self?.deleteSpace(id)
+        }
+    }
+
     /// A space, its tabs, and its cookies and sign-ins, gone. The first one
     /// of the profile stays: it is where everything was before there were spaces.
     func deleteSpace(_ id: UUID) {
@@ -641,11 +655,7 @@ enum SpaceMenu {
         }
         if !here.isFirst, here.id != browser.homeSpaceID {
             menu.addItem(.separator())
-            menu.addItem(item("Delete “\(here.name)”…") {
-                Ask.sure("Delete “\(here.name)”?", detail: "Its tabs close, and its cookies and sign-ins are erased from this Mac. History and bookmarks stay.", confirm: "Delete") {
-                    browser.deleteSpace(here.id)
-                }
-            })
+            menu.addItem(item("Delete “\(here.name)”…") { browser.requestDeleteSpace(here.id) })
         }
         return menu
     }
@@ -740,10 +750,12 @@ extension Browser {
 }
 
 
-/// Quiet page indicators, with naming kept out of the creation gesture.
+/// Quiet page indicators, with management available directly on each space.
 struct SpacePager: View {
     @ObservedObject var browser: Browser
     var compact = false
+    @State private var hovered: UUID?
+    @State private var captionHovered = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -753,7 +765,9 @@ struct SpacePager: View {
                     .foregroundStyle(Palette.muted)
                     .lineLimit(1)
                     .frame(maxWidth: .infinity)
-                    .contextMenu { rename }
+                    .contentShape(Rectangle())
+                    .onHover { captionHovered = $0 }
+                    .contextMenu { SpaceContextActions(browser: browser, space: browser.space) }
             }
             ScrollViewReader { reader in
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -774,10 +788,9 @@ struct SpacePager: View {
                             .id(space.id)
                             .accessibilityLabel(browser.spaceLabel(space))
                             .accessibilityAddTraits(space.id == browser.spaceID ? .isSelected : [])
-                            .help(browser.spaceLabel(space))
-                            .contextMenu {
-                                Button("Rename Space…") { rename(space) }
-                            }
+                            .help(browser.spaceLabel(space) + (browser.canDeleteSpace(space.id) ? " — Delete: ⌥⌘⌫ while hovering" : ""))
+                            .onHover { track(space.id, inside: $0) }
+                            .contextMenu { SpaceContextActions(browser: browser, space: space) }
                         }
                     }
                 }
@@ -787,15 +800,10 @@ struct SpacePager: View {
         }
         .frame(height: compact ? 24 : 34)
         .frame(maxWidth: .infinity)
+        .background(SpaceDeleteKeyReader(browser: browser, hovered: captionHovered ? browser.spaceID : hovered).frame(width: 1, height: 1).allowsHitTesting(false))
     }
 
-    private var rename: some View {
-        Button("Rename Space…") { rename(browser.space) }
-    }
-
-    private func rename(_ space: Space) {
-        Ask.name("Rename Space", placeholder: browser.spaceLabel(space), initial: browser.spaceLabel(space), confirm: "Rename") {
-            browser.renameSpace(space.id, to: $0)
-        }
+    private func track(_ id: UUID, inside: Bool) {
+        if inside { hovered = id } else if hovered == id { hovered = nil }
     }
 }

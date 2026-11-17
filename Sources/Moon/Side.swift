@@ -142,8 +142,11 @@ struct SideBar: View {
             VStack {
                 Spacer()
                 if prefs.usesSpaces && browser.spaces.count > 1 && !browser.ghostWindow {
-                    SpacePager(browser: browser, compact: icons)
-                        .padding(.horizontal, surfaceInsets.leading + 10)
+                    Group {
+                        if SpaceComparison.zen { ZenSpaceStrip(browser: browser) }
+                        else { SpacePager(browser: browser, compact: icons) }
+                    }
+                    .padding(.horizontal, surfaceInsets.leading + 10)
                 }
                 foot
                     .padding(.leading, surfaceInsets.leading)
@@ -247,12 +250,12 @@ struct SideBar: View {
                     .offset(x: swipe + (swipe < 0 ? width : -width))
             } else if swipe < 0, browser.newSpaceSwipe {
                 newSpacePage.offset(x: swipe + width)
-            } else if swipe < 0, at + 1 < browser.spaces.count {
-                page(at + 1, pill: after)
+            } else if swipe < 0, at + 1 < browser.spaces.count || SpaceComparison.zen {
+                page((at + 1) % browser.spaces.count, pill: after)
                     .offset(x: swipe + width)
             }
-            if swipe > 0, at > 0 {
-                page(at - 1, pill: before)
+            if swipe > 0, at > 0 || SpaceComparison.zen {
+                page((at - 1 + browser.spaces.count) % browser.spaces.count, pill: before)
                     .offset(x: swipe - width)
             }
         }
@@ -273,6 +276,8 @@ struct SideBar: View {
                 VStack(alignment: .leading, spacing: 0) {
                     if browser.ghostWindow {
                         GhostHeading().padding(.bottom, 8)
+                    } else if SpaceComparison.zen {
+                        ZenSpaceHeader(browser: browser).padding(.bottom, 8)
                     }
                     if !browser.squarePins.isEmpty || ghostSquare != nil {
                         pinned
@@ -421,7 +426,7 @@ struct SideBar: View {
     private var rowsEnd: CGFloat {
         let pins = browser.squarePins.count
         let pinBlock = pins == 0 ? 0 : (pinCells(pins).map(\.maxY).max() ?? 0) + 10
-        return top + (browser.ghostWindow ? 36 : 0) + pinBlock + rowsHeight
+        return top + (browser.ghostWindow ? 36 : SpaceComparison.zen ? 44 : 0) + pinBlock + rowsHeight
     }
 
     /// The pinned rows, the loose tabs and the row that makes another, added
@@ -851,7 +856,7 @@ struct SideBar: View {
     /// one above the other.
     private var footHeight: CGFloat {
         (icons ? CGFloat(SideFoot.doors(prefs, browser.fetches)) * 28 + 8
-            : (SideFoot.needsTwoRows(width: pageWidth, doors: SideFoot.doors(prefs, browser.fetches)) ? 64 : 36)) + surfaceInsets.bottom + (prefs.usesSpaces && browser.spaces.count > 1 && !browser.ghostWindow ? (icons ? 32 : 42) : 0)
+            : (SideFoot.needsTwoRows(width: pageWidth, doors: SideFoot.doors(prefs, browser.fetches)) ? 64 : 36)) + surfaceInsets.bottom + (prefs.usesSpaces && browser.spaces.count > 1 && !browser.ghostWindow ? (SpaceComparison.zen ? 46 : icons ? 32 : 42) : 0)
     }
 
     @ViewBuilder

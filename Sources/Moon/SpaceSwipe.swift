@@ -79,7 +79,7 @@ final class SpaceSwipe {
         self.browser = browser
         guard browser.prefs.usesSpaces || (browser.prefs.sidebar && step > 0) else { return false }
         let here = browser.makingSpace ? browser.spaces.count : (browser.spaces.firstIndex { $0.id == browser.spaceID } ?? 0)
-        let target = here + step
+        let target = SpaceComparison.zen ? ZenSpaceNavigation.destination(from: here, offset: step, count: browser.spaces.count) : here + step
         if target >= 0, target <= browser.spaces.count { slide(browser, to: target, from: here) }
         return true
     }
@@ -118,7 +118,8 @@ final class SpaceSwipe {
             notched = now
             guard rested else { return true }
             let here = browser.makingSpace ? browser.spaces.count : (browser.spaces.firstIndex { $0.id == browser.spaceID } ?? 0)
-            let target = here + (browser.prefs.sidebar ? (step < 0 ? 1 : -1) : (step < 0 ? 1 : -1))
+            let offset = step < 0 ? 1 : -1
+            let target = SpaceComparison.zen ? ZenSpaceNavigation.destination(from: here, offset: offset, count: browser.spaces.count) : here + offset
             if target >= 0, target <= browser.spaces.count { slide(browser, to: target, from: here) }
             return true
         }
@@ -180,7 +181,7 @@ final class SpaceSwipe {
         }
         guard axis == .across else { return false }
         guard browser.prefs.usesSpaces || (browser.prefs.sidebar && gathered.width < 0) else { return false }
-        browser.newSpaceSwipe = browser.prefs.sidebar && gathered.width < 0 && !browser.makingSpace && browser.spaceID == browser.spaces.last?.id
+        browser.newSpaceSwipe = !SpaceComparison.zen && browser.prefs.sidebar && gathered.width < 0 && !browser.makingSpace && browser.spaceID == browser.spaces.last?.id
         browser.spaceSwipe = resisted(gathered.width, in: browser)
         return true
     }
@@ -198,19 +199,21 @@ final class SpaceSwipe {
         let travel = gathered.width
         let here = browser.makingSpace ? browser.spaces.count : (browser.spaces.firstIndex { $0.id == browser.spaceID } ?? 0)
         // Sidebar: left advances, right returns. The top strip uses vertical paging.
-        let target = cancelled || abs(travel) < SpaceSwipe.enough(for: browser) ? here : here + (browser.prefs.sidebar ? (travel < 0 ? 1 : -1) : (travel < 0 ? 1 : -1))
+        let offset = travel < 0 ? 1 : -1
+        let target = cancelled || abs(travel) < Self.enough(for: browser) ? here
+            : SpaceComparison.zen ? ZenSpaceNavigation.destination(from: here, offset: offset, count: browser.spaces.count) : here + offset
         guard target != here, target >= 0, target <= browser.spaces.count else {
             withAnimation(Motion.settle) { browser.spaceSwipe = 0 } completion: {
                 if browser.spaceSwipe == 0 { browser.newSpaceSwipe = false }
             }
             return
         }
-        slide(browser, to: target, from: here)
+        slide(browser, to: target, from: here, direction: offset)
     }
 
     /// Nothing that way: the rows give a little, and come back.
     private func resisted(_ travel: CGFloat, in browser: Browser) -> CGFloat {
-        if browser.newSpaceSwipe { return travel }
+        if browser.newSpaceSwipe || (SpaceComparison.zen && browser.spaces.count > 1) { return travel }
         let here = browser.makingSpace ? browser.spaces.count : (browser.spaces.firstIndex { $0.id == browser.spaceID } ?? 0)
         let blocked = browser.prefs.sidebar ? (travel > 0 && here == 0) : (travel > 0 && here == 0)
         return blocked ? travel / 4 : travel
@@ -220,7 +223,7 @@ final class SpaceSwipe {
     /// where this one was; then it becomes the one on screen, in the same
     /// frame and without anything moving — it was already there. One past
     /// the last space is an empty new page.
-    func slide(_ browser: Browser, to target: Int, from here: Int) {
+    func slide(_ browser: Browser, to target: Int, from here: Int, direction: Int? = nil) {
         if browser.makingSpace, target != browser.spaces.count {
             browser.cancelSpaceCreation()
         }
@@ -230,8 +233,8 @@ final class SpaceSwipe {
         let destination = browser.spaces.indices.contains(target) ? browser.spaces[target].id : nil
         // A page is the column's width, or the bar's height.
         let width = browser.prefs.sidebar ? browser.prefs.columnWidth : Metrics.strip
-        browser.newSpaceSwipe = browser.prefs.sidebar && creating
-        let away: CGFloat = target > here ? -1 : 1
+        browser.newSpaceSwipe = !SpaceComparison.zen && browser.prefs.sidebar && creating
+        let away: CGFloat = (direction ?? (target > here ? 1 : -1)) > 0 ? -1 : 1
         browser.spaceStep = target > here ? 1 : -1
         resting = Date().addingTimeInterval(SpaceSwipe.rest)
         withAnimation(.easeOut(duration: 0.22), completionCriteria: .removed) {

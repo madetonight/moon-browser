@@ -41,11 +41,11 @@ trap cleanup EXIT
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources" "$app/Contents/Frameworks"
 cp "$binary_dir/Moon" "$app/Contents/MacOS/Moon"
 strip -u -r "$app/Contents/MacOS/Moon"
-for resource in Search-1.0.7-LICENSE Sparkle-LICENSE Moon.sdef; do cp "Support/$resource" "$app/Contents/Resources/$resource"; done
+for resource in Search-1.0.7-LICENSE Sparkle-LICENSE Zen-Workspaces-MPL-2.0.txt Moon.sdef; do cp "Support/$resource" "$app/Contents/Resources/$resource"; done
 cp LICENSE THIRD_PARTY_NOTICES.md "$app/Contents/Resources/"
 # Sparkle removes quarantine after extraction. A read-only copied license
 # prevents that operation even when the app and archive signatures are valid.
-chmod 644 "$app/Contents/Resources/"{Search-1.0.7-LICENSE,Sparkle-LICENSE,Moon.sdef,LICENSE,THIRD_PARTY_NOTICES.md}
+chmod 644 "$app/Contents/Resources/"{Search-1.0.7-LICENSE,Sparkle-LICENSE,Zen-Workspaces-MPL-2.0.txt,Moon.sdef,LICENSE,THIRD_PARTY_NOTICES.md}
 cp Support/Info.plist "$app/Contents/Info.plist"
 if [[ "$bundle_id" == org.moonbrowser.Moon ]]; then
   cp Support/container-migration.plist "$app/Contents/Resources/container-migration.plist"
@@ -67,6 +67,14 @@ import base64,os,plistlib,sys
 app,bundle_id,entitlements=sys.argv[1:]
 p=Path(app)/'Contents/Info.plist';info=plistlib.loads(p.read_bytes())
 info['CFBundleIdentifier']=bundle_id
+preview=os.environ.get('MOON_SPACES_PREVIEW')
+if preview:
+    assert preview in ('minimal','zen') and bundle_id == 'org.moonbrowser.Moon.preview.spaces.'+preview
+    info['MoonSpacesPreview']=preview
+    info['CFBundleName']='Moon '+preview.title()+' Preview'
+    info['CFBundleDisplayName']=info['CFBundleName']
+    for key in ['CFBundleURLTypes','CFBundleDocumentTypes','NSUserActivityTypes']:
+        info.pop(key,None)
 public_key=Path('Support/UpdatePublicKey.txt').read_text().strip()
 assert len(base64.b64decode(public_key,validate=True))==32, 'Invalid update public key'
 info['SUPublicEDKey']=public_key

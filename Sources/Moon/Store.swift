@@ -15,6 +15,7 @@ enum Store {
     /// once wrote over somebody's real session, and asking a person to
     /// remember a flag is not a safeguard.
     static var testing: Bool {
+        if SpaceComparison.style != nil { return true }
         if ProcessInfo.processInfo.environment["MOON_PROBE"] != nil || ProcessInfo.processInfo.environment["MOON_TEST_DIRECTORY"] != nil { return true }
         return Bundle.main.executablePath?.contains("/.build/") == true
     }
@@ -27,6 +28,7 @@ enum Store {
     /// never borrow each other's. Nil for the browser somebody is using.
     static let world: String? = {
         guard testing else { return nil }
+        if let style = SpaceComparison.style { return "spaces-preview-" + style.rawValue }
         let asked = (ProcessInfo.processInfo.environment["MOON_PROBE"] ?? ProcessInfo.processInfo.environment["MOON_TEST_DIRECTORY"].map { URL(fileURLWithPath: $0).lastPathComponent } ?? "").lowercased()
             .filter { ($0.isASCII && ($0.isLetter || $0.isNumber)) || $0 == "-" }
         return asked.isEmpty || asked == "1" || asked == "test" ? "test" : asked

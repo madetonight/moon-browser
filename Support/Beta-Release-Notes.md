@@ -1,14 +1,10 @@
-# Moon 0.4.13 beta
+# Moon 0.4.14 beta
 
-Move freely. Speak naturally. Browse privately.
+Your spaces, within easy reach.
 
-- Swipe left to move forward or instantly create a space, and right to return. Automatic names, quiet page dots, and optional renaming keep setup out of the way.
-- Move between spaces without losing the original tabs or active page. New spaces share existing website sign-ins automatically.
-- Hold Option–Space for Nebula. English and Spanish commands and context-aware dictation no longer require a mode or language picker.
-- Nebula stays off the sidebar mini dock. Microphone capture still stops on release, cancellation, or leaving Moon.
-- Quick force-click a web link for a short description; hold a force-click for a full page preview, with native haptic feedback on supported trackpads.
-- Open a Ghost window with Shift–Command–N, or a Ghost tab from File. Ghost uses temporary website storage and stays out of history, saved sessions and reopen lists.
-- Control–Option–Command–H closes Ghost browsing. Private tabs deny precise location permission by default; websites can still see your IP address.
+- Rename or delete a space from its sidebar name or page dot. No need to switch to horizontal tabs.
+- Hover a space and press Option–Command–Delete to request deletion.
+- The confirmation identifies the target space. Default browsing is protected, and shared website sign-ins, history and bookmarks are preserved.
+- Keep left-swipe creation, right-swipe return, and the minimal page dots. A single default browsing space shows no label or dots.
 
-Apple silicon, macOS 26 or later. English and Spanish speech uses Apple’s on-device models. This Moon beta is Apple Development signed and is not Apple-notarized.
-
+Apple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized.

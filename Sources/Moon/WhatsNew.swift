@@ -140,14 +140,13 @@ enum WhatsNew {
 
     /// Only the current release is shown. Release preparation verifies its version.
     static let notes: [Notes] = [
-        Notes(version: "0.4.13", date: "16 November 2026",
-              headline: "Move freely. Speak naturally. Browse privately.",
-              new: ["Ghost windows and tabs keep browsing data temporary, with a panic shortcut and precise-location blocking.",
-                    "Quick force-click a link for a short description, or hold to preview its page."],
-              better: ["Nebula is shortcut-first, understands English and Spanish, and chooses commands or focused-field dictation without a mode picker.",
-                       "Swipe left to move forward or create an empty space instantly; swipe right to return. Quiet page dots show your place, with optional renaming later."],
-              fixed: ["Default browsing has no space name or page dots until a second space exists. New spaces need no setup form.",
-                      "Switching spaces preserves your original tabs and active page."])
+        Notes(version: "0.4.14", date: "16 November 2026",
+              headline: "Your spaces, within easy reach.",
+              new: ["Rename or delete a space directly from its sidebar name or page dot.",
+                    "Hover a space and use Option–Command–Delete to request its deletion."],
+              better: ["Swipe left to create or advance through spaces, and right to return. Default browsing stays uncluttered when there is only one space."],
+              fixed: ["Deleting a shared-sign-in space preserves shared website logins, history and bookmarks.",
+                      "Deletion names the selected space, asks for confirmation, and protects default browsing."])
     ]
 }
 

@@ -1,22 +1,22 @@
 {
   "repository": "madetonight/moon-browser",
-  "tag": "v0.4.13-beta",
-  "build": "2026111603",
-  "title": "Moon 0.4.13 beta",
+  "tag": "v0.4.14-beta",
+  "build": "2026111604",
+  "title": "Moon 0.4.14 beta",
   "keep_latest_only": true,
   "assets": [
     {
-      "name": "Moon-0.4.13-arm64.dmg",
-      "size": 5513700,
-      "sha256": "5839a19a9fab5e67b2e7d8d25e4a89c0f7d48863938657be7a82b58862bf560f",
-      "blob": "0d989f73642ff55b706b2f7100e5b9bb4c99156f"
+      "name": "Moon-0.4.14-arm64.dmg",
+      "size": 5554767,
+      "sha256": "4af9d9c46b5eb8bd037bce88cf392b57b8af9f855d8b42a7dadf1bedda9533af",
+      "blob": "64d054f8dd7615032da6a9648fe7779cbaf9a5ae"
     }
   ],
   "feed": {
     "name": "appcast.xml",
-    "size": 2715,
-    "sha256": "a2429f607f2038c405d2402f6b94c83f131db3789a31da423d296d563a466c3f",
-    "blob": "2d5ff5581a838d0c52b0d79fecb11e4b7b4cce7a"
+    "size": 2123,
+    "sha256": "26fa267b2e243bc3f58f22a82b73010640f3de7eb4cc857cc40f0bb5b46afc59",
+    "blob": "b7d6b7dc945ad72f5830b0d58f6b179864f2e7e1"
   },
-  "notes": "# Moon 0.4.13 beta\n\nMove freely. Speak naturally. Browse privately.\n\n- Swipe left to move forward or instantly create a space, and right to return. Automatic names, quiet page dots, and optional renaming keep setup out of the way.\n- Move between spaces without losing the original tabs or active page. New spaces share existing website sign-ins automatically.\n- Hold Option–Space for Nebula. English and Spanish commands and context-aware dictation no longer require a mode or language picker.\n- Nebula stays off the sidebar mini dock. Microphone capture still stops on release, cancellation, or leaving Moon.\n- Quick force-click a web link for a short description; hold a force-click for a full page preview, with native haptic feedback on supported trackpads.\n- Open a Ghost window with Shift–Command–N, or a Ghost tab from File. Ghost uses temporary website storage and stays out of history, saved sessions and reopen lists.\n- Control–Option–Command–H closes Ghost browsing. Private tabs deny precise location permission by default; websites can still see your IP address.\n\nApple silicon, macOS 26 or later. English and Spanish speech uses Apple’s on-device models. This Moon beta is Apple Development signed and is not Apple-notarized.\n\n"
+  "notes": "# Moon 0.4.14 beta\n\nYour spaces, within easy reach.\n\n- Rename or delete a space from its sidebar name or page dot. No need to switch to horizontal tabs.\n- Hover a space and press Option–Command–Delete to request deletion.\n- The confirmation identifies the target space. Default browsing is protected, and shared website sign-ins, history and bookmarks are preserved.\n- Keep left-swipe creation, right-swipe return, and the minimal page dots. A single default browsing space shows no label or dots.\n\nApple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized.\n"
 }
