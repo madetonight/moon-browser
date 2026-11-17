@@ -1,10 +1,10 @@
-# Moon 0.4.14 beta
+# Moon 0.4.15 beta
 
-Your spaces, within easy reach.
+Floating video that follows your choice.
 
-- Rename or delete a space from its sidebar name or page dot. No need to switch to horizontal tabs.
-- Hover a space and press Option–Command–Delete to request deletion.
-- The confirmation identifies the target space. Default browsing is protected, and shared website sign-ins, history and bookmarks are preserved.
-- Keep left-swipe creation, right-swipe return, and the minimal page dots. A single default browsing space shows no label or dots.
+- Transfer the floating video window and its controls reliably between playing tabs.
+- Cancel stale requests when switching rapidly, closing a tab or turning Picture in Picture off.
+- Select visible videos instead of hidden preload players and recover when a site replaces its video element.
+- Add a Picture in Picture switch in Browsing settings. Existing users keep their current behavior unless they switch it off locally.
 
 Apple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized.

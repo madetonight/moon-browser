@@ -1044,20 +1044,36 @@ final class Settling {
 }
 
 enum Isolate {
+    static func on(request: UUID) -> String {
+        "(function () { var result = " + on + " if (result && result.floating) window.__moonVideoRequest = '" + request.uuidString + "'; return result; })();"
+    }
+
+    /// A cancelled request never moved the page into a panel, so restore it
+    /// immediately instead of waiting for a window-resize/landing animation.
+    static func off(request: UUID) -> String {
+        """
+        (function () {
+          if (window.__moonVideoRequest !== '\(request.uuidString)') return 'superseded';
+          clearInterval(window.__officeFloatWatch);
+          window.__officeFloatWatch = null;
+          window.__officeFloatLanding = null;
+          window.__officeFloatWait = null;
+          document.documentElement.classList.remove('office-floating');
+          var sheet = document.getElementById('office-float');
+          if (sheet) sheet.textContent = '';
+          document.querySelectorAll('[data-office-float]').forEach(function(v) { v.removeAttribute('data-office-float'); });
+          return 'out';
+        })();
+        """
+    }
+
     /// Everything but the video, out of the way. Visibility is inherited, so
     /// hiding the body and turning it back on for the video alone leaves the
     /// player's own machinery running untouched — which is what keeps the
     /// stream alive where cutting the DOM about would kill it.
     static let on = """
     (function () {
-      var videos = document.querySelectorAll('video');
-      var best = null, area = 0;
-      for (var i = 0; i < videos.length; i++) {
-        var v = videos[i];
-        if (v.paused || v.ended || v.readyState < 2) continue;
-        var box = v.getBoundingClientRect();
-        if (box.width * box.height >= area) { area = box.width * box.height; best = v; }
-      }
+      var best = \(PlayingVideo.script(allowPaused: false));
       if (!best) return 'none';
 
       // Where the video's picture is, for cutting it out of a picture of the
@@ -1185,17 +1201,7 @@ enum Isolate {
       clearInterval(window.__officeFloatWatch);
       window.__officeFloatWatch = setInterval(function () {
         if (document.querySelector('[data-office-float]')) return;
-        var again = null, most = 0;
-        var all = document.querySelectorAll('video');
-        for (var j = 0; j < all.length; j++) {
-          var one = all[j];
-          if (one.paused || one.ended || one.readyState < 2) continue;
-          var shape = one.getBoundingClientRect();
-          if (shape.width * shape.height >= most) {
-            most = shape.width * shape.height;
-            again = one;
-          }
-        }
+        var again = \(PlayingVideo.script(allowPaused: false));
         if (again) again.setAttribute('data-office-float', '');
       }, 250);
 

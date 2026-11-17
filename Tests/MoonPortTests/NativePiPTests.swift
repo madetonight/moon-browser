@@ -23,6 +23,19 @@ final class NativePiPTests: XCTestCase {
         XCTAssertEqual(Preferences().floatStyle, .search)
     }
 
+    func testMasterSwitchDefaultsOnAndPersistsOnlyInPreferences() {
+        let enabled = Store.settings.object(forKey: "float.enabled")
+        let style = Store.settings.object(forKey: "float.style")
+        defer { Store.settings.set(enabled, forKey: "float.enabled"); Store.settings.set(style, forKey: "float.style") }
+        Store.settings.removeObject(forKey: "float.enabled")
+        XCTAssertTrue(Preferences().floatingVideoEnabled)
+        let prefs = Preferences()
+        prefs.floatStyle = .system
+        prefs.floatingVideoEnabled = false
+        XCTAssertFalse(Preferences().floatingVideoEnabled)
+        XCTAssertFalse(NativePiP.chosen)
+    }
+
     func testScriptsAskOnlyForPictureInPicture() {
         let on = NativePiP.script(toggle: false)
         XCTAssertTrue(on.contains("var toggle = false"))

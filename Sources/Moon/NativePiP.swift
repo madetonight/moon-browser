@@ -1,3 +1,4 @@
+import Foundation
 import WebKit
 
 /// The floating video as macOS's own picture in picture, for whoever picks
@@ -26,7 +27,7 @@ enum FloatStyle: String, CaseIterable, Identifiable {
 
 enum NativePiP {
     /// Whether picture in picture is the choice (Prefs.floatStyle).
-    static var chosen: Bool { Store.settings.string(forKey: "float.style") == FloatStyle.system.rawValue }
+    static var chosen: Bool { (Store.settings.object(forKey: "float.enabled") as? Bool ?? true) && Store.settings.string(forKey: "float.style") == FloatStyle.system.rawValue }
 
     /// WebKit lets a page into picture in picture on macOS only with a
     /// preference outside the public framework, off by default there (Safari
@@ -60,28 +61,20 @@ enum NativePiP {
               try { v.webkitSetPresentationMode('inline'); return 'out'; } catch (e) { return 'refused'; }
             }
           }
-          var best = null, area = 0;
-          for (var j = 0; j < videos.length; j++) {
-            var w = videos[j];
-            if (w.paused || w.ended || w.readyState < 2) continue;
-            var box = w.getBoundingClientRect();
-            if (box.width * box.height >= area) { area = box.width * box.height; best = w; }
-          }
-          // By hand, a paused video can go too, as in Safari: the largest
-          // one with a picture.
-          if (!best && toggle) {
-            for (var k = 0; k < videos.length; k++) {
-              var u = videos[k];
-              if (u.readyState < 2) continue;
-              var b = u.getBoundingClientRect();
-              if (b.width * b.height >= area) { area = b.width * b.height; best = u; }
-            }
-          }
+          var best = \(PlayingVideo.script(allowPaused: toggle));
           if (!best) return 'none';
           if (!best.webkitSupportsPresentationMode || !best.webkitSupportsPresentationMode('picture-in-picture')) return 'refused';
           try { best.webkitSetPresentationMode('picture-in-picture'); return 'in'; } catch (e) { return 'refused'; }
         })();
         """
+    }
+
+    static func script(toggle: Bool, request: UUID) -> String {
+        "(function () { var result = " + script(toggle: toggle) + " if (result === 'in') window.__moonVideoRequest = '" + request.uuidString + "'; return result; })();"
+    }
+
+    static func off(request: UUID) -> String {
+        "(function () { if (window.__moonVideoRequest !== '" + request.uuidString + "') return 'superseded'; return " + off + " })();"
     }
 
     /// Back into the page, whatever is in picture in picture there.

@@ -521,11 +521,24 @@ final class Preferences: ObservableObject {
             store.set(safe, forKey: "panel.site")
         }
     }
+    /// This Mac's master switch; existing users keep floating video enabled.
+    @Published var floatingVideoEnabled: Bool {
+        didSet {
+            store.set(floatingVideoEnabled, forKey: "float.enabled")
+            NativePiP.allowEverywhere()
+            if !floatingVideoEnabled {
+                FloatingVideoRequest.cancelAll()
+                for browser in Browsers.all { browser.land(); browser.unpicture() }
+            }
+        }
+    }
     /// Which window a floating video goes into: Moon's own, as it always
     /// was, or macOS's picture in picture (see NativePiP.swift).
     @Published var floatStyle: FloatStyle {
         didSet {
             store.set(floatStyle.rawValue, forKey: "float.style")
+            FloatingVideoRequest.cancelAll()
+            for browser in Browsers.all { browser.land(); browser.unpicture() }
             NativePiP.allowEverywhere()
         }
     }
@@ -779,6 +792,7 @@ final class Preferences: ObservableObject {
         let flicks = store.object(forKey: "float.flicks") as? Bool ?? true
         floatFlicks = flicks
         Float.flicks = flicks
+        floatingVideoEnabled = store.object(forKey: "float.enabled") as? Bool ?? true
         floatsAway = store.bool(forKey: "float.away")
         floatsOnLeave = store.object(forKey: "float.leave") as? Bool ?? true
         let rememberedPanel = store.string(forKey: "panel.site") ?? ""

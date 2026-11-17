@@ -588,9 +588,11 @@ struct SettingsPanel: View {
         case "links.little": Switch(on: $prefs.littleLinks)
         case "reader.twins": Switch(on: $prefs.readsTwins)
         case "reader.follows": Switch(on: $prefs.readerFollowsLook)
-        case "float.style": Segmented(options: FloatStyle.allCases.map { ($0, $0.title) }, selection: $prefs.floatStyle)
+        case "float.enabled": Switch(on: $prefs.floatingVideoEnabled)
+        case "float.style": Segmented(options: FloatStyle.allCases.map { ($0, $0.title) }, selection: $prefs.floatStyle).disabled(!prefs.floatingVideoEnabled)
         case "float.own":
             Segmented(options: FloatOwn.allCases.map { ($0, $0.title) }, selection: $prefs.floatOwn, wide: true)
+                .disabled(!prefs.floatingVideoEnabled)
                 .frame(maxWidth: 340)
         case "media.click": Switch(on: $prefs.waitsForPlay)
         case "fullscreen.escapeTwice": Switch(on: $prefs.escapeTwice)

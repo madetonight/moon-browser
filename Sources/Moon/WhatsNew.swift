@@ -140,13 +140,12 @@ enum WhatsNew {
 
     /// Only the current release is shown. Release preparation verifies its version.
     static let notes: [Notes] = [
-        Notes(version: "0.4.14", date: "16 November 2026",
-              headline: "Your spaces, within easy reach.",
-              new: ["Rename or delete a space directly from its sidebar name or page dot.",
-                    "Hover a space and use Option–Command–Delete to request its deletion."],
-              better: ["Swipe left to create or advance through spaces, and right to return. Default browsing stays uncluttered when there is only one space."],
-              fixed: ["Deleting a shared-sign-in space preserves shared website logins, history and bookmarks.",
-                      "Deletion names the selected space, asks for confirmation, and protects default browsing."])
+        Notes(version: "0.4.15", date: "17 November 2026",
+              headline: "Floating video that follows your choice.",
+              new: ["Picture in Picture can be switched off on this Mac in Browsing settings, without changing other users’ defaults."],
+              better: ["Choosing another playing video transfers the floating window and its controls to the selected tab."],
+              fixed: ["Overlapping video requests cannot move the wrong page or leave a hidden player behind.",
+                      "Hidden preload players are ignored, replacement players recover, and slow snapshots no longer block a handoff."])
     ]
 }
 

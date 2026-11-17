@@ -185,6 +185,7 @@ struct MoonApp: App {
                     .disabled(browser.active?.canTranslate != true)
                 Button("Float Video") { browser.toggleFloat() }
                     .shortcut("view.float")
+                    .disabled(!browser.prefs.floatingVideoEnabled)
                 // Websites in the side panel, only once they are on
                 // (Settings › General).
                 if browser.prefs.sitesInPanel {
