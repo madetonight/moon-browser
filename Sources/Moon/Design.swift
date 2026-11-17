@@ -271,6 +271,13 @@ enum Motion {
         reduced ? nil : .easeOut(duration: 0.14)
     }
 
+    /// A short, bounded settle from the finger's current position.
+    static func spacePaging(remaining: CGFloat) -> Animation? {
+        guard !reduced else { return nil }
+        let duration = 0.14 + 0.14 * min(Double(remaining), 1)
+        return .timingCurve(0.24, 0.76, 0.26, 1, duration: light ? min(0.18, duration) : duration)
+    }
+
     /// How far a tab gives while it is pressed (see Give): enough to feel
     /// under the pointer, about 3 points on a pill and 7 on a column row.
     static let give: CGFloat = 0.97

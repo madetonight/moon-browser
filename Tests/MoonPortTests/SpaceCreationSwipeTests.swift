@@ -28,7 +28,6 @@ final class SpaceCreationSwipeTests: XCTestCase {
     }
 
     private func swipe(_ distance: CGFloat, cancelled: Bool = false) async throws {
-        try await Task.sleep(for: .milliseconds(450))
         SpaceSwipe.shared.began()
         _ = SpaceSwipe.shared.moved(dx: distance, dy: 0)
         SpaceSwipe.shared.ended(cancelled: cancelled)
@@ -88,6 +87,38 @@ final class SpaceCreationSwipeTests: XCTestCase {
             XCTAssertFalse(browser.prefs.usesSpaces)
             XCTAssertFalse(browser.makingSpace)
             XCTAssertEqual(browser.spaceSwipe, 0)
+        }
+    }
+
+    func testReversingFirstSwipeDoesNotLeaveSidebarOffset() async throws {
+        try await withBrowser { browser in
+            let home = browser.spaceID
+            SpaceSwipe.shared.began()
+            XCTAssertTrue(SpaceSwipe.shared.moved(dx: -80, dy: 0))
+            XCTAssertEqual(browser.spacePaging.neighbor?.destination, .new)
+            XCTAssertTrue(SpaceSwipe.shared.moved(dx: 100, dy: 0))
+            SpaceSwipe.shared.ended()
+            try await Task.sleep(for: .milliseconds(350))
+            XCTAssertEqual(browser.spaceID, home)
+            XCTAssertEqual(browser.spaces.count, 1)
+            XCTAssertEqual(browser.spacePaging.progress, 0)
+            XCTAssertNil(browser.spacePaging.neighbor)
+        }
+    }
+
+    func testIndicatorCanSelectNonAdjacentSpace() async throws {
+        try await withBrowser { browser in
+            let home = browser.spaceID
+            browser.addInstantSpace()
+            browser.addInstantSpace()
+            let third = browser.spaceID
+            browser.switchSpace(to: home)
+            SpaceSwipe.shared.select(third, in: browser)
+            try await Task.sleep(for: .milliseconds(350))
+            XCTAssertEqual(browser.spaceID, third)
+            XCTAssertEqual(browser.spaces.count, 3)
+            XCTAssertEqual(browser.spacePaging.progress, 0)
+            XCTAssertNil(browser.spacePaging.neighbor)
         }
     }
 

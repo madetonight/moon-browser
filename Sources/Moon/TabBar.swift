@@ -12,7 +12,6 @@ struct TabBar: View {
 
     @Namespace private var pill
     /// The neighbouring spaces' own grey, apart from this one's.
-    @Namespace private var above
     @Namespace private var below
 
     /// Which tab is under the hand, where it started, and how far it has come.
@@ -61,11 +60,9 @@ struct TabBar: View {
                     // The spaces, one above the other: up or down over the bar
                     // and the next one's tabs come in as these go, with nothing
                     // between them (see SpaceSwipe). Past the last, a new one.
-                    ZStack(alignment: .leading) {
+                    SpacePages(paging: browser.spacePaging, axis: .vertical, extent: Metrics.strip) {
                         if making {
-                            NewSpaceCard(browser: browser, inline: true)
-                                .fixedSize()
-                                .offset(y: browser.spaceSwipe)
+                            NewSpaceCard(inline: true).fixedSize()
                         } else {
                             ScrollViewReader { reader in
                                 ScrollView(.horizontal, showsIndicators: false) {
@@ -119,15 +116,15 @@ struct TabBar: View {
                                 .onChange(of: overflowing(in: geo.size.width)) { _, _ in reveal(reader, in: geo.size.width) }
                                 .onChange(of: browser.activeID) { _, _ in reveal(reader, in: geo.size.width, gliding: true) }
                             }
-                                .offset(y: browser.spaceSwipe)
                         }
-                        if browser.spaceSwipe > 0, spaceAt > 0 {
-                            page(spaceAt - 1, in: geo.size.width, pill: above)
-                                .offset(y: browser.spaceSwipe - Metrics.strip)
-                        }
-                        if browser.spaceSwipe < 0, spaceAt < browser.spaces.count {
-                            page(spaceAt + 1, in: geo.size.width, pill: below)
-                                .offset(y: browser.spaceSwipe + Metrics.strip)
+                    } incoming: { destination in
+                        switch destination {
+                        case .new:
+                            NewSpaceCard(inline: true).fixedSize()
+                        case .existing(let id):
+                            if let index = browser.spaces.firstIndex(where: { $0.id == id }) {
+                                page(index, in: geo.size.width, pill: below)
+                            }
                         }
                     }
                     .frame(width: making ? min(540, room(in: geo.size.width)) : run(in: geo.size.width), height: Metrics.strip, alignment: .leading)
@@ -216,19 +213,13 @@ struct TabBar: View {
 
     private var making: Bool { browser.prefs.usesSpaces && browser.makingSpace }
 
-    /// Where the space on screen sits among them: one past the last while
-    /// the row for a new one is up.
-    private var spaceAt: Int {
-        browser.makingSpace ? browser.spaces.count : (browser.spaces.firstIndex { $0.id == browser.spaceID } ?? 0)
-    }
-
     /// Another space's row, drawn with the same pills as this one's so the
     /// two read as one bar while they pass — nothing to press until it is
     /// the one on screen. Past the last, the row for a new space.
     @ViewBuilder
     private func page(_ index: Int, in strip: CGFloat, pill: Namespace.ID) -> some View {
         if index == browser.spaces.count {
-            NewSpaceCard(browser: browser, inline: true)
+            NewSpaceCard(inline: true)
                 .fixedSize()
                 .allowsHitTesting(false)
         } else {

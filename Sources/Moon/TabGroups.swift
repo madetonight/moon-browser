@@ -116,6 +116,11 @@ struct GroupHeading: View {
 
     private var long: some View {
         HStack(spacing: 8) {
+            if !horizontal {
+                Image(systemName: group.collapsed ? "folder" : "folder.fill")
+                    .font(.system(size: 12, weight: .medium))
+                    .accessibilityHidden(true)
+            }
             if editing {
                 TextField("Group name", text: $draft)
                     .textFieldStyle(.plain)
@@ -142,7 +147,7 @@ struct GroupHeading: View {
                 Image(systemName: "chevron.down")
                     .font(.system(size: 9, weight: .medium))
                     .rotationEffect(.degrees(group.collapsed ? -90 : 0))
-                    .opacity(hovering ? 1 : 0)
+                    .opacity(hovering ? 1 : 0.45)
             }
         }
         .foregroundStyle(Palette.muted)

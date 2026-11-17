@@ -270,7 +270,8 @@ struct Command: Identifiable {
     ] + (1...9).map { number in
         Command("spaces.\(number)", "Space \(number)", .spaces,
                 KeyCombo(String(number), command: false, control: true)) { browser in
-            browser.switchSpace(index: number - 1)
+            guard browser.spaces.indices.contains(number - 1) else { return }
+            SpaceSwipe.shared.select(browser.spaces[number - 1].id, in: browser)
         }
     }
 }

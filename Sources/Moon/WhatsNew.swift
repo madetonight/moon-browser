@@ -140,12 +140,12 @@ enum WhatsNew {
 
     /// Only the current release is shown. Release preparation verifies its version.
     static let notes: [Notes] = [
-        Notes(version: "0.4.15", date: "17 November 2026",
-              headline: "Floating video that follows your choice.",
-              new: ["Picture in Picture can be switched off on this Mac in Browsing settings, without changing other users’ defaults."],
-              better: ["Choosing another playing video transfers the floating window and its controls to the selected tab."],
-              fixed: ["Overlapping video requests cannot move the wrong page or leave a hidden player behind.",
-                      "Hidden preload players are ignored, replacement players recover, and slow snapshots no longer block a handoff."])
+        Notes(version: "0.4.16", date: "17 November 2026",
+              headline: "Smoother switching between Spaces.",
+              new: [],
+              better: ["Swipe left to advance or create a space, and swipe right to go back. Click a page dot or use a keyboard shortcut for the same slide.",
+                       "With multiple spaces, the sidebar names the current space above its tabs. Folder icons make Tab Groups easier to spot."],
+              fixed: ["The sidebar keeps both spaces in view through the transition, so short, cancelled and reversed swipes settle cleanly."])
     ]
 }
 

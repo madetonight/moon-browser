@@ -1,11 +1,7 @@
 import SwiftUI
 
-// Spaces, paged through: in the column, two fingers sideways go from one to
-// the next, the rows following them, as in Arc; in the bar across the top,
-// the same up and down, the row of tabs following them — or a mouse wheel's
-// notch, one space at a time, or the mouse's back and forward buttons with
-// the pointer over the tabs. Past the last space a new one is made in
-// place. The space's icon turns over as it goes (see SpaceDot).
+// The sidebar pages sideways, and the top bar pages vertically. Trackpad
+// motion follows the fingers; the wheel and mouse buttons take one step.
 
 /// The swipe between spaces. It reads the trackpad's own scroll events
 /// before anything else sees them, and takes only a gesture that starts over
@@ -22,6 +18,7 @@ final class SpaceSwipe {
     private enum Axis { case undecided, across, along }
     private var axis = Axis.undecided
     private var tracking = false
+    private var claimed = false
     /// The glide after a swipe that was taken, which is taken too.
     private var gliding = false
     private var gathered = CGSize.zero
@@ -29,14 +26,6 @@ final class SpaceSwipe {
     /// or not. A spin of the wheel is a run of notches close together, and
     /// it brings one space: the next waits for the wheel to have rested.
     private var notched = Date.distantPast
-    /// Until when a new gesture is let go by: the hand that just brought a
-    /// space is often still moving, and its next stroke would take one more.
-    private var resting = Date.distantPast
-    /// A gesture let go by while resting, kept whole, glide included.
-    private var ignoring = false
-
-    /// How long after a space comes before another can.
-    static let rest: TimeInterval = 0.4
 
     /// How far the fingers have to go for the next space to come: 50
     /// points in the column; in a bar only 52 tall, most of its height, so
@@ -46,7 +35,7 @@ final class SpaceSwipe {
     }
 
     func start(for browser: Browser) {
-        self.browser = browser
+        if !tracking { self.browser = browser }
         guard monitor == nil else { return }
         monitor = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { event in
             MainActor.assumeIsolated { SpaceSwipe.shared.takes(event) } ? nil : event
@@ -78,8 +67,8 @@ final class SpaceSwipe {
               !browser.folded || browser.peeking, overTabs(event, in: browser) else { return false }
         self.browser = browser
         guard browser.prefs.usesSpaces || (browser.prefs.sidebar && step > 0) else { return false }
-        let here = browser.makingSpace ? browser.spaces.count : (browser.spaces.firstIndex { $0.id == browser.spaceID } ?? 0)
-        let target = SpaceComparison.zen ? ZenSpaceNavigation.destination(from: here, offset: step, count: browser.spaces.count) : here + step
+        let here = index(in: browser)
+        let target = destination(in: browser, from: here, offset: step)
         if target >= 0, target <= browser.spaces.count { slide(browser, to: target, from: here) }
         return true
     }
@@ -114,12 +103,12 @@ final class SpaceSwipe {
             let step = browser.prefs.sidebar ? (abs(dx) > abs(dy) ? dx : 0) : dy
             guard step != 0, overTabs(event, in: browser) else { return false }
             let now = Date()
-            let rested = now.timeIntervalSince(notched) > 0.3 && now > resting
+            let rested = now.timeIntervalSince(notched) > 0.3
             notched = now
             guard rested else { return true }
-            let here = browser.makingSpace ? browser.spaces.count : (browser.spaces.firstIndex { $0.id == browser.spaceID } ?? 0)
+            let here = index(in: browser)
             let offset = step < 0 ? 1 : -1
-            let target = SpaceComparison.zen ? ZenSpaceNavigation.destination(from: here, offset: offset, count: browser.spaces.count) : here + offset
+            let target = destination(in: browser, from: here, offset: offset)
             if target >= 0, target <= browser.spaces.count { slide(browser, to: target, from: here) }
             return true
         }
@@ -127,27 +116,19 @@ final class SpaceSwipe {
         switch event.phase {
         case .began:
             gliding = false
-            ignoring = false
             // Only a gesture that starts over the tabs.
             guard overTabs(event, in: browser) else {
                 tracking = false
                 return false
             }
             began()
-            if ignoring { return true }
             return moved(dx: event.scrollingDeltaX, dy: event.scrollingDeltaY)
         case .changed:
-            if ignoring { return true }
             guard tracking else { return false }
             return moved(dx: event.scrollingDeltaX, dy: event.scrollingDeltaY)
         case .ended, .cancelled:
-            if ignoring {
-                ignoring = false
-                gliding = true
-                return true
-            }
             guard tracking else { return false }
-            let taken = axis == .across
+            let taken = claimed
             ended(cancelled: event.phase == .cancelled)
             gliding = taken
             return taken
@@ -159,16 +140,13 @@ final class SpaceSwipe {
     // MARK: - the gesture, apart from where its events come from (the bench drives these)
 
     func began() {
-        browser?.newSpaceSwipe = false
         axis = .undecided
         gathered = .zero
-        // Just after a space came: the same hand's next stroke is let go by.
-        ignoring = Date() <= resting
-        tracking = !ignoring
+        claimed = false
+        tracking = true
     }
 
-    /// True while the gesture is this one's to take. The spaces lie
-    /// sideways in the column and one above the other in the bar.
+    /// Capture sideways paging without intercepting vertical tab scrolling.
     @discardableResult
     func moved(dx: CGFloat, dy: CGFloat) -> Bool {
         guard tracking, let browser else { return false }
@@ -180,9 +158,18 @@ final class SpaceSwipe {
             axis = abs(gathered.width) > abs(gathered.height) * 1.5 ? .across : .along
         }
         guard axis == .across else { return false }
-        guard browser.prefs.usesSpaces || (browser.prefs.sidebar && gathered.width < 0) else { return false }
-        browser.newSpaceSwipe = !SpaceComparison.zen && browser.prefs.sidebar && gathered.width < 0 && !browser.makingSpace && browser.spaceID == browser.spaces.last?.id
-        browser.spaceSwipe = resisted(gathered.width, in: browser)
+        guard claimed || browser.prefs.usesSpaces || (browser.prefs.sidebar && gathered.width < 0) else { return false }
+        claimed = true
+        guard browser.spacePaging.settlement == nil else { return true }
+        let offset = gathered.width < 0 ? 1 : -1
+        let here = index(in: browser)
+        let next = destination(in: browser, from: here, offset: offset)
+        let page = gathered.width == 0 ? browser.spacePaging.neighbor : neighbor(in: browser, target: next, direction: offset)
+        let travel = gathered.width / extent(in: browser)
+        // Limit the drag to one pane and give the leading edge resistance.
+        let progress = page == nil ? travel * 0.24 : travel
+        if browser.spacePaging.neighbor != page { prepare(page, in: browser) }
+        browser.spacePaging.progress = Motion.reduced ? 0 : min(max(progress, -1), 1)
         return true
     }
 
@@ -195,72 +182,198 @@ final class SpaceSwipe {
 
     func ended(cancelled: Bool = false) {
         defer { tracking = false }
-        guard let browser, axis == .across else { return }
+        guard let browser, claimed, browser.spacePaging.settlement == nil else { return }
         let travel = gathered.width
-        let here = browser.makingSpace ? browser.spaces.count : (browser.spaces.firstIndex { $0.id == browser.spaceID } ?? 0)
-        // Sidebar: left advances, right returns. The top strip uses vertical paging.
+        let here = index(in: browser)
         let offset = travel < 0 ? 1 : -1
-        let target = cancelled || abs(travel) < Self.enough(for: browser) ? here
-            : SpaceComparison.zen ? ZenSpaceNavigation.destination(from: here, offset: offset, count: browser.spaces.count) : here + offset
-        guard target != here, target >= 0, target <= browser.spaces.count else {
-            withAnimation(Motion.settle) { browser.spaceSwipe = 0 } completion: {
-                if browser.spaceSwipe == 0 { browser.newSpaceSwipe = false }
-            }
+        let target = destination(in: browser, from: here, offset: offset)
+        if cancelled || abs(travel) < Self.enough(for: browser) || target == here {
+            settle(browser, toward: nil)
+        } else {
+            slide(browser, to: target, from: here, direction: offset)
+        }
+    }
+
+    private func index(in browser: Browser) -> Int {
+        browser.spaces.firstIndex { $0.id == browser.spaceID } ?? 0
+    }
+
+    private func destination(in browser: Browser, from here: Int, offset: Int) -> Int {
+        SpaceComparison.zen ? ZenSpaceNavigation.destination(from: here, offset: offset, count: browser.spaces.count) : here + offset
+    }
+
+    private func extent(in browser: Browser) -> CGFloat {
+        browser.prefs.sidebar ? max(1, browser.prefs.columnWidth) : Metrics.strip
+    }
+
+    private func neighbor(in browser: Browser, target: Int, direction: Int) -> SpacePaging.Neighbor? {
+        if target == browser.spaces.count { return .init(destination: .new, direction: direction) }
+        guard browser.spaces.indices.contains(target), browser.spaces[target].id != browser.spaceID else { return nil }
+        return .init(destination: .existing(browser.spaces[target].id), direction: direction)
+    }
+
+    private func prepare(_ page: SpacePaging.Neighbor?, in browser: Browser) {
+        if case .existing(let id)? = page?.destination, browser.parked[id] == nil {
+            browser.parked[id] = browser.loadRow(id)
+        }
+        browser.spacePaging.neighbor = page
+    }
+
+    func select(_ id: UUID, in browser: Browser) {
+        guard !browser.ghostWindow, browser.prefs.usesSpaces,
+              let target = browser.spaces.firstIndex(where: { $0.id == id }) else { return }
+        if browser.spacePaging.settlement != nil {
+            browser.spacePaging.queued = id
             return
         }
-        slide(browser, to: target, from: here, direction: offset)
-    }
-
-    /// Nothing that way: the rows give a little, and come back.
-    private func resisted(_ travel: CGFloat, in browser: Browser) -> CGFloat {
-        if browser.newSpaceSwipe || (SpaceComparison.zen && browser.spaces.count > 1) { return travel }
-        let here = browser.makingSpace ? browser.spaces.count : (browser.spaces.firstIndex { $0.id == browser.spaceID } ?? 0)
-        let blocked = browser.prefs.sidebar ? (travel > 0 && here == 0) : (travel > 0 && here == 0)
-        return blocked ? travel / 4 : travel
-    }
-
-    /// The pages carry on the way the fingers went until the next one is
-    /// where this one was; then it becomes the one on screen, in the same
-    /// frame and without anything moving — it was already there. One past
-    /// the last space is an empty new page.
-    func slide(_ browser: Browser, to target: Int, from here: Int, direction: Int? = nil) {
-        if browser.makingSpace, target != browser.spaces.count {
-            browser.cancelSpaceCreation()
+        if browser.folded && !browser.peeking {
+            browser.switchSpace(to: id)
+        } else if id != browser.spaceID {
+            slide(browser, to: target, from: index(in: browser))
         }
-        let turn = UUID()
-        browser.spaceSlideToken = turn
-        let creating = target == browser.spaces.count
-        let destination = browser.spaces.indices.contains(target) ? browser.spaces[target].id : nil
-        // A page is the column's width, or the bar's height.
-        let width = browser.prefs.sidebar ? browser.prefs.columnWidth : Metrics.strip
-        browser.newSpaceSwipe = !SpaceComparison.zen && browser.prefs.sidebar && creating
-        let away: CGFloat = (direction ?? (target > here ? 1 : -1)) > 0 ? -1 : 1
-        browser.spaceStep = target > here ? 1 : -1
-        resting = Date().addingTimeInterval(SpaceSwipe.rest)
-        withAnimation(.easeOut(duration: 0.22), completionCriteria: .removed) {
-            browser.spaceSwipe = away * width
-        } completion: {
-            guard browser.spaceSlideToken == turn else { return }
-            var still = Transaction()
+    }
+
+    func slide(_ browser: Browser, to target: Int, from here: Int, direction: Int? = nil) {
+        guard browser.spacePaging.settlement == nil else { return }
+        if browser.makingSpace { browser.cancelSpaceCreation() }
+        let direction = direction ?? (target > here ? 1 : -1)
+        settle(browser, toward: neighbor(in: browser, target: target, direction: direction))
+    }
+
+    private func settle(_ browser: Browser, toward page: SpacePaging.Neighbor?) {
+        let paging = browser.spacePaging
+        guard page != nil || paging.progress != 0 || paging.neighbor != nil else { return }
+        if let page, paging.neighbor != page {
+            // An indicator can select a space several positions away.
+            // Bring that pane in from offscreen instead of an adjacent space.
+            paging.progress = 0
+            prepare(page, in: browser)
+        }
+        let ticket = UUID()
+        paging.settlement = ticket
+        let end = page.map { -CGFloat($0.direction) } ?? 0
+        let complete = { [weak self, weak browser] in
+            guard let self, let browser, paging.settlement == ticket else { return }
+            let queued = paging.queued
+            var still = Transaction(animation: nil)
             still.disablesAnimations = true
             withTransaction(still) {
-                if creating {
-                    browser.addInstantSpace()
-                } else if let destination, browser.spaces.contains(where: { $0.id == destination }) {
-                    browser.makingSpace = false
-                    browser.prefs.usesSpaces = true
-                    browser.switchSpace(to: destination)
+                if let page {
+                    switch page.destination {
+                    case .new: browser.addInstantSpace()
+                    case .existing(let id): browser.switchSpace(to: id)
+                    }
                 }
-                browser.spaceSwipe = 0
-                browser.newSpaceSwipe = false
+                paging.reset()
+            }
+            if let queued { self.select(queued, in: browser) }
+        }
+        guard let animation = Motion.spacePaging(remaining: abs(end - paging.progress)), end != paging.progress else {
+            complete()
+            return
+        }
+        let animate = {
+            guard paging.settlement == ticket else { return }
+            withAnimation(animation, completionCriteria: .removed) {
+                paging.progress = end
+            } completion: {
+                complete()
+            }
+        }
+        // A clicked indicator inserts an incoming pane. Give that pane an
+        // offscreen starting position before sending the animated endpoint.
+        if let pane = paging.neighbor, paging.mounted != pane, browser.window?.isVisible == true {
+            paging.afterMount = animate
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.04) { [weak paging] in
+                guard let paging, paging.settlement == ticket else { return }
+                paging.startWhenReady()
+            }
+        } else {
+            animate()
+        }
+    }
+}
+
+/// Observe movement only where the two panes are placed. A trackpad event
+/// does not invalidate Browser, its tab rows, or the WebKit stage.
+@MainActor @Observable
+final class SpacePaging {
+    enum Destination: Hashable { case existing(UUID), new }
+    struct Neighbor: Hashable {
+        let destination: Destination
+        let direction: Int
+    }
+
+    var progress: CGFloat = 0
+    var neighbor: Neighbor?
+    @ObservationIgnored var settlement: UUID?
+    @ObservationIgnored var queued: UUID?
+    @ObservationIgnored var mounted: Neighbor?
+    @ObservationIgnored var afterMount: (() -> Void)?
+
+    func startWhenReady() {
+        let start = afterMount
+        afterMount = nil
+        start?()
+    }
+
+    func reset() {
+        progress = 0
+        neighbor = nil
+        settlement = nil
+        queued = nil
+        mounted = nil
+        afterMount = nil
+    }
+}
+
+struct SpacePages<Current: View, Incoming: View>: View {
+    let paging: SpacePaging
+    let axis: Axis
+    let extent: CGFloat
+    @ViewBuilder let current: () -> Current
+    @ViewBuilder let incoming: (SpacePaging.Destination) -> Incoming
+
+    var body: some View {
+        ZStack(alignment: .topLeading) {
+            current()
+                .modifier(SpacePageOffset(paging: paging, axis: axis, extent: extent, page: 0))
+                .allowsHitTesting(paging.neighbor == nil)
+            if let neighbor = paging.neighbor {
+                incoming(neighbor.destination)
+                    .modifier(SpacePageOffset(paging: paging, axis: axis, extent: extent, page: neighbor.direction))
+                    .id(neighbor)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+                    .transition(.identity)
+                    .onAppear {
+                        paging.mounted = neighbor
+                        DispatchQueue.main.async {
+                            if paging.neighbor == neighbor { paging.startWhenReady() }
+                        }
+                    }
+                    .onDisappear {
+                        if paging.mounted == neighbor { paging.mounted = nil }
+                    }
             }
         }
     }
 }
 
+private struct SpacePageOffset: ViewModifier {
+    let paging: SpacePaging
+    let axis: Axis
+    let extent: CGFloat
+    let page: Int
+
+    func body(content: Content) -> some View {
+        let offset = (paging.progress + CGFloat(page)) * extent
+        content.offset(x: axis == .horizontal ? offset : 0, y: axis == .vertical ? offset : 0)
+    }
+}
+
 /// An empty neighboring page during the swipe; creation never asks for setup.
 struct NewSpaceCard: View {
-    @ObservedObject var browser: Browser
     var inline = false
     var body: some View {
         Color.clear.frame(width: inline ? 180 : nil, height: inline ? Metrics.strip : nil)

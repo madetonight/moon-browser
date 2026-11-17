@@ -2036,13 +2036,12 @@ final class Browser: NSObject, ObservableObject {
     let profileID: UUID
     @Published var spaceID = Space.firstID
     var parked: [UUID: Parked] = [:]
-    /// How far the column's rows have followed two fingers sideways, and
-    /// whether the card for a new space stands in for them (see SpaceSwipe).
-    @Published var spaceSwipe: CGFloat = 0
-    @Published var newSpaceSwipe = false
+    let spacePaging = SpacePaging()
+    var spaceSwipe: CGFloat {
+        spacePaging.progress * (prefs.sidebar ? prefs.columnWidth : Metrics.strip)
+    }
     @Published var makingSpace = false
     /// A tab being sent into the Space being made from its context menu.
-    var spaceSlideToken = UUID()
     var afterSpaceCreated: ((Space) -> Void)?
     /// A link's page, peeked at over this one (see Peek.swift).
     @Published var peekTab: Tab?
@@ -3033,6 +3032,7 @@ final class Browser: NSObject, ObservableObject {
 
     /// Its window closed for good, with others open: every page let go.
     func closeAll() {
+        spacePaging.reset()
         FloatingVideoRequest.cancel(in: self)
         if pictured != nil { unpicture() }
         linkInsight = nil
@@ -4180,7 +4180,7 @@ final class Browser: NSObject, ObservableObject {
 
     func toggleTabGroup(_ id: UUID) {
         guard let index = tabGroups.firstIndex(where: { $0.id == id }) else { return }
-        tabGroups[index].collapsed.toggle()
+        withAnimation(Motion.quick) { tabGroups[index].collapsed.toggle() }
         writeSession(now: true)
     }
 

@@ -286,8 +286,8 @@ extension Browser {
 
     func enter(_ id: UUID) {
         guard !ghostWindow else { return }
-        spaceSlideToken = UUID()
         guard id != spaceID, let to = spaces.firstIndex(where: { $0.id == id }) else { return }
+        spacePaging.reset()
         // Which way the icon at the foot turns over: the way the spaces lie.
         if !makingSpace { spaceStep = to > (spaces.firstIndex { $0.id == spaceID } ?? 0) ? 1 : -1 }
         cancelTabEdit()
@@ -392,11 +392,15 @@ extension Browser {
         guard !ghostWindow else { return }
         prefs.usesSpaces = true
         if spaces.first?.name == "Personal" { spaces[0].name = "Space 1" }
-        var number = spaces.count + 1
-        while spaces.contains(where: { $0.name == "Space \(number)" }) { number += 1 }
-        let name = "Space \(number)"
+        let name = nextSpaceName
         addSpace(named: name)
         announce("\(name) created")
+    }
+
+    var nextSpaceName: String {
+        var number = spaces.count + 1
+        while spaces.contains(where: { $0.name == "Space \(number)" }) { number += 1 }
+        return "Space \(number)"
     }
 
     func spaceLabel(_ space: Space) -> String {
@@ -404,11 +408,9 @@ extension Browser {
     }
 
     func cancelSpaceCreation() {
-        spaceSlideToken = UUID()
+        spacePaging.reset()
         afterSpaceCreated = nil
         makingSpace = false
-        newSpaceSwipe = false
-        spaceSwipe = 0
     }
 
     func renameSpace(_ id: UUID, to name: String) {
@@ -470,6 +472,7 @@ extension Browser {
     /// Spaces turned off: back to the first one. The others are kept, in
     /// case they are turned on again.
     func leaveSpaces() {
+        spacePaging.reset()
         enter(homeSpaceID)
         for (_, row) in parked { for tab in row.tabs { tab.close() } }
         parked = [:]
@@ -525,7 +528,7 @@ struct SpaceDot: View {
         .onChange(of: key) { _, now in
             let symbol = symbol
             DispatchQueue.main.async {
-                withAnimation(.easeOut(duration: 0.22)) { shown = (now, symbol) }
+                withAnimation(Motion.quick) { shown = (now, symbol) }
             }
         }
         .onChange(of: browser.spaceID) { _, _ in name() }
@@ -599,7 +602,7 @@ enum SpaceMenu {
         let menu = NSMenu()
         for (index, space) in browser.spaces.enumerated() {
             let entry = item(space.name, key: index < 9 ? "\(index + 1)" : "", checked: space.id == browser.spaceID) {
-                browser.switchSpace(to: space.id)
+                SpaceSwipe.shared.select(space.id, in: browser)
             }
             entry.image = NSImage(systemSymbolName: space.symbol, accessibilityDescription: nil)
             menu.addItem(entry)
@@ -755,52 +758,38 @@ struct SpacePager: View {
     @ObservedObject var browser: Browser
     var compact = false
     @State private var hovered: UUID?
-    @State private var captionHovered = false
-
     var body: some View {
-        VStack(spacing: 0) {
-            if !compact {
-                Text(browser.spaceLabel(browser.space))
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(Palette.muted)
-                    .lineLimit(1)
-                    .frame(maxWidth: .infinity)
-                    .contentShape(Rectangle())
-                    .onHover { captionHovered = $0 }
-                    .contextMenu { SpaceContextActions(browser: browser, space: browser.space) }
-            }
-            ScrollViewReader { reader in
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 0) {
-                        ForEach(browser.spaces) { space in
-                            Button {
-                                browser.cancelSpaceCreation()
-                                browser.switchSpace(to: space.id)
-                            } label: {
-                                Circle()
-                                    .fill(space.id == browser.spaceID ? Palette.ink : .clear)
-                                    .overlay(Circle().strokeBorder(space.id == browser.spaceID ? Palette.ink : Palette.muted.opacity(0.65), lineWidth: 1))
-                                    .frame(width: 6, height: 6)
-                                    .frame(width: 20, height: 20)
-                                    .contentShape(Rectangle())
-                            }
-                            .buttonStyle(.plain)
-                            .id(space.id)
-                            .accessibilityLabel(browser.spaceLabel(space))
-                            .accessibilityAddTraits(space.id == browser.spaceID ? .isSelected : [])
-                            .help(browser.spaceLabel(space) + (browser.canDeleteSpace(space.id) ? " — Delete: ⌥⌘⌫ while hovering" : ""))
-                            .onHover { track(space.id, inside: $0) }
-                            .contextMenu { SpaceContextActions(browser: browser, space: space) }
+        ScrollViewReader { reader in
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 0) {
+                    ForEach(browser.spaces) { space in
+                        Button {
+                            SpaceSwipe.shared.select(space.id, in: browser)
+                        } label: {
+                            let selected = space.id == browser.spaceID
+                            Circle()
+                                .fill(selected ? Palette.ink : .clear)
+                                .overlay(Circle().strokeBorder(selected ? Palette.ink : Palette.muted.opacity(0.65), lineWidth: 1))
+                                .frame(width: 6, height: 6)
+                                .animation(Motion.quick, value: selected)
+                                .frame(width: 20, height: 20)
+                                .contentShape(Rectangle())
                         }
+                        .buttonStyle(.plain)
+                        .id(space.id)
+                        .accessibilityLabel(browser.spaceLabel(space))
+                        .accessibilityAddTraits(space.id == browser.spaceID ? .isSelected : [])
+                        .help(browser.spaceLabel(space) + (browser.canDeleteSpace(space.id) ? " — Delete: ⌥⌘⌫ while hovering" : ""))
+                        .onHover { track(space.id, inside: $0) }
+                        .contextMenu { SpaceContextActions(browser: browser, space: space) }
                     }
                 }
-                .frame(width: min(CGFloat(browser.spaces.count) * 20, compact ? 40 : max(40, browser.prefs.columnWidth - 40)), height: 20)
-                .onChange(of: browser.spaceID, initial: true) { _, id in reader.scrollTo(id, anchor: .center) }
             }
+            .frame(width: min(CGFloat(browser.spaces.count) * 20, compact ? 40 : max(40, browser.prefs.columnWidth - 40)), height: 20)
+            .onChange(of: browser.spaceID, initial: true) { _, id in reader.scrollTo(id, anchor: .center) }
         }
-        .frame(height: compact ? 24 : 34)
         .frame(maxWidth: .infinity)
-        .background(SpaceDeleteKeyReader(browser: browser, hovered: captionHovered ? browser.spaceID : hovered).frame(width: 1, height: 1).allowsHitTesting(false))
+        .background(SpaceDeleteKeyReader(browser: browser, hovered: hovered).frame(width: 1, height: 1).allowsHitTesting(false))
     }
 
     private func track(_ id: UUID, inside: Bool) {
