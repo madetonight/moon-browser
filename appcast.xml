@@ -4,27 +4,24 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
     <channel>
         <title>Moon</title>
         <item>
-            <title>0.4.17</title>
-            <pubDate>Wed, 18 Nov 2026 21:34:32 -0500</pubDate>
-            <link>https://github.com/madetonight/moon-browser/releases/tag/v0.4.17-beta</link>
-            <sparkle:version>2026111801</sparkle:version>
-            <sparkle:shortVersionString>0.4.17</sparkle:shortVersionString>
+            <title>0.4.18</title>
+            <pubDate>Wed, 18 Nov 2026 21:49:48 -0500</pubDate>
+            <link>https://github.com/madetonight/moon-browser/releases/tag/v0.4.18-beta</link>
+            <sparkle:version>2026111802</sparkle:version>
+            <sparkle:shortVersionString>0.4.18</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
             <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <description sparkle:format="markdown"><![CDATA[# Moon 0.4.17 beta
+            <description sparkle:format="markdown"><![CDATA[# Moon 0.4.18 beta
 
-Liquid Glass, edge to edge.
-
-- Turn on Liquid Glass in Appearance → Window for a continuous window background. The glass takes on blurred colors from behind the window, with a graphite finish in dark mode and soft pearl in light mode.
-- In Glass mode, Settings uses thin dividers and the browsing layout has no inset page frame or separate glass outlines around the tabs.
-- Delete Space takes effect immediately. The default space stays protected.
+- The sidebar keeps its usual colors, padding, and corners when Liquid Glass is on.
+- Page text stays hidden behind the sidebar when it slides into view. The window background still uses Liquid Glass.
 
 Apple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized.
 ]]></description>
-            <enclosure url="https://github.com/madetonight/moon-browser/releases/download/v0.4.17-beta/Moon-0.4.17-arm64.dmg" length="5591472" type="application/octet-stream" sparkle:edSignature="Ax8RhRCyAh8m/8B6bsvZv4dfikojBw+1DeAGLz8TVo7Q40Nse2Mq9wgMPGawBkk1xhNS7V+kNupD1ID7OEs/AQ=="></enclosure>
+            <enclosure url="https://github.com/madetonight/moon-browser/releases/download/v0.4.18-beta/Moon-0.4.18-arm64.dmg" length="5590336" type="application/octet-stream" sparkle:edSignature="43f/pEyFY9lYsVvkP+IiGUdb11wI5YcnfJVQVpvJv5cDAPQijizfr4ivx2/HC7HlSZrKrzyhuI4+vlFY+H6pBw=="></enclosure>
         </item>
     </channel>
 </rss><!-- sparkle-signatures:
-edSignature: +oysIjW3UKCtp9I3Z/TRf8JtfSuts1ei8b7J9HYom2LFwHCMyhLYLoQB4yQggVcyNQAOFrLYi4e/jypCYaVCDw==
-length: 1947
+edSignature: G8De1vwcZrRU89aRUVq7ZIsGd5wOfZgDGrtKOQnnWhy8/lLlZBbsZVc6Mfugu7ca23sERVCsJHP3PZ1pQAArCQ==
+length: 1698
 -->
