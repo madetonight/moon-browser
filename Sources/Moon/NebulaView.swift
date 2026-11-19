@@ -34,20 +34,15 @@ struct NebulaOverlay: View {
 
 struct NebulaPanel: View {
     @ObservedObject var nebula: Nebula
-    @ObservedObject private var prefs = Shared.prefs
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.moonWindowGlass) private var windowGlass
     private var listening: Bool { nebula.phase == .listening }
 
     var body: some View {
-        Group {
-            if prefs.liquidGlass && !reduceTransparency {
-                strip.glassEffect(.regular, in: Capsule())
-            } else {
-                strip.background(Palette.ground, in: Capsule())
-                    .overlay(Capsule().strokeBorder(Palette.hairline, lineWidth: 1))
+        strip.background(Palette.ground, in: Capsule())
+            .overlay {
+                if !windowGlass { Capsule().strokeBorder(Palette.hairline, lineWidth: 1) }
             }
-        }
         .shadow(color: .black.opacity(0.15), radius: 12, y: 4)
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.16), value: nebula.phase)
         .task { await nebula.loadLanguages() }

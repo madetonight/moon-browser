@@ -111,15 +111,16 @@ extension Plate where Foot == EmptyView {
 
 /// A group of lines in one hairline box.
 struct Card<Content: View>: View {
+    var framed = true
     @ViewBuilder let content: () -> Content
 
     var body: some View {
         VStack(spacing: 0) { content() }
-            .background(Palette.ground)
+            .background(framed ? Palette.ground : Color.clear)
             .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 11, style: .continuous)
-                    .strokeBorder(Palette.hairline, lineWidth: 1)
+                    .strokeBorder(framed ? Palette.hairline : Color.clear, lineWidth: 1)
             )
     }
 }
@@ -127,8 +128,12 @@ struct Card<Content: View>: View {
 /// The hairline between two lines of a card, inset like the text.
 struct Rule: View {
     var inset: CGFloat = 14
+    var subdued = false
     var body: some View {
-        Rectangle().fill(Palette.hairline).frame(height: 1).padding(.leading, inset)
+        Rectangle()
+            .fill(subdued ? Palette.ink.opacity(0.12) : Palette.hairline)
+            .frame(height: 1)
+            .padding(.leading, inset)
     }
 }
 

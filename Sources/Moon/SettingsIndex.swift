@@ -133,7 +133,10 @@ enum SettingsIndex {
     // MARK: - rows
 
     static let items: [SettingsItem] = ([
-        .init(id: "appearance.glass", group: "theme", icon: "square.on.square", title: "Liquid Glass", detail: "Frosted sidebar, glass edges and a translucent frame. Follows Reduce Transparency.", keys: ["liquidGlass"]),
+        .init(id: "appearance.glass", group: "window", icon: "square.on.square", title: "Liquid Glass",
+              detail: "A continuous translucent background that reaches the window edges.",
+              more: "Uses macOS Liquid Glass. Reduce Transparency in System Settings switches to a solid background.",
+              keys: ["liquidGlass"], words: ["material", "transparent", "frosted"]),
         // General
         .init(id: "general.default", group: "browser", icon: "link.badge.plus",
               title: "Open links from other apps", detail: "Make Moon the browser Mail, Slack and the rest send links to",
@@ -475,7 +478,8 @@ enum SettingsIndex {
         switch item.id {
         case "pages.dusk": return prefs.look != .light
         case "sidebar.roomy": return prefs.sidebar && !prefs.sideIcons
-        case "sidebar.hides", "layout.cards", "pins.list": return prefs.sidebar
+        case "sidebar.hides", "pins.list": return prefs.sidebar
+        case "layout.cards": return prefs.sidebar && !prefs.liquidGlass
         case "toolbar.left": return !prefs.sidebar
         default: return true
         }
@@ -487,6 +491,7 @@ enum SettingsIndex {
         case "pages.dusk": return "Only while Moon isn't set to Light"
         case "toolbar.left": return "Only with the tabs across the top"
         case "sidebar.roomy": return "Only with titles in the column"
+        case "layout.cards": return "Only with sidebar tabs and Liquid Glass off"
         default: return "Only with the tabs down a side"
         }
     }

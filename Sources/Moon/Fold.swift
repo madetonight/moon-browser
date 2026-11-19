@@ -60,7 +60,6 @@ extension Browser {
 struct Fold: View {
     @ObservedObject var browser: Browser
     @ObservedObject var prefs: Preferences
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
     /// The column going back in, a moment after the pointer left it.
     @State private var leaving: DispatchWorkItem?
@@ -115,7 +114,8 @@ struct Fold: View {
                 // tabs, and the shadow fell from every title and icon rather
                 // than from the row's edge.
                 TabBar(browser: browser)
-                    .modifier(FoldShadow(y: 4, behind: true, strength: browser.peeking ? 1 : 0))
+                    .modifier(FoldShadow(y: 4, behind: true, strength: browser.peeking ? 1 : 0,
+                                         glass: prefs.liquidGlass))
                     .offset(y: browser.peeking ? 0 : -Metrics.strip)
                     .allowsHitTesting(browser.peeking)
             }
@@ -143,7 +143,7 @@ struct Fold: View {
                     SidebarSlide(shown: browser.peeking, width: prefs.columnWidth, onRight: onRight) {
                         SideBar(browser: browser, prefs: prefs, onFrame: browser.asCards)
                         .modifier(FoldShadow(x: onRight ? -4 : 4, behind: true, strength: 1,
-                                             sidebar: true, glass: prefs.liquidGlass && !reduceTransparency, onRight: onRight))
+                                             sidebar: true, glass: prefs.liquidGlass, onRight: onRight))
                     }
                 }
             }
@@ -486,9 +486,8 @@ private struct FoldShadow: ViewModifier {
 
     func body(content: Content) -> some View {
         let color = Color.black.opacity(0.14 * strength)
-        if sidebar && glass {
-            // Native glass owns its contour and shadow. A solid shadow plane
-            // here used to erase transparency and leave square corners.
+        if glass {
+            // In glass mode the window owns the background and perimeter.
             content
         } else if sidebar {
             content.background {

@@ -490,8 +490,7 @@ struct ContentView: View {
             // that survives the transition is not a white band across the top.
             // With the tabs down the side, the ground the page's card and the
             // column sit on (see CardEdge).
-            MoonWindowGround(glass: browser.prefs.liquidGlass, fullscreen: fullscreenTab != nil,
-                             cards: cards, sidebar: sidebar)
+            MoonWindowGround(glass: windowGlass, fullscreen: fullscreenTab != nil, cards: cards)
 
             // One stage, always. It starts beside the column and under the
             // strip, not behind them — a page sliding beneath floating chrome
@@ -618,6 +617,10 @@ struct ContentView: View {
     /// window nor a page filling the screen (see Browser.asCards).
     private var cards: Bool {
         browser.asCards && fullscreenTab == nil
+    }
+
+    private var windowGlass: Bool {
+        browser.prefs.liquidGlass && !reduceTransparency && fullscreenTab == nil
     }
 
     /// The card's gap on the side away from the column, and along the bottom.
@@ -840,6 +843,7 @@ struct ContentView: View {
                 if let job = browser.fileImport { ImportProgress(browser: browser, job: job) }
             }
             .environment(\.tabShortcutNumbers, browser.tabShortcutNumbers)
+            .environment(\.moonWindowGlass, windowGlass)
             // The field comes on its spring, and goes quickly: once Return
             // is pressed the page is on its way, and the field is not what
             // there is to watch.

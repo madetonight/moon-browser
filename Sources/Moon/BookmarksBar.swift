@@ -9,6 +9,7 @@ import SwiftUI
 // tabs when they fold away (⌘S) and when a video takes the screen.
 
 struct BookmarksBar: View {
+    @Environment(\.moonWindowGlass) private var windowGlass
     @ObservedObject var browser: Browser
     @ObservedObject var bookmarks: Bookmarks
     /// On the window's ground, above the page's card, with the tabs down the
@@ -56,9 +57,9 @@ struct BookmarksBar: View {
                 withAnimation(Motion.glide) { browser.prefs.bookmarksBar = false }
             }
         }
-        .background(onFrame ? Palette.frame : Palette.ground)
+        .background(windowGlass ? Color.clear : onFrame ? Palette.frame : Palette.ground)
         .overlay(alignment: .bottom) {
-            if !onFrame { Rectangle().fill(Palette.hairline).frame(height: 1) }
+            if !onFrame && !windowGlass { Rectangle().fill(Palette.hairline).frame(height: 1) }
         }
     }
 

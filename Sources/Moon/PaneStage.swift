@@ -16,6 +16,7 @@ import WebKit
 
 /// The stage, for SwiftUI. Its identity never changes; what it shows does.
 struct PaneStageView: NSViewRepresentable {
+    @Environment(\.moonWindowGlass) private var windowGlass
     let tabs: [Tab]
     let split: TabSplit?
     let focused: Tab.ID?
@@ -37,6 +38,7 @@ struct PaneStageView: NSViewRepresentable {
     func makeNSView(context: Context) -> PaneStage { PaneStage() }
 
     func updateNSView(_ stage: PaneStage, context: Context) {
+        stage.windowGlass = windowGlass
         stage.corner = corner
         stage.immersedID = immersed
         stage.onCommit = commit
@@ -52,6 +54,9 @@ struct PaneStageView: NSViewRepresentable {
 }
 
 final class PaneStage: NSView {
+    var windowGlass = false {
+        didSet { if windowGlass != oldValue { paint() } }
+    }
     /// Each page's corners, as a card (see CardEdge): with the tabs down the
     /// side, each page on the stage is a card of its own, with the window's
     /// ground in the gutter between two.
@@ -204,7 +209,11 @@ final class PaneStage: NSView {
     }
 
     override func updateLayer() {
-        layer?.backgroundColor = Palette.NS.ground.cgColor
+        layer?.backgroundColor = backdropColor
+    }
+
+    private var backdropColor: CGColor {
+        (windowGlass || corner > 0 ? NSColor.clear : Palette.NS.ground).cgColor
     }
 
     // MARK: - what is shown
@@ -310,7 +319,7 @@ final class PaneStage: NSView {
         effectiveAppearance.performAsCurrentDrawingAppearance {
             let edge = NSColor.labelColor.withAlphaComponent(CardEdge.edge).cgColor
             let ground = Palette.NS.ground.cgColor
-            layer?.backgroundColor = card ? NSColor.clear.cgColor : ground
+            layer?.backgroundColor = backdropColor
             for slot in slots {
                 slot.layer?.borderWidth = card ? 1 : 0
                 slot.layer?.borderColor = edge

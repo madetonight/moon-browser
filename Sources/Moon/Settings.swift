@@ -16,6 +16,8 @@ struct SettingsPanel: View {
     /// Words already in Find a setting when it opens (previews).
     var found: String? = nil
     @Environment(\.asTab) private var asTab
+    @Environment(\.moonWindowGlass) private var windowGlass
+    private var flatGlass: Bool { asTab && windowGlass }
 
     @ObservedObject private var updater = Updater.shared
     @ObservedObject private var shield = Shield.shared
@@ -103,7 +105,7 @@ struct SettingsPanel: View {
     private var tabbed: some View {
         HStack(spacing: 0) {
             pages
-            Rectangle().fill(Palette.hairline).frame(width: 1)
+            Rectangle().fill(flatGlass ? Palette.ink.opacity(0.10) : Palette.hairline).frame(width: 1)
             content
                 .padding(.top, 26)
                 .frame(maxWidth: 600)
@@ -154,16 +156,16 @@ struct SettingsPanel: View {
                 .padding(.horizontal, 10)
                 .padding(.top, 14)
                 .padding(.bottom, 10)
-            FindField(text: $query, focus: $finding)
+            FindField(text: $query, focus: $finding, flatGlass: flatGlass)
                 .padding(.bottom, 10)
             ForEach(Array(Page.blocks.enumerated()), id: \.offset) { index, block in
                 if index > 0 {
-                    Rectangle().fill(Palette.hairline).frame(height: 1)
+                    Rectangle().fill(flatGlass ? Palette.ink.opacity(0.12) : Palette.hairline).frame(height: 1)
                         .padding(.horizontal, 10).padding(.vertical, 7)
                 }
                 ForEach(block) { item in
                     PageRow(page: item, on: !searching && page == item,
-                            count: searching ? counts[item] ?? 0 : nil) {
+                            count: searching ? counts[item] ?? 0 : nil, flatGlass: flatGlass) {
                         query = ""
                         page = item
                     }
@@ -174,7 +176,7 @@ struct SettingsPanel: View {
         .padding(8)
         .frame(width: SettingsPanel.rail, alignment: .leading)
         .frame(maxHeight: .infinity, alignment: .top)
-        .background(Palette.wash.opacity(0.45), in: Rectangle())
+        .background(flatGlass ? Palette.ink.opacity(0.04) : Palette.wash.opacity(0.45))
     }
 
     /// Find a setting: the wash, the glass, ⌘F beside it until something
@@ -182,6 +184,7 @@ struct SettingsPanel: View {
     private struct FindField: View {
         @Binding var text: String
         var focus: FocusState<Bool>.Binding
+        var flatGlass: Bool
 
         var body: some View {
             HStack(spacing: 7) {
@@ -215,8 +218,15 @@ struct SettingsPanel: View {
             }
             .padding(.horizontal, 9)
             .frame(height: 28)
-            .background(Palette.ground, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Palette.hairline, lineWidth: 1))
+            .background(flatGlass ? Palette.ink.opacity(0.07) : Palette.ground,
+                        in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .overlay {
+                if !flatGlass || focus.wrappedValue {
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .strokeBorder(flatGlass ? Palette.ink.opacity(0.32) : Palette.hairline, lineWidth: 1)
+                        .allowsHitTesting(false)
+                }
+            }
         }
     }
 
@@ -225,6 +235,7 @@ struct SettingsPanel: View {
         let on: Bool
         /// While searching: how many rows of this section match.
         let count: Int?
+        var flatGlass: Bool
         let act: () -> Void
         @State private var hovering = false
 
@@ -252,8 +263,8 @@ struct SettingsPanel: View {
                 .frame(height: 30)
                 .background(
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(on ? Palette.ground : (hovering ? Palette.hover : .clear))
-                        .shadow(color: .black.opacity(on ? 0.06 : 0), radius: 3, y: 1)
+                        .fill(on ? (flatGlass ? Palette.ink.opacity(0.11) : Palette.ground)
+                                 : (hovering ? (flatGlass ? Palette.ink.opacity(0.06) : Palette.hover) : .clear))
                 )
                 .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
             }
@@ -327,7 +338,7 @@ struct SettingsPanel: View {
     private func groups(of page: Page) -> some View {
         ForEach(SettingsIndex.groups(of: page)) { group in
             GroupBlock(title: group.title, icon: group.icon, blurb: group.blurb) {
-                Card { rows(SettingsIndex.items(in: group.id).filter(shown), searched: false) }
+                Card(framed: !flatGlass) { rows(SettingsIndex.items(in: group.id).filter(shown), searched: false) }
             }
         }
     }
@@ -337,7 +348,10 @@ struct SettingsPanel: View {
 
     private func rows(_ items: [SettingsItem], searched: Bool) -> some View {
         ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
-            if index > 0 { Rule(inset: item.hangs && !searched ? SettingsPanel.textInset + 24 : SettingsPanel.textInset) }
+            if index > 0 {
+                Rule(inset: item.hangs && !searched ? SettingsPanel.textInset + 24 : SettingsPanel.textInset,
+                     subdued: flatGlass)
+            }
             row(item, searched: searched)
             after(item, searched: searched)
         }
@@ -367,7 +381,7 @@ struct SettingsPanel: View {
     private var results: some View {
         let found = hits
         if found.isEmpty {
-            Card { Nothing("No setting called that. Try other words, like dark, tabs or video") }
+            Card(framed: !flatGlass) { Nothing("No setting called that. Try other words, like dark, tabs or video") }
         }
         let byGroup = Dictionary(grouping: found, by: \.group)
         ForEach(SettingsIndex.groups.filter { byGroup[$0.id] != nil }) { group in
@@ -392,7 +406,7 @@ struct SettingsPanel: View {
                 }
                 .buttonStyle(.plain)
                 .help("Open \(group.page.title) at \(group.title)")
-                Card { rows(byGroup[group.id] ?? [], searched: true) }
+                Card(framed: !flatGlass) { rows(byGroup[group.id] ?? [], searched: true) }
             }
         }
     }

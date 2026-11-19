@@ -84,7 +84,7 @@ struct SpaceDeleteKeyReader: NSViewRepresentable {
                           let window = browser.window, (event.window ?? NSApp.keyWindow) === window,
                           event.modifierFlags.intersection(.deviceIndependentFlagsMask).subtracting([.capsLock, .numericPad, .function]) == [.command, .option],
                           [51, 117].contains(Int(event.keyCode)), browser.canDeleteSpace(id) else { return event }
-                    browser.requestDeleteSpace(id)
+                    if !event.isARepeat { browser.deleteSpace(id) }
                     return nil
                 }
             }
@@ -105,7 +105,7 @@ struct SpaceContextActions: View {
         }
         if browser.canDeleteSpace(space.id) {
             Divider()
-            Button("Delete Space…", role: .destructive) { browser.requestDeleteSpace(space.id) }
+            Button("Delete Space", role: .destructive) { browser.deleteSpace(space.id) }
         }
     }
 }

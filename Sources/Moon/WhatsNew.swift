@@ -140,12 +140,13 @@ enum WhatsNew {
 
     /// Only the current release is shown. Release preparation verifies its version.
     static let notes: [Notes] = [
-        Notes(version: "0.4.16", date: "17 November 2026",
-              headline: "Smoother switching between Spaces.",
+        Notes(version: "0.4.17", date: "18 November 2026",
+              headline: "Liquid Glass, edge to edge.",
               new: [],
-              better: ["Swipe left to advance or create a space, and swipe right to go back. Click a page dot or use a keyboard shortcut for the same slide.",
-                       "With multiple spaces, the sidebar names the current space above its tabs. Folder icons make Tab Groups easier to spot."],
-              fixed: ["The sidebar keeps both spaces in view through the transition, so short, cancelled and reversed swipes settle cleanly."])
+              better: ["Liquid Glass gives Moon one continuous window background, with graphite in dark mode and pearl in light mode. Turn it on in Appearance › Window.",
+                       "Settings uses thin dividers on the glass surface.",
+                       "Delete Space takes effect immediately. The default space stays protected."],
+              fixed: ["Glass mode removes the inset frame around the page and the separate outlines around the sidebar and tab bar."])
     ]
 }
 

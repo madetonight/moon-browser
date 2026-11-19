@@ -17,6 +17,7 @@ struct Omnibox: View {
 
     @State private var shake: CGFloat = 0
     @State private var refused = false
+    @Environment(\.moonWindowGlass) private var windowGlass
 
     /// Sized to a pane of a split rather than to the window.
     var fitted = false
@@ -92,26 +93,28 @@ struct Omnibox: View {
             .padding(.horizontal, 22)
             .padding(.vertical, 14)
             .background {
-                ZStack {
-                    // A slow, almost invisible breath under the field. It is
-                    // the only thing on an empty tab, and a thing that never
-                    // moves at all reads as a picture of an app rather than
-                    // an app.
-                    Breath()
+                if windowGlass {
+                    if over {
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(Palette.ground.opacity(0.96))
+                    }
+                } else {
+                    ZStack {
+                        // A quiet glow beneath the solid address field.
+                        Breath()
 
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(browser.prefs.liquidGlass && !NSWorkspace.shared.accessibilityDisplayShouldReduceTransparency ? Color.clear : Palette.ground)
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(Palette.ground)
+                    }
                 }
             }
-            .modifier(MoonFieldGlass(enabled: browser.prefs.liquidGlass))
-            .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .strokeBorder(
-                        refused ? Color.red.opacity(0.35) : Palette.hairline,
-                        lineWidth: 1
-                    )
-                    .allowsHitTesting(false)
-            )
+            .overlay {
+                if refused || !windowGlass {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .strokeBorder(refused ? Color.red.opacity(0.35) : Palette.hairline, lineWidth: 1)
+                        .allowsHitTesting(false)
+                }
+            }
             .shadow(color: .black.opacity(0.06), radius: 24, y: 8)
             .modifier(Shake(travel: shake))
             .onAppear { shake = 0; refused = false }

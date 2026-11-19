@@ -1,22 +1,22 @@
 {
   "repository": "madetonight/moon-browser",
-  "tag": "v0.4.16-beta",
-  "build": "2026111702",
-  "title": "Moon 0.4.16 beta",
+  "tag": "v0.4.17-beta",
+  "build": "2026111801",
+  "title": "Moon 0.4.17 beta",
   "keep_latest_only": true,
   "assets": [
     {
-      "name": "Moon-0.4.16-arm64.dmg",
-      "size": 5591756,
-      "sha256": "484c74aeda9882382dd484d1b75692bfe6dca5f491dea684f8df21e5816fa5ec",
-      "blob": "43702639deabf782b0c08bf4b140919119a395db"
+      "name": "Moon-0.4.17-arm64.dmg",
+      "size": 5591472,
+      "sha256": "6ea08789fbdc7baf5d68d7cdcc0832757ebaf18d7baa7d65a2c1458964a478d8",
+      "blob": "b9ccc065f2eb21fdef1bb997a9d402d867eee4d9"
     }
   ],
   "feed": {
     "name": "appcast.xml",
-    "size": 2019,
-    "sha256": "1337e57e9cc8909f95a953bf6402db1cf0a243feb28a729ed2c1ed8c70b325e1",
-    "blob": "35365c231356775fa232ae1cedc0004bef0fea50"
+    "size": 2091,
+    "sha256": "bffe8a2ad5522b17937e8b7ef204d34e3ab7ceaa0665df586d192bc6d715fd6b",
+    "blob": "6a5d039bf6422ff4fb60ca0abb530c6b4a1d674b"
   },
-  "notes": "# Moon 0.4.16 beta\n\nSmoother switching between Spaces.\n\n- The sidebar follows your swipe and settles into place. Swipe left from the last space to make a new one, or swipe right to go back.\n- Click a page dot or use a keyboard shortcut for the same slide. When multiple spaces are open, the sidebar names the current space above its tabs.\n- Folder icons make collapsible Tab Groups easier to spot.\n\nApple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized.\n"
+  "notes": "# Moon 0.4.17 beta\n\nLiquid Glass, edge to edge.\n\n- Turn on Liquid Glass in Appearance → Window for a continuous window background. The glass takes on blurred colors from behind the window, with a graphite finish in dark mode and soft pearl in light mode.\n- In Glass mode, Settings uses thin dividers and the browsing layout has no inset page frame or separate glass outlines around the tabs.\n- Delete Space takes effect immediately. The default space stays protected.\n\nApple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized.\n"
 }

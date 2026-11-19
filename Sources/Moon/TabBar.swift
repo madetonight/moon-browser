@@ -4,6 +4,7 @@ import SwiftUI
 /// slides from the tab you left to the tab you picked rather than blinking out
 /// of one and into the other.
 struct TabBar: View {
+    @Environment(\.moonWindowGlass) private var windowGlass
     /// The room kept at the start for the window's buttons: none to speak of
     /// in full screen, where macOS takes them away (idea 184).
     private var lights: CGFloat { browser.fullScreen ? 12 : Metrics.lights }
@@ -195,6 +196,9 @@ struct TabBar: View {
         .background {
             ZStack {
                 landing ? Palette.hover : Color.clear
+                if browser.prefs.liquidGlass && browser.folded && !landing {
+                    windowGlass ? Palette.frame.opacity(0.94) : Palette.ground
+                }
                 if browser.prefs.splitView {
                     SplitDropZone(browser: browser, tab: nil, kind: .strip)
                 }

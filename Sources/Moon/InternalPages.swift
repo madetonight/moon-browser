@@ -120,6 +120,7 @@ extension View {
 /// One of Moon's own pages, where a web page would be: on the stage, on
 /// its card when pages are cards, in either pane of a pair.
 struct InternalPageView: View {
+    @Environment(\.moonWindowGlass) private var windowGlass
     @ObservedObject var browser: Browser
     @ObservedObject var tab: Tab
     let page: InternalPage
@@ -132,7 +133,7 @@ struct InternalPageView: View {
             // follow you into Downloads.
             .id(page.kind)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .background(Palette.ground)
+            .background(windowGlass ? Color.clear : Palette.ground)
             .clipShape(RoundedRectangle(cornerRadius: corner, style: .continuous))
             // In a pair, a click on this page makes it the one with the keys,
             // as a click on a web page does (see PageView.onKeys).

@@ -9,7 +9,7 @@ import SwiftUI
 struct SideBar: View {
     @ObservedObject var browser: Browser
     @ObservedObject var prefs: Preferences
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.moonWindowGlass) private var windowGlass
     /// On the window's ground, beside the page's card (see CardEdge): the
     /// ground's colour and no edge of its own, the card's edge being the line.
     var onFrame = false
@@ -63,7 +63,7 @@ struct SideBar: View {
     /// three doors under it.
     private var top: CGFloat { icons ? lightsBand + Metrics.helmDoors + 8 : Metrics.strip }
     private var innerEdge: Alignment { onRight ? .leading : .trailing }
-    private var roundedSurface: Bool { browser.folded || (prefs.liquidGlass && !reduceTransparency) }
+    private var roundedSurface: Bool { browser.folded && !prefs.liquidGlass }
     private var surfaceInsets: EdgeInsets {
         roundedSurface ? SidebarSurface.insets(onRight: onRight) : EdgeInsets()
     }
@@ -158,13 +158,14 @@ struct SideBar: View {
         .frame(maxHeight: .infinity)
         // Rows on their way to or from another space stay in the column.
         .clipped()
-        .modifier(MoonSidebarGlass(enabled: prefs.liquidGlass && !landing, insets: surfaceInsets, look: prefs.look))
         .onAppear { SpaceSwipe.shared.start(for: browser) }
         .background {
             ZStack {
-                if !prefs.liquidGlass || reduceTransparency || landing {
+                if !windowGlass || landing {
                     (landing ? greys.hover : onFrame ? Palette.frame : Palette.ground)
                         .clipShape(RoundedRectangle(cornerRadius: roundedSurface ? SidebarSurface.radius : 0, style: .continuous))
+                } else if browser.folded {
+                    Palette.frame.opacity(0.94)
                 }
             }
             .padding(surfaceInsets)
@@ -175,7 +176,7 @@ struct SideBar: View {
             }
         }
         .overlay(alignment: innerEdge) {
-            if !roundedSurface && !onFrame && (!prefs.liquidGlass || reduceTransparency) {
+            if !roundedSurface && !onFrame && !prefs.liquidGlass {
                 Rectangle().fill(Palette.hairline).frame(width: 1)
             }
         }
@@ -878,12 +879,15 @@ struct SideBar: View {
 
     @ViewBuilder
     private var newTab: some View {
+        let glass = windowGlass
         if icons {
-            Quiet(icon: "plus", title: "", height: rowHeight, size: prefs.sideTitle, centred: true) { browser.launch() }
+            Quiet(icon: "plus", title: "", height: rowHeight, size: prefs.sideTitle, centred: true,
+                  restingInk: glass ? Palette.ink.opacity(0.73) : Palette.faint) { browser.launch() }
                 .help("New Tab   ⌘T")
                 .padding(.top, SideBar.gap)
         } else {
-            Quiet(icon: "plus", title: "New tab", height: rowHeight, size: prefs.sideTitle) { browser.launch() }
+            Quiet(icon: "plus", title: "New tab", height: rowHeight, size: prefs.sideTitle,
+                  restingInk: glass ? Palette.ink.opacity(0.73) : Palette.faint) { browser.launch() }
                 .padding(.top, SideBar.gap)
         }
     }
@@ -931,15 +935,6 @@ private struct SideFoot: View {
                 }
             }
             .frame(width: max(0, (availableWidth ?? prefs.sideWidth) - 20), alignment: .leading)
-            .background {
-                if prefs.liquidGlass {
-                    // A quiet backing keeps these permanent actions readable
-                    // when glass samples a bright or moving web page.
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(Palette.frame.opacity(0.94))
-                        .allowsHitTesting(false)
-                }
-            }
             .padding(.horizontal, 10)
             .padding(.bottom, 10)
         }
@@ -1358,6 +1353,7 @@ struct Quiet: View {
     var size: CGFloat = 12.5
     /// The icon alone, in the middle: the column of icons' new tab.
     var centred = false
+    var restingInk = Palette.faint
     let act: () -> Void
 
     @State private var hovering = false
@@ -1375,7 +1371,7 @@ struct Quiet: View {
                 }
                 Spacer(minLength: 0)
             }
-            .foregroundStyle(hovering ? Palette.ink.opacity(0.7) : Palette.faint)
+            .foregroundStyle(hovering ? Palette.ink : restingInk)
             .padding(.leading, centred ? 0 : 10)
             .frame(height: height)
             .frame(maxWidth: .infinity, alignment: .leading)

@@ -440,20 +440,10 @@ extension Browser {
         !ghostWindow && id != Space.firstID && id != homeSpaceID && spaces.contains { $0.id == id }
     }
 
-    func requestDeleteSpace(_ id: UUID) {
-        guard canDeleteSpace(id), let space = spaces.first(where: { $0.id == id }) else { return }
-        let detail = space.sharesSignIns == true
-            ? "Its tabs will close. Shared website sign-ins, history and bookmarks stay."
-            : "Its tabs will close, and its own cookies and sign-ins will be erased. History and bookmarks stay."
-        Ask.sure("Delete “\(spaceLabel(space))”?", detail: detail, confirm: "Delete", returnCancels: true) { [weak self] in
-            self?.deleteSpace(id)
-        }
-    }
-
     /// A space, its tabs, and its cookies and sign-ins, gone. The first one
     /// of the profile stays: it is where everything was before there were spaces.
     func deleteSpace(_ id: UUID) {
-        guard id != Space.firstID, id != homeSpaceID, let at = spaces.firstIndex(where: { $0.id == id }) else { return }
+        guard canDeleteSpace(id), let at = spaces.firstIndex(where: { $0.id == id }) else { return }
         if spaceID == id { switchSpace(to: homeSpaceID) }
         for tab in parked.removeValue(forKey: id)?.tabs ?? [] { tab.close() }
         let shared = spaces[at].sharesSignIns == true
@@ -656,9 +646,9 @@ enum SpaceMenu {
         if folder != nil {
             menu.addItem(item("Downloads to the Folder in Settings") { browser.setSpaceDownloads(here.id, to: nil) })
         }
-        if !here.isFirst, here.id != browser.homeSpaceID {
+        if browser.canDeleteSpace(here.id) {
             menu.addItem(.separator())
-            menu.addItem(item("Delete “\(here.name)”…") { browser.requestDeleteSpace(here.id) })
+            menu.addItem(item("Delete “\(here.name)”") { browser.deleteSpace(here.id) })
         }
         return menu
     }

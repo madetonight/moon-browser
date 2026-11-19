@@ -151,7 +151,7 @@ final class SpaceCreationSwipeTests: XCTestCase {
 
 @MainActor
 final class SpaceDeletionActionsTests: XCTestCase {
-    func testOnlyTargetSpaceIsDeletedAndDefaultIsProtected() {
+    func testDeleteMenuRemovesSpaceImmediatelyAndReturnsToDefault() throws {
         _ = NSApplication.shared
         let browser = Browser(record: WindowRecord())
         let saved = Spaces.read(profile: browser.profileID)
@@ -165,19 +165,18 @@ final class SpaceDeletionActionsTests: XCTestCase {
         let keep = browser.spaceID
         browser.addSpace(named: "Delete this")
         let remove = browser.spaceID
-        browser.switchSpace(to: keep)
         XCTAssertFalse(browser.canDeleteSpace(home))
+        // A confirmation would be declined by the test harness.
         Ask.testing = false
-        browser.requestDeleteSpace(remove)
-        XCTAssertTrue(browser.spaces.contains { $0.id == remove })
-        Ask.testing = true
-        browser.requestDeleteSpace(remove)
+        let menu = SpaceMenu.menu(for: browser)
+        let item = try XCTUnwrap(menu.item(withTitle: "Delete “Delete this”"))
+        menu.performActionForItem(at: menu.index(of: item))
         XCTAssertFalse(browser.spaces.contains { $0.id == remove })
         XCTAssertTrue(browser.spaces.contains { $0.id == keep })
-        XCTAssertEqual(browser.spaceID, keep)
-        browser.requestDeleteSpace(home)
+        XCTAssertEqual(browser.spaceID, home)
+        browser.deleteSpace(home)
         XCTAssertTrue(browser.spaces.contains { $0.id == home })
-        browser.requestDeleteSpace(remove)
+        browser.deleteSpace(remove)
         XCTAssertEqual(browser.spaces.count, 2)
     }
 
