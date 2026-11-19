@@ -9,10 +9,9 @@ import SwiftUI
 struct SideBar: View {
     @ObservedObject var browser: Browser
     @ObservedObject var prefs: Preferences
-    @Environment(\.moonWindowGlass) private var windowGlass
     /// On the window's ground, beside the page's card (see CardEdge): the
     /// ground's colour and no edge of its own, the card's edge being the line.
-    var onFrame = false
+    private var onFrame: Bool { browser.sidebarUsesFramePalette }
     /// The greys for that ground, handed down to every row, pin and door.
     private var greys: Greys { onFrame ? .frame : .white }
 
@@ -63,7 +62,7 @@ struct SideBar: View {
     /// three doors under it.
     private var top: CGFloat { icons ? lightsBand + Metrics.helmDoors + 8 : Metrics.strip }
     private var innerEdge: Alignment { onRight ? .leading : .trailing }
-    private var roundedSurface: Bool { browser.folded && !prefs.liquidGlass }
+    private var roundedSurface: Bool { browser.folded }
     private var surfaceInsets: EdgeInsets {
         roundedSurface ? SidebarSurface.insets(onRight: onRight) : EdgeInsets()
     }
@@ -160,23 +159,19 @@ struct SideBar: View {
         .clipped()
         .onAppear { SpaceSwipe.shared.start(for: browser) }
         .background {
-            ZStack {
-                if !windowGlass || landing {
-                    (landing ? greys.hover : onFrame ? Palette.frame : Palette.ground)
-                        .clipShape(RoundedRectangle(cornerRadius: roundedSurface ? SidebarSurface.radius : 0, style: .continuous))
-                } else if browser.folded {
-                    Palette.frame.opacity(0.94)
+            // A revealed sidebar can sit over a live page. Its original
+            // opaque surface also keeps the layout and contrast mode-independent.
+            (landing ? greys.hover : onFrame ? Palette.frame : Palette.ground)
+                .clipShape(RoundedRectangle(cornerRadius: roundedSurface ? SidebarSurface.radius : 0, style: .continuous))
+                .padding(surfaceInsets)
+                .overlay {
+                    if prefs.splitView {
+                        SplitDropZone(browser: browser, tab: nil, kind: .strip)
+                    }
                 }
-            }
-            .padding(surfaceInsets)
-            .overlay {
-                if prefs.splitView {
-                    SplitDropZone(browser: browser, tab: nil, kind: .strip)
-                }
-            }
         }
         .overlay(alignment: innerEdge) {
-            if !roundedSurface && !onFrame && !prefs.liquidGlass {
+            if !roundedSurface && !onFrame {
                 Rectangle().fill(Palette.hairline).frame(width: 1)
             }
         }
@@ -879,15 +874,12 @@ struct SideBar: View {
 
     @ViewBuilder
     private var newTab: some View {
-        let glass = windowGlass
         if icons {
-            Quiet(icon: "plus", title: "", height: rowHeight, size: prefs.sideTitle, centred: true,
-                  restingInk: glass ? Palette.ink.opacity(0.73) : Palette.faint) { browser.launch() }
+            Quiet(icon: "plus", title: "", height: rowHeight, size: prefs.sideTitle, centred: true) { browser.launch() }
                 .help("New Tab   ⌘T")
                 .padding(.top, SideBar.gap)
         } else {
-            Quiet(icon: "plus", title: "New tab", height: rowHeight, size: prefs.sideTitle,
-                  restingInk: glass ? Palette.ink.opacity(0.73) : Palette.faint) { browser.launch() }
+            Quiet(icon: "plus", title: "New tab", height: rowHeight, size: prefs.sideTitle) { browser.launch() }
                 .padding(.top, SideBar.gap)
         }
     }
@@ -1353,7 +1345,6 @@ struct Quiet: View {
     var size: CGFloat = 12.5
     /// The icon alone, in the middle: the column of icons' new tab.
     var centred = false
-    var restingInk = Palette.faint
     let act: () -> Void
 
     @State private var hovering = false
@@ -1371,7 +1362,7 @@ struct Quiet: View {
                 }
                 Spacer(minLength: 0)
             }
-            .foregroundStyle(hovering ? Palette.ink : restingInk)
+            .foregroundStyle(hovering ? Palette.ink : Palette.faint)
             .padding(.leading, centred ? 0 : 10)
             .frame(height: height)
             .frame(maxWidth: .infinity, alignment: .leading)

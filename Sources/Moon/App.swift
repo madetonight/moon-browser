@@ -524,7 +524,7 @@ struct ContentView: View {
             // height, so the traffic lights sit in its own corner rather than
             // over the page.
             if sidebar {
-                SideBar(browser: browser, prefs: browser.prefs, onFrame: cards)
+                SideBar(browser: browser, prefs: browser.prefs)
                     .frame(maxHeight: .infinity, alignment: .top)
                     .transition(.move(edge: sideOnRight ? .trailing : .leading))
             }

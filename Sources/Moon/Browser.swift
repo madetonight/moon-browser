@@ -2066,9 +2066,10 @@ final class Browser: NSObject, ObservableObject {
     /// Its window fills the screen. macOS takes the window's buttons away
     /// then, so the room kept for them at the top goes too (idea 184).
     @Published var fullScreen = false
-    /// Cards are available with a solid sidebar in a regular window.
-    /// Glass uses the full window, with no inset around the page.
-    var asCards: Bool { prefs.sidebar && prefs.cards && !prefs.liquidGlass && !fullScreen }
+    /// Keep the sidebar palette tied to the saved layout, even when Glass
+    /// makes the page itself edge to edge.
+    var sidebarUsesFramePalette: Bool { prefs.sidebar && prefs.cards && !fullScreen }
+    var asCards: Bool { sidebarUsesFramePalette && !prefs.liquidGlass }
     /// The extension a popup window was opened for (windows.create with
     /// type "popup"), or nil for a browser window. Such a window is small,
     /// the page under a thin line with its site; it is never saved, never

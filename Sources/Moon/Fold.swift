@@ -138,12 +138,11 @@ struct Fold: View {
                     // again from every row, icon and title on each frame of
                     // the slide, the column's full height over: in full
                     // screen, the whole screen's, and the slide lagged there.
-                    // Glass owns its shadow, with no opaque plane beneath it.
-                    // The flat surface's shadow follows the same rounded inset.
+                    // The shadow follows the sidebar's rounded inset.
                     SidebarSlide(shown: browser.peeking, width: prefs.columnWidth, onRight: onRight) {
-                        SideBar(browser: browser, prefs: prefs, onFrame: browser.asCards)
+                        SideBar(browser: browser, prefs: prefs)
                         .modifier(FoldShadow(x: onRight ? -4 : 4, behind: true, strength: 1,
-                                             sidebar: true, glass: prefs.liquidGlass, onRight: onRight))
+                                             sidebar: true, onRight: onRight))
                     }
                 }
             }

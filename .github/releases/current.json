@@ -1,22 +1,22 @@
 {
   "repository": "madetonight/moon-browser",
-  "tag": "v0.4.17-beta",
-  "build": "2026111801",
-  "title": "Moon 0.4.17 beta",
+  "tag": "v0.4.18-beta",
+  "build": "2026111802",
+  "title": "Moon 0.4.18 beta",
   "keep_latest_only": true,
   "assets": [
     {
-      "name": "Moon-0.4.17-arm64.dmg",
-      "size": 5591472,
-      "sha256": "6ea08789fbdc7baf5d68d7cdcc0832757ebaf18d7baa7d65a2c1458964a478d8",
-      "blob": "b9ccc065f2eb21fdef1bb997a9d402d867eee4d9"
+      "name": "Moon-0.4.18-arm64.dmg",
+      "size": 5590336,
+      "sha256": "59433ebb6468f48bb97cb2f7268167678eaba7ca7409a9896bd795727376f1a9",
+      "blob": "2fbfd42ef15be9833ebdc48c8dfdc907c02491ce"
     }
   ],
   "feed": {
     "name": "appcast.xml",
-    "size": 2091,
-    "sha256": "bffe8a2ad5522b17937e8b7ef204d34e3ab7ceaa0665df586d192bc6d715fd6b",
-    "blob": "6a5d039bf6422ff4fb60ca0abb530c6b4a1d674b"
+    "size": 1842,
+    "sha256": "7ac94d58a876a4a8950ed9bb8fcbca186ebd8b7617309451586b6177adf861c9",
+    "blob": "a263f4b1331aac2d6cfb0f8a81a1d57d3b76b0fc"
   },
-  "notes": "# Moon 0.4.17 beta\n\nLiquid Glass, edge to edge.\n\n- Turn on Liquid Glass in Appearance → Window for a continuous window background. The glass takes on blurred colors from behind the window, with a graphite finish in dark mode and soft pearl in light mode.\n- In Glass mode, Settings uses thin dividers and the browsing layout has no inset page frame or separate glass outlines around the tabs.\n- Delete Space takes effect immediately. The default space stays protected.\n\nApple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized.\n"
+  "notes": "# Moon 0.4.18 beta\n\n- The sidebar keeps its usual colors, padding, and corners when Liquid Glass is on.\n- Page text stays hidden behind the sidebar when it slides into view. The window background still uses Liquid Glass.\n\nApple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized.\n"
 }
