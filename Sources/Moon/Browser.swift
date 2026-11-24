@@ -3596,7 +3596,7 @@ final class Browser: NSObject, ObservableObject {
     /// ⌘W, or the cross on the tab. Closing the last one leaves a blank tab
     /// behind; closing that blank tab closes the window.
     func close(_ tab: Tab) {
-        guard MoonDraftRelay.confirmClosing(tab) else { return }
+        guard MoonDraftRelay.confirmClosing(tab, in: window) else { return }
         guard let index = tabs.firstIndex(where: { $0.id == tab.id }) else { return }
         let pair = split(for: tab)
         let partner = pair.flatMap { pair in tabs.first { $0.id == pair.partner(of: tab.id) } }
@@ -6827,6 +6827,11 @@ extension Browser: WKNavigationDelegate, WKUIDelegate {
             }
             return
         }
+        // The floating surface belongs to the document that was moved into it.
+        // A new document has its own player and needs the normal tab stage.
+        FloatingVideoRequest.cancel(in: self, tab: tab.id)
+        if floating == tab.id { land(covering: false, cancelRequest: false) }
+        if pictured == tab.id { pictured = nil }
         tab.didCommit()
         tab.extensionReturn.finished(navigation)
         if tab.id == activeID {

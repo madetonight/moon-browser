@@ -10,11 +10,9 @@ import WebKit
 // hosts, and only there, a small script in the page's world takes the ad
 // schedule out of that data before the player reads it: the keys
 // adPlacements, adSlots, playerAds and adBreakHeartbeatParams, at the top of
-// an answer that looks like YouTube's (it has responseContext,
-// playabilityStatus, streamingData or videoDetails), or of the playerResponse
-// such an answer carries. Nothing else is touched; an answer of any other
-// shape is handed on as it came, so a change at YouTube leaves the video
-// playing, with its ads, rather than broken.
+// a playable response with a video identity or stream data, or of the
+// playerResponse such an answer carries. Watch-page metadata and responses
+// that need a follow-up from the player keep their original fields.
 //
 // Written for Moon from YouTube's page structure as it is publicly
 // documented; no code is taken from another blocker.
@@ -82,14 +80,14 @@ enum YouTubeAds {
           var apply = Reflect.apply, owns = Object.prototype.hasOwnProperty,
               define = Object.defineProperty, isArray = Array.isArray;
           var ads = ['adPlacements', 'adSlots', 'playerAds', 'adBreakHeartbeatParams'];
-          var marks = ['responseContext', 'playabilityStatus', 'streamingData', 'videoDetails'];
           function plain(o) { return o !== null && typeof o === 'object' && !isArray(o); }
-          function youtubes(o) {
-            for (var i = 0; i < marks.length; i++) if (apply(owns, o, [marks[i]])) return true;
-            return false;
+          function playable(o) {
+            if (!apply(owns, o, ['playabilityStatus']) || o.playabilityStatus?.status !== 'OK') return false;
+            return (apply(owns, o, ['videoDetails']) && typeof o.videoDetails?.videoId === 'string' && o.videoDetails.videoId.length > 0)
+              || (apply(owns, o, ['streamingData']) && plain(o.streamingData));
           }
           function strip(o) {
-            if (!plain(o) || !youtubes(o)) return;
+            if (!plain(o) || !playable(o)) return;
             for (var i = 0; i < ads.length; i++) if (apply(owns, o, [ads[i]])) delete o[ads[i]];
           }
           function one(o) {
@@ -152,41 +150,49 @@ enum YouTubeAds {
           'use strict';
           if (\(hostList(hosts)).indexOf(location.hostname) < 0) return;
           var held = new WeakMap();
+          function restore(video, was) {
+            held.delete(video);
+            try { if (video.playbackRate === 16) video.playbackRate = was.rate; } catch (e) {}
+            if (video.muted) video.muted = was.muted;
+          }
           function look(event) {
             var video = event.target;
             if (!(video instanceof HTMLVideoElement)) return;
             var player = video.closest('.html5-video-player');
             var ad = !!player && player.classList.contains('ad-showing');
             var was = held.get(video);
+            // The same element can be reused for the next clip while the
+            // player still has its previous ad class. Restore it before the
+            // new source starts, and never start skipping on a load event.
+            var reset = event.type === 'emptied' || event.type === 'loadstart' || event.type === 'error';
+            if (was && (!ad || reset)) restore(video, was);
+            if (!ad || reset || video.paused || video.ended) return;
+            if (event.type !== 'playing' && event.type !== 'timeupdate') return;
             try {
-              if (ad) {
-                if (!was) {
-                  was = { muted: video.muted, rate: video.playbackRate };
-                  held.set(video, was);
-                  video.muted = true;
-                }
-                if (video.playbackRate !== 16) video.playbackRate = 16;
-              } else if (was) {
-                held.delete(video);
-                video.playbackRate = was.rate;
-                video.muted = was.muted;
+              if (!was) {
+                was = { muted: video.muted, rate: video.playbackRate };
+                // Change the rate first: if the player rejects it, leave
+                // the audio alone and let the player handle the break.
+                video.playbackRate = 16;
+                held.set(video, was);
+                video.muted = true;
               }
             } catch (e) {}
           }
-          ['playing', 'timeupdate', 'durationchange', 'emptied'].forEach(function (type) {
+          ['playing', 'timeupdate', 'durationchange', 'emptied', 'loadstart', 'error'].forEach(function (type) {
             document.addEventListener(type, look, true);
           });
         })();
         """
     }
 
-    /// Shield's rules for YouTube: where its player reports ads and fetches
-    /// them, never the video. Each path is anchored on YouTube's own hosts;
+    /// Shield's rules for YouTube's ad telemetry. Leave ad-break negotiation
+    /// and the player SDK reachable so the player can finish starting.
+    /// Each path is anchored on YouTube's own hosts;
     /// Google's ad hosts that are third parties on YouTube are already in
     /// Shield's list (doubleclick.net, googlesyndication.com…).
     static let paths = [
-        "/api/stats/ads", "/pagead/", "/ptracking", "/get_midroll_info",
-        "/youtubei/v1/player/ad_break", "/pcs/activeview",
+        "/api/stats/ads", "/pagead/", "/ptracking", "/pcs/activeview",
     ]
 
     static func filter(path: String) -> String {
@@ -202,15 +208,11 @@ enum YouTubeAds {
             "trigger": ["url-filter": "^https?://([^/]+\\.)?youtube\\.com/api/stats/qoe\\?.*adformat="],
             "action": ["type": "block"],
         ])
-        // Google's own ad paths and the video ads SDK, only from YouTube's
-        // pages: other sites' players may need the SDK to play at all.
-        let youtube = ["*youtube.com", "*youtube-nocookie.com"]
-        for filter in ["^https?://([^/]+\\.)?google\\.com/pagead/", "^https?://imasdk\\.googleapis\\.com/"] {
-            rules.append([
-                "trigger": ["url-filter": filter, "if-domain": youtube],
-                "action": ["type": "block"],
-            ])
-        }
+        rules.append([
+            "trigger": ["url-filter": "^https?://([^/]+\\.)?google\\.com/pagead/",
+                        "if-domain": ["*youtube.com", "*youtube-nocookie.com"]],
+            "action": ["type": "block"],
+        ])
         return rules
     }
 }

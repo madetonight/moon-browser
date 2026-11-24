@@ -1196,13 +1196,17 @@ enum Isolate {
       // turns pure black while still holding a perfectly live page. That is the
       // black rectangle, and it is not an orphaned window at all.
       //
-      // So the mark is put back on whatever is playing now, four times a
-      // second, for as long as the page is out.
+      // Some players keep the old element in the page after its replacement
+      // starts. Keep a paused frame if there is no replacement, but show the
+      // new video as soon as it has a frame. Leave seeking/buffering alone.
       clearInterval(window.__officeFloatWatch);
       window.__officeFloatWatch = setInterval(function () {
-        if (document.querySelector('[data-office-float]')) return;
+        var marked = document.querySelector('video[data-office-float]');
+        if (marked && !marked.error && !marked.paused && !marked.ended) return;
         var again = \(PlayingVideo.script(allowPaused: false));
-        if (again) again.setAttribute('data-office-float', '');
+        if (!again || again === marked) return;
+        if (marked) marked.removeAttribute('data-office-float');
+        again.setAttribute('data-office-float', '');
       }, 250);
 
       return { floating: true, picture: pic, page: [innerWidth, innerHeight] };
@@ -1275,6 +1279,8 @@ enum Isolate {
     /// 720×405 window, dropped to a strip before it grew again (#257).
     static let off = """
     (function () {
+      var root = document.documentElement;
+      if (!root.classList.contains('office-floating')) return 'none';
       // The engine may have put the video in its own floating window as well —
       // some players ask for that themselves. Leaving one and not the other
       // leaves you with two.
@@ -1291,7 +1297,6 @@ enum Isolate {
         }
       } catch (e) {}
 
-      var root = document.documentElement;
       var landing = window.__officeFloatLanding = {};
       var wait = window.__officeFloatWait = { settled: false, landing: true };
       function put() {

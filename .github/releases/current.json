@@ -1,22 +1,22 @@
 {
   "repository": "madetonight/moon-browser",
-  "tag": "v0.4.18-beta",
-  "build": "2026111802",
-  "title": "Moon 0.4.18 beta",
+  "tag": "v0.4.19-beta",
+  "build": "2026112301",
+  "title": "Moon 0.4.19 beta",
   "keep_latest_only": true,
   "assets": [
     {
-      "name": "Moon-0.4.18-arm64.dmg",
-      "size": 5590336,
-      "sha256": "59433ebb6468f48bb97cb2f7268167678eaba7ca7409a9896bd795727376f1a9",
-      "blob": "2fbfd42ef15be9833ebdc48c8dfdc907c02491ce"
+      "name": "Moon-0.4.19-arm64.dmg",
+      "size": 5593929,
+      "sha256": "933282c0effbdc4715554b0f4a626d3e017389cee01dcb1843eda0f141caa604",
+      "blob": "53bb41d1dbe434e8cbb2b5e2d4941a3a3b210766"
     }
   ],
   "feed": {
     "name": "appcast.xml",
-    "size": 1842,
-    "sha256": "7ac94d58a876a4a8950ed9bb8fcbca186ebd8b7617309451586b6177adf861c9",
-    "blob": "a263f4b1331aac2d6cfb0f8a81a1d57d3b76b0fc"
+    "size": 1929,
+    "sha256": "2f2563a88510b9745361ab6a060f418d36f1672a9d891aa2fd4b6c49f12bc5c9",
+    "blob": "e9b114474fff6558f52b32e9ec81a1b7033a19df"
   },
-  "notes": "# Moon 0.4.18 beta\n\n- The sidebar keeps its usual colors, padding, and corners when Liquid Glass is on.\n- Page text stays hidden behind the sidebar when it slides into view. The window background still uses Liquid Glass.\n\nApple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized.\n"
+  "notes": "# Moon 0.4.19 beta\n\n- The close-tab confirmation follows Moon’s design. Close Tab comes first. Return closes the tab and Escape keeps it open.\n- YouTube’s player can complete its startup requests while Shield is on.\n- Moon’s floating video window follows the new video when a page replaces its player.\n\nApple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized.\n"
 }

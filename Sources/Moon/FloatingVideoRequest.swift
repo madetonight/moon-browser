@@ -37,7 +37,7 @@ enum PlayingVideo {
           for (var pass = 0; pass < \(allowPaused ? 2 : 1); pass++) {
             for (var i = 0; i < all.length; i++) {
               var v = all[i], box = v.getBoundingClientRect(), style = getComputedStyle(v);
-              if (v.ended || v.readyState < 2 || (pass === 0 && v.paused)) continue;
+              if (v.error || v.ended || v.readyState < 2 || (pass === 0 && v.paused)) continue;
               if (box.width < 2 || box.height < 2 || style.display === 'none' || (style.visibility === 'hidden' && !document.documentElement.classList.contains('office-floating'))) continue;
               var size = box.width * box.height;
               if (size > area) { area = size; best = v; }

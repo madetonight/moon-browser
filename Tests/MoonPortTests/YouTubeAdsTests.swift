@@ -96,6 +96,11 @@ final class YouTubeAdsTests: XCTestCase {
         XCTAssertEqual(run(c, "JSON.parse('{\"a\":2}', function (k, v) { return k === 'a' ? v * 2 : v; }).a").toInt32(), 4)
         var threw = run(c, "try { JSON.parse('{'); false } catch (e) { e instanceof SyntaxError }").toBool()
         XCTAssertTrue(threw)
+        XCTAssertTrue(run(c, """
+        'adSlots' in JSON.parse('{"responseContext":{},"adSlots":[1]}') &&
+        'adSlots' in JSON.parse('{"playabilityStatus":{"status":"OK"},"adSlots":[1]}') &&
+        'adSlots' in JSON.parse('{"playabilityStatus":{"status":"UNPLAYABLE"},"videoDetails":{"videoId":"x"},"adSlots":[1]}')
+        """).toBool())
         // The function keeps a native one's shape.
         XCTAssertEqual(run(c, "JSON.parse.name + JSON.parse.length").toString(), "parse2")
         threw = run(c, "try { new JSON.parse('1'); false } catch (e) { e instanceof TypeError }").toBool()
@@ -128,7 +133,7 @@ final class YouTubeAdsTests: XCTestCase {
         HTMLVideoElement.prototype.closest = function () { return this.player; };
         var heard = {};
         var document = { addEventListener: function (t, f, capture) { (heard[t] = heard[t] || []).push(f); } };
-        function fire(t, v) { (heard[t] || []).forEach(function (f) { f({ target: v }); }); }
+        function fire(t, v) { (heard[t] || []).forEach(function (f) { f({ type: t, target: v }); }); }
         var shown = {};
         var player = { classList: { contains: function (c) { return !!shown[c]; } } };
         var v = new HTMLVideoElement(); v.player = player;
@@ -138,10 +143,12 @@ final class YouTubeAdsTests: XCTestCase {
         XCTAssertEqual(run(c, "v.muted + ' ' + v.playbackRate").toString(), "false 1.5", "no ad: untouched")
         c.evaluateScript("shown['ad-showing'] = true; fire('timeupdate', v)")
         XCTAssertEqual(run(c, "v.muted + ' ' + v.playbackRate").toString(), "true 16")
-        c.evaluateScript("v.playbackRate = 1; fire('timeupdate', v)")
-        XCTAssertEqual(run(c, "v.playbackRate").toInt32(), 16, "the player setting it back is undone while the ad lasts")
         c.evaluateScript("shown['ad-showing'] = false; fire('playing', v)")
         XCTAssertEqual(run(c, "v.muted + ' ' + v.playbackRate").toString(), "false 1.5", "the video's own sound and speed")
+        c.evaluateScript("shown['ad-showing'] = true; fire('playing', v); fire('emptied', v); fire('loadstart', v)")
+        XCTAssertEqual(run(c, "v.muted + ' ' + v.playbackRate").toString(), "false 1.5", "the next source starts with its original settings even with a stale ad class")
+        c.evaluateScript("fire('playing', v); v.playbackRate = 1; fire('timeupdate', v); shown['ad-showing'] = false; fire('playing', v)")
+        XCTAssertEqual(run(c, "v.muted + ' ' + v.playbackRate").toString(), "false 1", "the player's own rate change wins")
         // Muted before the ad: still muted after.
         c.evaluateScript("v.muted = true; shown['ad-showing'] = true; fire('playing', v); shown['ad-showing'] = false; fire('playing', v)")
         XCTAssertEqual(run(c, "v.muted").toBool(), true)
@@ -157,14 +164,15 @@ final class YouTubeAdsTests: XCTestCase {
             patterns.contains { $0.firstMatch(in: url, range: NSRange(url.startIndex..., in: url)) != nil }
         }
         for url in ["https://www.youtube.com/api/stats/ads?ver=2", "https://www.youtube.com/pagead/adview?x",
-                    "https://www.youtube.com/ptracking?pltype=adhost", "https://www.youtube.com/get_midroll_info?ei=1",
-                    "https://www.youtube.com/youtubei/v1/player/ad_break?key=1", "https://www.youtube.com/pcs/activeview?x",
+                    "https://www.youtube.com/ptracking?pltype=adhost", "https://www.youtube.com/pcs/activeview?x",
                     "https://s.youtube.com/api/stats/qoe?event=streamingstats&adformat=15_2",
-                    "https://www.google.com/pagead/lvz?x", "https://imasdk.googleapis.com/js/sdkloader/ima3.js"] {
+                    "https://www.google.com/pagead/lvz?x"] {
             XCTAssertTrue(blocked(url), url)
         }
         for url in ["https://rr1---sn-abc.googlevideo.com/videoplayback?expire=1&itag=18",
                     "https://www.youtube.com/youtubei/v1/player?key=1", "https://www.youtube.com/youtubei/v1/next?key=1",
+                    "https://www.youtube.com/youtubei/v1/player/ad_break?key=1",
+                    "https://www.youtube.com/get_midroll_info?ei=1", "https://imasdk.googleapis.com/js/sdkloader/ima3.js",
                     "https://www.youtube.com/api/stats/watchtime?x", "https://www.youtube.com/api/stats/playback?x",
                     "https://s.youtube.com/api/stats/qoe?event=streamingstats&fmt=18",
                     "https://www.youtube.com/watch?v=pagead", "https://i.ytimg.com/vi/x/hqdefault.jpg",

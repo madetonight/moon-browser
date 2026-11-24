@@ -140,12 +140,12 @@ enum WhatsNew {
 
     /// Only the current release is shown. Release preparation verifies its version.
     static let notes: [Notes] = [
-        Notes(version: "0.4.18", date: "18 November 2026",
-              headline: "Consistent sidebar styling with Liquid Glass",
+        Notes(version: "0.4.19", date: "23 November 2026",
+              headline: "A clearer close-tab prompt and better video playback",
               new: [],
-              better: [],
-              fixed: ["The sidebar keeps its usual colors, padding, and corners when Liquid Glass is on.",
-                      "Page text stays hidden behind the sidebar when it slides into view."])
+              better: ["The close-tab confirmation follows Moon’s design. Close Tab comes first. Return closes the tab and Escape keeps it open."],
+              fixed: ["YouTube’s player can complete its startup requests while Shield is on.",
+                      "Moon’s floating video window follows the new video when a page replaces its player."])
     ]
 }
 

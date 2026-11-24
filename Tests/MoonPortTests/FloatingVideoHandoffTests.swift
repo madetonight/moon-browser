@@ -153,6 +153,31 @@ final class FloatingVideoHandoffTests: XCTestCase {
         }
     }
 
+    func testFloatingVideoFollowsNewPlayerWhenOldPlayerIsKept() async throws {
+        try await withBrowser { browser in
+            let a = try await video(browser, "retained-player")
+            browser.select(a, floatPrevious: false)
+            browser.toggleFloat()
+            try await wait("first player isolated") {
+                await self.js(a.web, "document.querySelector('video[data-office-float]')?.id") as? String == "main"
+            }
+            _ = await js(a.web, """
+            var old=document.getElementById('main'), next=document.createElement('video');
+            old.pause(); next.id='replacement'; document.body.append(next); fixtureVideo(next); true;
+            """)
+            try await wait("replacement player shown while the old one remains in the document") {
+                await self.js(a.web, """
+                document.getElementById('main').isConnected &&
+                [...document.querySelectorAll('video[data-office-float]')].map(v=>v.id).join() === 'replacement'
+                """) as? Bool == true
+            }
+            a.web.loadHTMLString("<title>New document</title><p>New player page</p>", baseURL: nil)
+            try await wait("new document returned to its original tab") {
+                browser.floating == nil && !a.floating && !browser.floater.showing
+            }
+        }
+    }
+
     func testSystemPiPSelectsVisibleVideoAndStaleCleanupCannotStopNewRequest() async throws {
         try await withBrowser { browser in
             let a = try await video(browser, "system")
