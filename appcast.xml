@@ -4,25 +4,25 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
     <channel>
         <title>Moon</title>
         <item>
-            <title>0.4.19</title>
-            <pubDate>Mon, 23 Nov 2026 20:01:28 -0500</pubDate>
-            <link>https://github.com/madetonight/moon-browser/releases/tag/v0.4.19-beta</link>
-            <sparkle:version>2026112301</sparkle:version>
-            <sparkle:shortVersionString>0.4.19</sparkle:shortVersionString>
+            <title>0.4.20</title>
+            <pubDate>Thu, 26 Nov 2026 01:47:18 -0500</pubDate>
+            <link>https://github.com/madetonight/moon-browser/releases/tag/v0.4.20-beta</link>
+            <sparkle:version>2026112601</sparkle:version>
+            <sparkle:shortVersionString>0.4.20</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
             <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <description sparkle:format="markdown"><![CDATA[# Moon 0.4.19 beta
+            <description sparkle:format="markdown"><![CDATA[# Moon 0.4.20 beta
 
-- The close-tab confirmation follows Moon’s design. Close Tab comes first. Return closes the tab and Escape keeps it open.
-- YouTube’s player can complete its startup requests while Shield is on.
-- Moon’s floating video window follows the new video when a page replaces its player.
+- Ask Moon a question or follow up with Gemini below the new-tab address field. Add your Gemini API key in Settings → AI.
+- The sidebar keeps its space pager and clears the mini dock. Find Translation and Extensions in View, and Orbit in History.
+- The Codex workspace and its local helper have been removed.
 
 Apple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized.
 ]]></description>
-            <enclosure url="https://github.com/madetonight/moon-browser/releases/download/v0.4.19-beta/Moon-0.4.19-arm64.dmg" length="5593929" type="application/octet-stream" sparkle:edSignature="snEnDHZs930wLgspA+ItxrgDK2xUUrc+o7q6MQpCa1lZU1e2TbvytFRL2NC7YnPI9su5KZdMt2Sgby6yRYbYAg=="></enclosure>
+            <enclosure url="https://github.com/madetonight/moon-browser/releases/download/v0.4.20-beta/Moon-0.4.20-arm64.dmg" length="5298601" type="application/octet-stream" sparkle:edSignature="KsgvpEpywgbKvJ/5/zXZuV5DmfW29W+52dsMAbwUjocF1i4o/rqtiZ3kXjTrfxPnmyzSoP+Gi1bQ+pvrGXYiCQ=="></enclosure>
         </item>
     </channel>
 </rss><!-- sparkle-signatures:
-edSignature: f4EzPQn/ePqwyVA6F10PPsyPH17CxcviZSskfbapiiWGqrGCQilgxjc3C0J/9AkKiKFJZtVknabdC+07HeJyCA==
-length: 1785
+edSignature: hU0UzTqhjzJYZeOMRessmhfyA6IPQbdjPDdsKhp01EC3LF+zSvftXoFD1YoZex3zVLQsLi80j092HHx2KktHCg==
+length: 1808
 -->
