@@ -22,6 +22,17 @@ final class MoonCustomizationTests: XCTestCase {
         XCTAssertFalse(AIClient.allowed(URL(string: "https://api.openai.com/v1/chat/completions")!, for: .openAI))
     }
 
+    func testChatGPTQuestionPreservesUnicodeAndQueryCharacters() throws {
+        let question = "¿Qué es C++? & #WebKit"
+        let url = try XCTUnwrap(SiteSearch.chatGPT.url(for: " \(question) "))
+        let components = try XCTUnwrap(URLComponents(url: url, resolvingAgainstBaseURL: false))
+        XCTAssertEqual(components.scheme, "https")
+        XCTAssertEqual(components.host, "chatgpt.com")
+        XCTAssertEqual(components.queryItems, [URLQueryItem(name: "q", value: question)])
+        XCTAssertNil(components.fragment)
+        XCTAssertNil(SiteSearch.chatGPT.url(for: " \n "))
+    }
+
     func testNewTabAssistantKeepsPageConsentSeparateAndStopsOnTabChange() throws {
         setenv("MOON_PROBE", "new-tab-assistant-\(getpid())", 1)
         guard Store.settings !== UserDefaults.standard else {

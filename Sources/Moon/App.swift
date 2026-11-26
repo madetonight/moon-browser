@@ -762,12 +762,6 @@ struct ContentView: View {
     /// and goes (What's New).
     @ViewBuilder
     private var panels: some View {
-        if browser.prefs.sidebar, browser.translationOpen, let tab = browser.active, tab.canTranslate {
-            sheet {
-                WebsiteTranslationPanel(tab: tab) { browser.translationOpen = false }
-                    .id(tab.id)
-            } close: { browser.translationOpen = false }
-        }
         if browser.nebulaOpen {
             NebulaOverlay(browser: browser).ignoresSafeArea()
         }
@@ -1352,9 +1346,9 @@ struct ContentView: View {
 
     /// Whether the caret is in the window's address field: its field editor
     /// answers to the field, and the field to AddressField (Omnibox.swift).
-    private static func inAddressField(_ window: NSWindow) -> Bool {
-        guard let editor = window.firstResponder as? NSTextView else { return false }
-        return (editor.delegate as? NSTextField)?.delegate is AddressField.Coordinator
+    private static func addressField(in window: NSWindow?) -> AddressField.Coordinator? {
+        guard let editor = window?.firstResponder as? NSTextView else { return nil }
+        return (editor.delegate as? NSTextField)?.delegate as? AddressField.Coordinator
     }
 
     /// Whether the tab switcher can come up: in this window, with nothing
@@ -1556,6 +1550,7 @@ struct ContentView: View {
         }
         if event.keyCode == 48, !flags.contains(.command), !flags.contains(.option), !flags.contains(.control) {
             if browser.editingTab != nil { return true }
+            if ContentView.addressField(in: window)?.isQuestion == true { return false }
             // "red" then Tab: Reddit, in the field (SiteSearch.swift).
             if browser.fieldShowing, !flags.contains(.shift), browser.lockSiteOffer() { return true }
             if browser.fieldShowing, !browser.offers.isEmpty {
@@ -1618,7 +1613,7 @@ struct ContentView: View {
         // theirs as before.
         if event.keyCode == 36 || event.keyCode == 76, browser.fieldShowing,
            browser.editingTab == nil, let window, event.window === window,
-           ContentView.inAddressField(window) {
+           ContentView.addressField(in: window)?.isQuestion == false {
             browser.submit(aside: true, front: shifted)
             return true
         }

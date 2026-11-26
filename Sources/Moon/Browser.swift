@@ -3448,22 +3448,31 @@ final class Browser: NSObject, ObservableObject {
         focusRequest += 1
     }
 
-    func newTab() {
+    func newTab() { newTab(fresh: false) }
+
+    func newTab(fresh: Bool) {
         if websitePopup {
-            if active?.shy == true { tabDestination.newShyTab() } else { tabDestination.newTab() }
+            if active?.shy == true { tabDestination.newShyTab(fresh: fresh) }
+            else { tabDestination.newTab(fresh: fresh) }
             return
+        }
+        if fresh {
+            if !summoning, let active, active.isBlank { active.draft = typed }
+            cancelTabEdit()
+            launching = false
+            siteChip = nil
         }
         // On a private tab, a new one is private too: ⌘T from a page that
         // keeps nothing and landing on one that keeps everything is how a
         // private search ends up in the history.
         if ghostWindow || active?.shy == true {
-            newShyTab()
+            newShyTab(fresh: fresh)
             return
         }
         // An extension's new tab page, if one asked and you said yes. One
         // added since that also asks is still asked, over the page it would
         // take the place of: which one has new tabs stays yours to say.
-        if #available(macOS 15.4, *), let page = Extensions.shared.newTabPage {
+        if #available(macOS 15.4, *), !fresh, let page = Extensions.shared.newTabPage {
             let tab = open(page, foreground: true)
             summoning = false
             rememberSession()
@@ -3472,7 +3481,7 @@ final class Browser: NSObject, ObservableObject {
         }
         // Reuse an empty tab at the chosen position, clearing its draft:
         // repeated ⌘T must not leave a row of identical empty tabs.
-        if let blank = tabs.last(where: { $0.isBlank && !$0.bench && !$0.shy && split(for: $0) == nil }) {
+        if !fresh, let blank = tabs.last(where: { $0.isBlank && !$0.bench && !$0.shy && split(for: $0) == nil }) {
             placeBlank(blank)
             if activeID != blank.id { leaving() }
             activeID = blank.id
@@ -3497,7 +3506,7 @@ final class Browser: NSObject, ObservableObject {
         editing = false
         focusRequest += 1
         rememberSession()
-        if #available(macOS 15.4, *) { Extensions.shared.offerNewTabPage(into: tab) }
+        if #available(macOS 15.4, *), !fresh { Extensions.shared.offerNewTabPage(into: tab) }
     }
 
     /// A new tab given an extension's new tab page, whether blank or showing
@@ -4824,11 +4833,13 @@ final class Browser: NSObject, ObservableObject {
 
     /// ⌘⇧N. A tab that keeps nothing — its own cookies, its own sign-ins, no
     /// history, and no place in tomorrow's session.
-    func newShyTab() {
-        if websitePopup { tabDestination.newShyTab(); return }
+    func newShyTab() { newShyTab(fresh: false) }
+
+    private func newShyTab(fresh: Bool) {
+        if websitePopup { tabDestination.newShyTab(fresh: fresh); return }
         // Never two empty private tabs, as ⌘T never makes two empty ones:
         // one already open is moved to the chosen position.
-        if let blank = tabs.last(where: { $0.isBlank && $0.shy && !$0.bench && split(for: $0) == nil }) {
+        if !fresh, let blank = tabs.last(where: { $0.isBlank && $0.shy && !$0.bench && split(for: $0) == nil }) {
             placeBlank(blank)
             if activeID != blank.id { leaving() }
             activeID = blank.id
@@ -5790,6 +5801,15 @@ final class Browser: NSObject, ObservableObject {
         guard active?.isBlank == false else { return }
         editing = false
         typed = ""
+    }
+
+    func askChatGPT(_ prompt: String) {
+        guard let tab = active, tab.isBlank, !tab.shy, !ghostWindow, !summoning,
+              let url = SiteSearch.chatGPT.url(for: prompt) else { return }
+        tab.go(to: url)
+        siteChip = nil
+        typed = ""
+        editing = false
     }
 
     /// Return. A row picked from the list wins; otherwise what the field was

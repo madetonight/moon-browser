@@ -1996,10 +1996,11 @@ struct ExtensionSlot: View {
     /// How many pinned ones the row has room for; the rest are only in the
     /// list. Nil: all of them.
     var room: Int? = nil
+    var alwaysVisible = false
 
     var body: some View {
         if #available(macOS 15.4, *) {
-            ExtensionButtons(extensions: .shared, edge: edge, room: room)
+            ExtensionButtons(extensions: .shared, edge: edge, room: room, alwaysVisible: alwaysVisible)
         }
     }
 }
@@ -2009,9 +2010,10 @@ private struct ExtensionButtons: View {
     @ObservedObject var extensions: Extensions
     let edge: Edge
     var room: Int?
+    var alwaysVisible: Bool
 
     var body: some View {
-        if !extensions.installed.isEmpty {
+        if alwaysVisible || !extensions.installed.isEmpty {
             HStack(spacing: 2) {
                 ForEach(extensions.buttons.filter(\.pinned).prefix(room ?? .max)) { button in
                     ActionButton(button: button) { extensions.press(button.id) }

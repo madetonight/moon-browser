@@ -13,9 +13,7 @@ extension Browser {
     func openTranslation() {
         Nebula.shared.suspend(in: self)
         guard active?.canTranslate == true else { return }
-        // The top tab bar keeps its button anchor. The sidebar layout shows
-        // the language menu over the page instead.
-        if folded, !prefs.sidebar { peeking = true }
+        if folded { peeking = true }
         translationOpen = true
     }
 }

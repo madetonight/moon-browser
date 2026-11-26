@@ -140,11 +140,11 @@ enum WhatsNew {
 
     /// Only the current release is shown. Release preparation verifies its version.
     static let notes: [Notes] = [
-        Notes(version: "0.4.20", date: "26 November 2026",
-              headline: "Ask Moon from a new tab",
-              new: ["Ask a question or follow up with Gemini below the new-tab address field. Add your Gemini API key in Settings › AI."],
-              better: ["The sidebar keeps its space pager and clears the mini dock. Find Translation and Extensions in View, and Orbit in History."],
-              fixed: ["The Codex workspace and its local helper have been removed."])
+        Notes(version: "0.4.21", date: "26 November 2026",
+              headline: "Search or ask ChatGPT from a new tab",
+              new: ["Switch between Search and Ask AI on the home page. Press Return in Ask AI to open your question in ChatGPT."],
+              better: ["The sidebar’s New tab button opens a fresh tab every time. ⌘T still uses the floating address field when enabled."],
+              fixed: ["Extensions, Bookmarks, Downloads, Translate, and Orbit are back in the sidebar."])
     ]
 }
 

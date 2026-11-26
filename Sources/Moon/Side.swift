@@ -134,8 +134,7 @@ struct SideBar: View {
 
                 Spacer(minLength: 0)
             }
-            // Keep tabs clear of the space pager.
-            .padding(.bottom, pagerClearance)
+            .padding(.bottom, footHeight)
 
             VStack {
                 Spacer()
@@ -145,8 +144,12 @@ struct SideBar: View {
                         else { SpacePager(browser: browser, compact: icons) }
                     }
                     .padding(.horizontal, surfaceInsets.leading + 10)
-                    .padding(.bottom, surfaceInsets.bottom + 10)
                 }
+                SideFoot(browser: browser, prefs: prefs, fetches: browser.fetches,
+                         vertical: icons, availableWidth: pageWidth)
+                    .padding(.leading, surfaceInsets.leading)
+                    .padding(.trailing, surfaceInsets.trailing)
+                    .padding(.bottom, surfaceInsets.bottom)
             }
         }
         .environment(\.greys, greys)
@@ -862,23 +865,76 @@ struct SideBar: View {
         }
     }
 
-    private var pagerClearance: CGFloat {
+    private var footHeight: CGFloat {
         let pager = prefs.usesSpaces && browser.spaces.count > 1 && !browser.ghostWindow
-        return surfaceInsets.bottom + (pager ? (SpaceComparison.zen ? 56 : 38) : 0)
+        let controls: CGFloat = icons ? 148 : (SideFoot.needsTwoRows(width: pageWidth) ? 64 : 36)
+        return controls + surfaceInsets.bottom + (pager ? (SpaceComparison.zen ? 46 : 28) : 0)
     }
 
     @ViewBuilder
     private var newTab: some View {
         if icons {
-            Quiet(icon: "plus", title: "", height: rowHeight, size: prefs.sideTitle, centred: true) { browser.launch() }
-                .help("New Tab   ⌘T")
+            Quiet(icon: "plus", title: "", height: rowHeight, size: prefs.sideTitle, centred: true) { browser.newTab(fresh: true) }
+                .accessibilityLabel("New tab")
+                .help("New Tab")
                 .padding(.top, SideBar.gap)
         } else {
-            Quiet(icon: "plus", title: "New tab", height: rowHeight, size: prefs.sideTitle) { browser.launch() }
+            Quiet(icon: "plus", title: "New tab", height: rowHeight, size: prefs.sideTitle) { browser.newTab(fresh: true) }
                 .padding(.top, SideBar.gap)
         }
     }
 
+}
+
+/// The sidebar's browser actions, using the same controls as the tab bar.
+private struct SideFoot: View {
+    @ObservedObject var browser: Browser
+    @ObservedObject var prefs: Preferences
+    @ObservedObject var fetches: Fetches
+    var vertical: Bool
+    var availableWidth: CGFloat
+
+    private var edge: Edge { prefs.sidePosition == .right ? .leading : .trailing }
+
+    var body: some View {
+        Group {
+            if vertical {
+                VStack(spacing: 2) {
+                    extensions
+                    actions
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.bottom, 8)
+            } else {
+                VStack(alignment: .leading, spacing: 2) {
+                    if Self.needsTwoRows(width: availableWidth) {
+                        HStack(spacing: 2) { extensions; Spacer(minLength: 0) }
+                        HStack(spacing: 2) { actions; Spacer(minLength: 0) }
+                    } else {
+                        HStack(spacing: 2) { extensions; actions; Spacer(minLength: 0) }
+                    }
+                }
+                .frame(width: max(0, availableWidth - 20), alignment: .leading)
+                .padding(.horizontal, 10)
+                .padding(.bottom, 10)
+            }
+        }
+    }
+
+    private var extensions: some View {
+        ExtensionSlot(edge: edge, room: 0, alwaysVisible: true)
+    }
+
+    private var actions: some View {
+        Group {
+            BookmarkDoor(browser: browser, arrowEdge: edge)
+            FetchDoor(browser: browser, fetches: fetches, persistent: true)
+            TranslationDoor(browser: browser, arrowEdge: edge)
+            OrbitDoor(browser: browser)
+        }
+    }
+
+    static func needsTwoRows(width: CGFloat) -> Bool { width - 20 < 138 }
 }
 
 /// The pinned squares' grid, every cell laid out at once. A lazy grid makes

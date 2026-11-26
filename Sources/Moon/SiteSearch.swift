@@ -24,6 +24,9 @@ struct SearchSite: Codable, Identifiable, Equatable {
 
 @MainActor
 enum SiteSearch {
+    static let chatGPT = SearchSite(name: "ChatGPT", host: "chatgpt.com",
+                                   template: "https://chatgpt.com/?q=%s", aliases: ["gpt", "openai"])
+
     /// Checked by hand on 28 Sep 2026, each opened with a word to find: the
     /// search comes back, or the site's sign-in or consent page does and
     /// goes on to it after (X, Claude, Google Maps).
@@ -32,7 +35,7 @@ enum SiteSearch {
             SearchSite(name: "Reddit", host: "reddit.com", template: "https://www.reddit.com/search/?q=%s"),
             SearchSite(name: "YouTube", host: "youtube.com", template: "https://www.youtube.com/results?search_query=%s", aliases: ["yt"]),
             SearchSite(name: "X", host: "x.com", template: "https://x.com/search?q=%s", aliases: ["twitter"]),
-            SearchSite(name: "ChatGPT", host: "chatgpt.com", template: "https://chatgpt.com/?q=%s", aliases: ["gpt", "openai"]),
+            chatGPT,
             SearchSite(name: "Claude", host: "claude.ai", template: "https://claude.ai/new?q=%s"),
             SearchSite(name: "Perplexity", host: "perplexity.ai", template: "https://www.perplexity.ai/search?q=%s"),
             SearchSite(name: "Wikipedia", host: "wikipedia.org",

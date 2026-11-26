@@ -115,6 +115,20 @@ import UniformTypeIdentifiers
     }
 }
 
+struct OrbitDoor: View {
+    @ObservedObject var browser: Browser
+
+    var body: some View {
+        Door(icon: "sparkles", on: browser.orbitOpen, help: "Orbit — Activity") {
+            Nebula.shared.suspend(in: browser)
+            browser.orbitOpen.toggle()
+        }
+        .disabled(browser.ghostWindow)
+        .accessibilityLabel("Orbit Activity")
+        .accessibilityIdentifier("orbit.door")
+    }
+}
+
 /// The largest rectangle the card can occupy, in window coordinates.
 /// Prefer the space beside the dock, overlapping the column only when needed.
 enum OrbitSummaryLayout {

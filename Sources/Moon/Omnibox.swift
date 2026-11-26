@@ -1,10 +1,7 @@
 import SwiftUI
 import AppKit
 
-/// One field, in the middle, and the few places it thinks you mean. It takes
-/// addresses and only addresses: type something that isn't a place and it
-/// shivers and says so, rather than quietly handing your keystrokes to a
-/// search engine.
+/// The address field and its suggestions, with a ChatGPT composer on new tabs.
 struct Omnibox: View {
     @ObservedObject var browser: Browser
     /// Raised over a page by ⌘L, rather than standing on an empty tab.
@@ -17,6 +14,8 @@ struct Omnibox: View {
 
     @State private var shake: CGFloat = 0
     @State private var refused = false
+    @State private var question = ""
+    @State private var questionFocus: Int?
     @Environment(\.moonWindowGlass) private var windowGlass
 
     /// Sized to a pane of a split rather than to the window.
@@ -29,6 +28,8 @@ struct Omnibox: View {
         }
         .animation(Motion.quick, value: browser.assisting?.id)
         .allowsHitTesting(browser.fieldShowing)
+        .onChange(of: browser.activeID) { _, _ in resetQuestion() }
+        .onChange(of: over) { _, isOver in if isOver { resetQuestion() } }
     }
 
     private var homeAssistant: Assistant? {
@@ -37,11 +38,16 @@ struct Omnibox: View {
     }
 
     private var offersHomeAI: Bool {
-        AI.shipped && browser.active?.shy == false && !browser.ghostWindow
+        !over && !browser.summoning && browser.active?.shy == false && !browser.ghostWindow
+    }
+
+    private var asksChatGPT: Bool {
+        offersHomeAI && homeAssistant == nil && questionFocus == browser.focusRequest
     }
 
     private var showHomeLinks: Bool {
-        !browser.summoning && browser.typed.isEmpty && browser.offers.isEmpty && browser.siteOffer == nil
+        !browser.summoning && (asksChatGPT ||
+            (browser.typed.isEmpty && browser.offers.isEmpty && browser.siteOffer == nil))
     }
 
     private func content(width: CGFloat, height: CGFloat) -> some View {
@@ -63,17 +69,17 @@ struct Omnibox: View {
                         .transition(.opacity)
                 }
                 VStack(alignment: .leading, spacing: 14) {
-                    field
+                    field(width: width)
                         .frame(width: width)
                         .overlay(alignment: .top) {
-                            if !browser.offers.isEmpty || browser.siteOffer != nil {
+                            if !asksChatGPT && (!browser.offers.isEmpty || browser.siteOffer != nil) {
                                 list.frame(width: width).offset(y: Self.fieldHeight + 8)
                             }
                         }
-                        .overlay(alignment: .topLeading) {
+                        .overlay(alignment: .top) {
                             if !over {
                                 MoonWelcomeHeading(privateMode: browser.active?.shy == true)
-                                    .offset(y: -52)
+                                    .offset(y: -57)
                             }
                         }
                         .zIndex(1)
@@ -105,35 +111,80 @@ struct Omnibox: View {
 
     private var homeLinks: some View {
         VStack(alignment: .leading, spacing: 16) {
-            if offersHomeAI {
-                Button { browser.askAnything() } label: {
-                    Label("Ask anything…", systemImage: "sparkles")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(Palette.ink)
-                        .padding(.horizontal, 13)
-                        .frame(height: 32)
-                        .background(Palette.wash, in: Capsule())
+            if offersHomeAI, AI.shipped {
+                HStack {
+                    Button { browser.askAnything() } label: {
+                        Label("Gemini", systemImage: "sparkles")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(Palette.ink)
+                            .padding(.horizontal, 11)
+                            .frame(height: 28)
+                            .background(Palette.wash, in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    if asksChatGPT, !paired {
+                        Spacer()
+                        Text("Opens in ChatGPT")
+                            .font(.system(size: 12))
+                            .foregroundStyle(Palette.muted)
+                    }
                 }
-                .buttonStyle(.plain)
             }
-            if !paired { MoonWelcomeBookmarks(browser: browser) }
+            if !paired {
+                MoonWelcomeBookmarks(browser: browser)
+                    .opacity(asksChatGPT ? 0 : 1)
+                    .allowsHitTesting(!asksChatGPT)
+                    .accessibilityHidden(asksChatGPT)
+            }
         }
     }
 
-    private var field: some View {
-        HStack(spacing: 8) {
-            if let site = browser.siteChip {
-                SiteChip(site: site)
-                    .transition(.scale(scale: 0.9, anchor: .leading).combined(with: .opacity))
+    private func resetQuestion() {
+        question = ""
+        questionFocus = nil
+    }
+
+    private func field(width: CGFloat) -> some View {
+        let hasModes = offersHomeAI && homeAssistant == nil
+        return HStack(spacing: 8) {
+            HStack(spacing: 8) {
+                if hasModes {
+                    Image(systemName: asksChatGPT ? "sparkles" : "magnifyingglass")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(Palette.muted)
+                        .accessibilityHidden(true)
+                }
+                if !asksChatGPT, let site = browser.siteChip {
+                    SiteChip(site: site)
+                        .transition(.scale(scale: 0.9, anchor: .leading).combined(with: .opacity))
+                }
+                AddressField(
+                    browser: browser,
+                    searchesWeb: hasModes,
+                    question: asksChatGPT ? $question : nil,
+                    switchMode: hasModes ? { questionFocus = asksChatGPT ? nil : browser.focusRequest } : nil
+                )
             }
-            AddressField(browser: browser)
+            .frame(height: 22)
+            if hasModes {
+                HStack(spacing: 2) {
+                    modeButton("Search", icon: "magnifyingglass", active: !asksChatGPT, compact: width < 325) {
+                        questionFocus = nil
+                    }
+                    modeButton("Ask AI", icon: "sparkles", active: asksChatGPT, compact: width < 325) {
+                        questionFocus = browser.focusRequest
+                    }
+                }
+                .padding(3)
+                .background(Palette.wash, in: RoundedRectangle(cornerRadius: 10))
+            }
         }
             .animation(Motion.quick, value: browser.siteChip)
-            .frame(height: 22)
-            .padding(.horizontal, 22)
-            .padding(.vertical, 14)
+            .padding(.leading, hasModes ? 16 : 22)
+            .padding(.trailing, hasModes ? 8 : 22)
+            .frame(height: Self.fieldHeight)
             .background {
-                if windowGlass {
+                if windowGlass && !hasModes {
                     if over {
                         RoundedRectangle(cornerRadius: 14, style: .continuous)
                             .fill(Palette.ground.opacity(0.96))
@@ -149,7 +200,7 @@ struct Omnibox: View {
                 }
             }
             .overlay {
-                if refused || !windowGlass {
+                if refused || !windowGlass || hasModes {
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
                         .strokeBorder(refused ? Color.red.opacity(0.35) : Palette.hairline, lineWidth: 1)
                         .allowsHitTesting(false)
@@ -166,6 +217,26 @@ struct Omnibox: View {
             .onChange(of: browser.typed) { _, _ in
                 withAnimation(Motion.quick) { refused = false }
             }
+    }
+
+    private func modeButton(_ title: String, icon: String, active: Bool, compact: Bool,
+                            action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Group {
+                if compact { Image(systemName: icon) }
+                else { Text(title).fixedSize() }
+            }
+            .font(.system(size: 12, weight: active ? .semibold : .medium))
+            .foregroundStyle(active ? Palette.ink : Palette.muted)
+            .padding(.horizontal, compact ? 7 : 10)
+            .frame(height: 24)
+            .background(active ? Palette.ground : .clear, in: RoundedRectangle(cornerRadius: 7))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(title)
+        .accessibilityAddTraits(active ? .isSelected : [])
+        .help(title == "Ask AI" ? "Ask ChatGPT" : "Search the web or enter an address")
     }
 
     /// What it thinks you mean. Places you have been come with their titles;
@@ -429,6 +500,9 @@ private struct Breath: NSViewRepresentable {
 /// needs a real text field and its delegate.
 struct AddressField: NSViewRepresentable {
     @ObservedObject var browser: Browser
+    var searchesWeb = false
+    var question: Binding<String>?
+    var switchMode: (() -> Void)?
 
     func makeCoordinator() -> Coordinator { Coordinator(browser: browser) }
 
@@ -446,21 +520,27 @@ struct AddressField: NSViewRepresentable {
         // Scrolls with the caret, so a long address can be read and edited
         // all the way along rather than cut off at the field's edge.
         field.cell?.isScrollable = true
-        // SwiftUI picks its own colour for a placeholder, and on a pale ground
-        // that colour was near-white.
-        field.placeholderAttributedString = NSAttributedString(
-            string: "Enter a web address",
-            attributes: [
-                .font: NSFont.systemFont(ofSize: 15.5),
-                .foregroundColor: NSColor(Palette.ink.opacity(0.3)),
-            ]
-        )
         return field
     }
 
     func updateNSView(_ field: Field, context: Context) {
         let coordinator = context.coordinator
+        let modeChanged = coordinator.isQuestion != (question != nil)
         coordinator.browser = browser
+        coordinator.question = question
+        coordinator.switchMode = switchMode
+
+        let label = coordinator.isQuestion ? "Ask ChatGPT" : searchesWeb ? "Search or enter an address" : "Enter a web address"
+        if field.placeholderAttributedString?.string != label {
+            field.setAccessibilityLabel(label)
+            field.placeholderAttributedString = NSAttributedString(
+                string: label,
+                attributes: [
+                    .font: NSFont.systemFont(ofSize: 15.5),
+                    .foregroundColor: NSColor(Palette.muted),
+                ]
+            )
+        }
 
         // Only when something other than typing changed it — ⌘L arriving with
         // an address, a walk through the list, a submit clearing it.
@@ -470,14 +550,15 @@ struct AddressField: NSViewRepresentable {
         // still considers complete, and the next update would helpfully type
         // it back in. That is a field you cannot shorten, and it reads exactly
         // like one that has stopped responding.
-        let want = browser.completed
-        if want != coordinator.synced {
+        let want = question?.wrappedValue ?? browser.completed
+        if modeChanged || want != coordinator.synced {
             coordinator.synced = want
             field.stringValue = want
-            coordinator.select(from: browser.typed.count, in: field)
+            if modeChanged { coordinator.deleting = false }
+            coordinator.select(from: question == nil ? browser.typed.utf16.count : want.utf16.count, in: field)
         }
 
-        if coordinator.answered != browser.focusRequest {
+        if modeChanged || coordinator.answered != browser.focusRequest {
             coordinator.answered = browser.focusRequest
             DispatchQueue.main.async { coordinator.focus(field) }
         }
@@ -504,6 +585,9 @@ struct AddressField: NSViewRepresentable {
 
     final class Coordinator: NSObject, NSTextFieldDelegate {
         var browser: Browser
+        var question: Binding<String>?
+        var isQuestion: Bool { question != nil }
+        var switchMode: (() -> Void)?
         var answered = -1
         /// The last value pushed in from the browser side, so an update can
         /// tell a change worth applying from one it made itself.
@@ -512,7 +596,7 @@ struct AddressField: NSViewRepresentable {
         /// A backspace has to be allowed to actually take a letter off. Without
         /// this the field puts the same letter straight back as a completion
         /// and the address can never be shortened.
-        private var deleting = false
+        fileprivate var deleting = false
 
         init(browser: Browser) {
             self.browser = browser
@@ -542,8 +626,10 @@ struct AddressField: NSViewRepresentable {
             ]
             // A draft come back to its blank tab is carried on, not typed
             // over: the caret after it. An address ⌘L raises is selected whole.
-            if browser.active?.isBlank == true, !browser.typed.isEmpty {
-                select(from: browser.typed.count, in: field)
+            if let question {
+                select(from: question.wrappedValue.utf16.count, in: field)
+            } else if browser.active?.isBlank == true, !browser.typed.isEmpty {
+                select(from: browser.typed.utf16.count, in: field)
             } else {
                 editor.selectAll(nil)
             }
@@ -553,6 +639,11 @@ struct AddressField: NSViewRepresentable {
             guard let field = note.object as? NSTextField else { return }
             let text = field.stringValue
 
+            if let question {
+                synced = text
+                question.wrappedValue = text
+                return
+            }
             browser.typed = text
             guard !deleting, let ending = browser.ending else {
                 if deleting { browser.stopCompleting() }
@@ -564,7 +655,7 @@ struct AddressField: NSViewRepresentable {
 
             field.stringValue = text + ending
             synced = field.stringValue
-            select(from: text.count, in: field)
+            select(from: text.utf16.count, in: field)
         }
 
         /// The part after the caret, shown as selected, so the next keystroke
@@ -575,7 +666,7 @@ struct AddressField: NSViewRepresentable {
                 .backgroundColor: NSColor(Palette.ink.opacity(0.12)),
                 .foregroundColor: Palette.NS.ink,
             ]
-            let length = field.stringValue.count
+            let length = field.stringValue.utf16.count
             guard start <= length else { return }
             editor.selectedRange = NSRange(location: start, length: length - start)
         }
@@ -585,6 +676,15 @@ struct AddressField: NSViewRepresentable {
             textView: NSTextView,
             doCommandBy command: Selector
         ) -> Bool {
+            if command == #selector(NSResponder.insertTab(_:)), let switchMode {
+                if NSApp.currentEvent?.isARepeat != true { switchMode() }
+                return true
+            }
+            if let question {
+                guard command == #selector(NSResponder.insertNewline(_:)) else { return false }
+                browser.askChatGPT(question.wrappedValue)
+                return true
+            }
             switch command {
             case #selector(NSResponder.insertNewline(_:)):
                 browser.submit()

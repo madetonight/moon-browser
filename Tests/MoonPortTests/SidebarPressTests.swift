@@ -66,6 +66,72 @@ final class SidebarPressTests: XCTestCase {
         XCTAssertEqual(browser.editingTab, first.id, "A fresh click on the active row still edits")
     }
 
+    func testSidebarNewTabAlwaysAddsAnEmptyTabAndShortcutStillFloats() async throws {
+        let browser = makeBrowser()
+        let floating = browser.prefs.floatingNewTab
+        defer { browser.prefs.floatingNewTab = floating }
+        browser.prefs.floatingNewTab = true
+        let window = makeWindow(browser)
+        let initialIDs = browser.tabs.map(\.id)
+        let initialSelection = browser.activeID
+        try XCTUnwrap(Command.named("file.newTab")).run(browser)
+        XCTAssertTrue(browser.launching)
+        XCTAssertEqual(browser.tabs.map(\.id), initialIDs)
+        XCTAssertEqual(browser.activeID, initialSelection)
+        try await settle()
+
+        for added in 0..<2 {
+            let point = rowPoint(initialIDs.count + added, in: window)
+            try await send(.leftMouseDown, at: point, in: window)
+            try await send(.leftMouseUp, at: point, in: window)
+            try await settle()
+            let blank = try XCTUnwrap(browser.active)
+            XCTAssertEqual(browser.tabs.count, initialIDs.count + added + 1)
+            XCTAssertFalse(initialIDs.contains(blank.id))
+            XCTAssertTrue(blank.isBlank)
+            XCTAssertTrue(browser.fieldShowing)
+            XCTAssertFalse(browser.launching)
+            if added == 0 { browser.typed = "keep this draft" }
+        }
+        XCTAssertEqual(browser.tabs.first(where: { $0.draft == "keep this draft" })?.isBlank, true)
+        XCTAssertTrue(browser.typed.isEmpty)
+    }
+
+    func testHomeComposerSeparatesChatGPTFromAddressSuggestions() async throws {
+        let browser = makeBrowser()
+        browser.newTab(fresh: true)
+        let window = makeWindow(root: Omnibox(browser: browser, over: false), width: 800, height: 560)
+        try await settle()
+        func addressField(in view: NSView) -> AddressField.Field? {
+            if let field = view as? AddressField.Field { return field }
+            return view.subviews.lazy.compactMap { addressField(in: $0) }.first
+        }
+        let field = try XCTUnwrap(addressField(in: XCTUnwrap(window.contentView)))
+        let coordinator = try XCTUnwrap(field.delegate as? AddressField.Coordinator)
+        let editor = NSTextView()
+        let tab = #selector(NSResponder.insertTab(_:))
+        XCTAssertEqual(field.placeholderAttributedString?.string, "Search or enter an address")
+        XCTAssertTrue(coordinator.control(field, textView: editor, doCommandBy: tab))
+        try await settle()
+        XCTAssertEqual(field.placeholderAttributedString?.string, "Ask ChatGPT")
+        XCTAssertTrue(coordinator.isQuestion)
+
+        field.stringValue = "What’s new in WebKit?"
+        coordinator.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: field))
+        XCTAssertTrue(browser.typed.isEmpty)
+        XCTAssertTrue(browser.offers.isEmpty)
+        XCTAssertTrue(coordinator.control(field, textView: editor, doCommandBy: tab))
+        try await settle()
+        XCTAssertFalse(coordinator.isQuestion)
+        XCTAssertTrue(field.stringValue.isEmpty)
+
+        browser.newShyTab()
+        try await settle()
+        XCTAssertNil(coordinator.switchMode)
+        browser.askChatGPT("test")
+        XCTAssertTrue(browser.active?.isBlank == true)
+    }
+
     func testPressThenDragStillReordersWithoutEditing() async throws {
         let browser = makeBrowser()
         let first = browser.tabs[0]
