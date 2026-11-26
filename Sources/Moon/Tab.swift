@@ -494,7 +494,6 @@ final class Tab: ObservableObject, Identifiable {
     }
 
     /// True while the caret is in something on the page that takes typing.
-    var codex: CodexSession?
     @Published var typing = false
     /// Frame identity comes from Moon’s isolated form relay.
     var nebulaFrame: WKFrameInfo?
@@ -1362,6 +1361,7 @@ final class Tab: ObservableObject, Identifiable {
     }
 
     func go(to url: URL) {
+        guard !InternalPage.isRetired(url) else { return }
         loadRevision = UUID()
         navigationLifecycle.invalidate()
         if let own = InternalPage(url: url) {
@@ -1821,7 +1821,6 @@ final class Tab: ObservableObject, Identifiable {
     /// Called when the tab is thrown away. Without it the view keeps running
     /// whatever the page left behind — timers, video, sockets.
     func close() {
-        codex?.close(); codex = nil
         onZoom = nil
         onLink = nil
         onForceLink = nil

@@ -11,8 +11,8 @@ final class MoonCustomizationTests: XCTestCase {
         XCTAssertFalse(Web.userAgentName.contains("Chrome"))
     }
 
-    func testOnlyCodexAndGeminiAreOfferedAndRemoteKeysStayOnGoogle() {
-        XCTAssertEqual(AIProvider.allCases, [.codex, .gemini])
+    func testOnlyGeminiIsOfferedAndRemoteKeysStayOnGoogle() {
+        XCTAssertEqual(AIProvider.allCases, [.gemini])
         XCTAssertTrue(AIClient.allowed(AIProvider.gemini.base.appendingPathComponent("chat/completions"), for: .gemini))
         for text in ["http://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
                      "https://example.com/v1/chat/completions",
@@ -20,6 +20,58 @@ final class MoonCustomizationTests: XCTestCase {
             XCTAssertFalse(AIClient.allowed(URL(string: text)!, for: .gemini))
         }
         XCTAssertFalse(AIClient.allowed(URL(string: "https://api.openai.com/v1/chat/completions")!, for: .openAI))
+    }
+
+    func testNewTabAssistantKeepsPageConsentSeparateAndStopsOnTabChange() throws {
+        setenv("MOON_PROBE", "new-tab-assistant-\(getpid())", 1)
+        guard Store.settings !== UserDefaults.standard else {
+            return XCTFail("The assistant test requires an isolated profile.")
+        }
+        let browser = Browser(record: WindowRecord())
+        let settings = Store.settings
+        let generalConsent = "ai.told.general.gemini"
+        let pageConsent = "ai.told.gemini"
+        let saved = (browser.prefs.ai, browser.prefs.aiProvider,
+                     settings.object(forKey: generalConsent), settings.object(forKey: pageConsent))
+        let savedKey = AIKeys.key(for: .gemini)
+        defer {
+            browser.closeAll()
+            (browser.prefs.ai, browser.prefs.aiProvider) = (saved.0, saved.1)
+            settings.set(saved.2, forKey: generalConsent)
+            settings.set(saved.3, forKey: pageConsent)
+            if let savedKey { _ = AIKeys.save(savedKey, for: .gemini) }
+            else { AIKeys.forget(.gemini) }
+        }
+        browser.prefs.ai = true
+        browser.prefs.aiProvider = .gemini
+        settings.removeObject(forKey: generalConsent)
+        settings.set(true, forKey: pageConsent)
+        _ = AIKeys.save("synthetic-gemini-key", for: .gemini)
+        browser.newTab()
+        let tab = try XCTUnwrap(browser.active)
+        browser.askAnything()
+        let assistant = try XCTUnwrap(browser.assisting)
+        XCTAssertTrue(assistant.general)
+        XCTAssertEqual(assistant.tab, tab.id)
+        XCTAssertFalse(assistant.reading)
+        assistant.draft = "A question for Gemini"
+        assistant.submit()
+        XCTAssertNotNil(assistant.notice)
+        XCTAssertTrue(assistant.turns.isEmpty)
+        browser.show(InternalPage(.settings))
+        // Settings may take over the blank tab without changing its id.
+        // As a real tab switch, a second tab always releases the assistant.
+        browser.newTab()
+        XCTAssertNil(browser.assisting)
+    }
+
+    func testRetiredCodexPageCannotBeOpened() {
+        let tab = Tab()
+        let retired = URL(string: "moon://codex")!
+        XCTAssertNil(InternalPage(url: retired))
+        tab.go(to: retired)
+        XCTAssertTrue(tab.isBlank)
+        XCTAssertNil(tab.built)
     }
 
     func testLibraryMigrationKeepsWindowsPinsAndLocalFiles() throws {

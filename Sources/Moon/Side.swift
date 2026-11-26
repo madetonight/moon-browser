@@ -134,8 +134,8 @@ struct SideBar: View {
 
                 Spacer(minLength: 0)
             }
-            // Clear of the foot, which sits over the column's bottom edge.
-            .padding(.bottom, footHeight)
+            // Keep tabs clear of the space pager.
+            .padding(.bottom, pagerClearance)
 
             VStack {
                 Spacer()
@@ -145,11 +145,8 @@ struct SideBar: View {
                         else { SpacePager(browser: browser, compact: icons) }
                     }
                     .padding(.horizontal, surfaceInsets.leading + 10)
+                    .padding(.bottom, surfaceInsets.bottom + 10)
                 }
-                foot
-                    .padding(.leading, surfaceInsets.leading)
-                    .padding(.trailing, surfaceInsets.trailing)
-                    .padding(.bottom, surfaceInsets.bottom)
             }
         }
         .environment(\.greys, greys)
@@ -865,11 +862,9 @@ struct SideBar: View {
         }
     }
 
-    /// The foot's door and its margin beneath; with icons only, its doors
-    /// one above the other.
-    private var footHeight: CGFloat {
-        (icons ? CGFloat(SideFoot.doors(prefs, browser.fetches)) * 28 + 8
-            : (SideFoot.needsTwoRows(width: pageWidth, doors: SideFoot.doors(prefs, browser.fetches)) ? 64 : 36)) + surfaceInsets.bottom + (prefs.usesSpaces && browser.spaces.count > 1 && !browser.ghostWindow ? (SpaceComparison.zen ? 46 : 28) : 0)
+    private var pagerClearance: CGFloat {
+        let pager = prefs.usesSpaces && browser.spaces.count > 1 && !browser.ghostWindow
+        return surfaceInsets.bottom + (pager ? (SpaceComparison.zen ? 56 : 38) : 0)
     }
 
     @ViewBuilder
@@ -884,86 +879,6 @@ struct SideBar: View {
         }
     }
 
-    /// One small door at the bottom: the settings.
-    private var foot: some View {
-        SideFoot(browser: browser, prefs: prefs, fetches: browser.fetches, vertical: icons, availableWidth: pageWidth)
-    }
-
-}
-
-/// The row at the bottom of the column. Never wider than the column: wider,
-/// the column took its width, and centred in its own frame it slid half the
-/// overflow off each side (#535). The space's door, the puzzle, bookmarks and
-/// downloads stay put; the pinned extensions that don't fit give way, from
-/// the last, and are still in the puzzle's list.
-private struct SideFoot: View {
-    @ObservedObject var browser: Browser
-    @ObservedObject var prefs: Preferences
-    @ObservedObject var fetches: Fetches
-    /// The column of icons: one above the other, centred, no pinned
-    /// extensions (their list is still the puzzle's).
-    var vertical = false
-    var availableWidth: CGFloat? = nil
-
-    var body: some View {
-        if vertical {
-            VStack(spacing: 2) {
-                ExtensionSlot(edge: prefs.sidePosition == .right ? .leading : .trailing, room: 0)
-                BookmarkDoor(browser: browser, arrowEdge: prefs.sidePosition == .right ? .leading : .trailing)
-                FetchDoor(browser: browser, fetches: fetches, persistent: true)
-                TranslationDoor(browser: browser, arrowEdge: prefs.sidePosition == .right ? .leading : .trailing)
-                CodexDoor(browser: browser)
-                OrbitDoor(browser: browser)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.bottom, 8)
-        } else {
-            VStack(alignment: .leading, spacing: 2) {
-                if Self.needsTwoRows(width: availableWidth ?? prefs.sideWidth, doors: Self.doors(prefs, fetches)) {
-                    HStack(spacing: 2) { utilities; Spacer(minLength: 0) }
-                    HStack(spacing: 2) { primary; Spacer(minLength: 0) }
-                } else {
-                    HStack(spacing: 2) { utilities; primary; Spacer(minLength: 0) }
-                }
-            }
-            .frame(width: max(0, (availableWidth ?? prefs.sideWidth) - 20), alignment: .leading)
-            .padding(.horizontal, 10)
-            .padding(.bottom, 10)
-        }
-    }
-
-    /// Core actions never participate in extension overflow or shrink away.
-    private var primary: some View {
-        Group {
-            BookmarkDoor(browser: browser, arrowEdge: prefs.sidePosition == .right ? .leading : .trailing)
-            FetchDoor(browser: browser, fetches: fetches, persistent: true)
-            TranslationDoor(browser: browser, arrowEdge: prefs.sidePosition == .right ? .leading : .trailing)
-            CodexDoor(browser: browser)
-            OrbitDoor(browser: browser)
-        }
-    }
-    private var utilities: some View {
-        Group {
-            ExtensionSlot(edge: .trailing, room: room)
-        }
-    }
-    static func needsTwoRows(width: CGFloat, doors: Int) -> Bool {
-        width - 20 < CGFloat(doors * 28 - 2)
-    }
-
-    /// How many doors the foot has, stacked: what the rows stop short of.
-    @MainActor static func doors(_ prefs: Preferences, _ fetches: Fetches) -> Int {
-        6  // extensions, bookmarks, downloads, translation, Codex and Orbit
-    }
-
-    /// How many pinned extensions fit beside the doors that stay. Every door
-    /// is 26 points, with 2 between them.
-    private var room: Int {
-        let door: CGFloat = 26 + 2
-        let kept = 7  // extensions, bookmarks, downloads, translation, Codex, Nebula and Orbit
-        let free = (availableWidth ?? prefs.sideWidth) - 2 * 10 + 2 - CGFloat(kept) * door
-        return max(0, Int((free / door).rounded(.down)))
-    }
 }
 
 /// The pinned squares' grid, every cell laid out at once. A lazy grid makes

@@ -1968,6 +1968,23 @@ final class ExtensionWindow: NSObject, WKWebExtensionWindow {
 
 // MARK: - the buttons in the row
 
+/// The View menu makes extension actions available in sidebar layouts.
+struct SidebarExtensionCommands: View {
+    @ObservedObject var extensions: Extensions
+
+    var body: some View {
+        Menu("Extensions") {
+            ForEach(extensions.buttons.filter(\.enabled)) { button in
+                Button(button.name) { extensions.press(button.id) }
+            }
+            if !extensions.buttons.isEmpty { Divider() }
+            Button("Manage Extensions…") {
+                extensions.browser?.show(InternalPage(.settings, "extensions"))
+            }
+        }
+    }
+}
+
 /// The extensions, behind one puzzle button — a list to press them from,
 /// pin them out of, reload or remove them. The pinned ones also sit in the
 /// row beside it, the way Chrome does it. Nothing at all below macOS 15.4

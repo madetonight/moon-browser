@@ -1,22 +1,22 @@
 {
   "repository": "madetonight/moon-browser",
-  "tag": "v0.4.19-beta",
-  "build": "2026112301",
-  "title": "Moon 0.4.19 beta",
+  "tag": "v0.4.20-beta",
+  "build": "2026112601",
+  "title": "Moon 0.4.20 beta",
   "keep_latest_only": true,
   "assets": [
     {
-      "name": "Moon-0.4.19-arm64.dmg",
-      "size": 5593929,
-      "sha256": "933282c0effbdc4715554b0f4a626d3e017389cee01dcb1843eda0f141caa604",
-      "blob": "53bb41d1dbe434e8cbb2b5e2d4941a3a3b210766"
+      "name": "Moon-0.4.20-arm64.dmg",
+      "size": 5298601,
+      "sha256": "cf1028d38fb32250a03ab9f7b132f430dbcc5e1278ea72744cab669209f847d1",
+      "blob": "99e75e06f5657b0d0eade57825b1e874eee3649b"
     }
   ],
   "feed": {
     "name": "appcast.xml",
-    "size": 1929,
-    "sha256": "2f2563a88510b9745361ab6a060f418d36f1672a9d891aa2fd4b6c49f12bc5c9",
-    "blob": "e9b114474fff6558f52b32e9ec81a1b7033a19df"
+    "size": 1952,
+    "sha256": "06c22caca0e10b8f26c17d7b80158e3c263eaa21a708e5ecfd0308b64cbe575e",
+    "blob": "fb04e452f93c060391a92763893fa986cfcb2ce5"
   },
-  "notes": "# Moon 0.4.19 beta\n\n- The close-tab confirmation follows Moon’s design. Close Tab comes first. Return closes the tab and Escape keeps it open.\n- YouTube’s player can complete its startup requests while Shield is on.\n- Moon’s floating video window follows the new video when a page replaces its player.\n\nApple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized.\n"
+  "notes": "# Moon 0.4.20 beta\n\n- Ask Moon a question or follow up with Gemini below the new-tab address field. Add your Gemini API key in Settings → AI.\n- The sidebar keeps its space pager and clears the mini dock. Find Translation and Extensions in View, and Orbit in History.\n- The Codex workspace and its local helper have been removed.\n\nApple silicon, macOS 26 or later. One signed DMG serves installation and in-app updates. This Moon beta is Apple Development signed and is not Apple-notarized.\n"
 }

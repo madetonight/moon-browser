@@ -115,7 +115,6 @@ struct MoonApp: App {
                     .shortcut("edit.find")
                     // On the Settings tab, ⌘F finds a setting.
                     .disabled(!(browser.active?.isWeb ?? false) && browser.active?.page?.kind != .settings)
-                Button("New Codex Tab") { browser.openCodex() }
                 Button("Talk to Nebula…") { browser.openNebula() }
                     .shortcut("edit.nebula")
                 Button("Find Next") { browser.look(forward: true) }
@@ -183,6 +182,9 @@ struct MoonApp: App {
                 Button("Translate Website…") { browser.openTranslation() }
                     .shortcut("view.translate")
                     .disabled(browser.active?.canTranslate != true)
+                if browser.prefs.sidebar {
+                    SidebarExtensionCommands(extensions: .shared)
+                }
                 Button("Float Video") { browser.toggleFloat() }
                     .shortcut("view.float")
                     .disabled(!browser.prefs.floatingVideoEnabled)
@@ -364,6 +366,11 @@ struct MoonApp: App {
                     .shortcut("history.show")
                 Button("Downloads…") { browser.hoarding = true }
                     .shortcut("history.downloads")
+                Button("Orbit Summary…") {
+                    Nebula.shared.suspend(in: browser)
+                    browser.orbitOpen.toggle()
+                }
+                .disabled(browser.ghostWindow)
                 Button("Orbit Activity…") { browser.show(InternalPage(.orbit)) }
                 Divider()
                 Button("Clear Browsing Data…") { browser.recallMode = .clearing }
@@ -572,7 +579,7 @@ struct ContentView: View {
                     }
                 }
                 .overlay(alignment: .topTrailing) {
-                    if let assistant = browser.assisting, assistant.tab == tab.id {
+                    if let assistant = browser.assisting, !assistant.general, assistant.tab == tab.id {
                         AssistantPanel(browser: browser, assistant: assistant)
                             .padding(.top, browser.finding ? 64 : 14)
                             .padding(.trailing, 14)
@@ -755,6 +762,12 @@ struct ContentView: View {
     /// and goes (What's New).
     @ViewBuilder
     private var panels: some View {
+        if browser.prefs.sidebar, browser.translationOpen, let tab = browser.active, tab.canTranslate {
+            sheet {
+                WebsiteTranslationPanel(tab: tab) { browser.translationOpen = false }
+                    .id(tab.id)
+            } close: { browser.translationOpen = false }
+        }
         if browser.nebulaOpen {
             NebulaOverlay(browser: browser).ignoresSafeArea()
         }

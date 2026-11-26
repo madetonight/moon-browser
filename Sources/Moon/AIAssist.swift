@@ -30,6 +30,7 @@ final class Assistant: ObservableObject, Identifiable {
     let tab: Tab.ID
     let provider: AIProvider
     let model: String
+    let general: Bool
     /// Asked for a summary, rather than opened for a question.
     let summary: Bool
 
@@ -48,14 +49,21 @@ final class Assistant: ObservableObject, Identifiable {
     private var waiting: AIPage.Ask?
     private var task: Task<Void, Never>?
 
-    init(tab: Tab, provider: AIProvider, model: String, summary: Bool) {
+    init(tab: Tab, provider: AIProvider, model: String, summary: Bool, general: Bool = false) {
         self.tab = tab.id
         self.provider = provider
         self.model = model
         self.summary = summary
-        Task { @MainActor [weak self, weak tab] in
+        self.general = general
+        if general {
+            reading = false
+            return
+        }
+        task = Task { @MainActor [weak self, weak tab] in
             guard let self, let tab else { return }
-            self.read = await AIPage.read(tab)
+            let read = await AIPage.read(tab)
+            guard !Task.isCancelled else { return }
+            self.read = read
             self.addressed = self.read?.addressed ?? false
             self.reading = false
             guard self.read != nil else {
@@ -68,6 +76,15 @@ final class Assistant: ObservableObject, Identifiable {
 
     var busy: Bool { reading || turns.last.map { !$0.done } ?? false }
 
+    var canSubmit: Bool {
+        !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && !busy && notice == nil && (general || read != nil)
+    }
+
+    private var consentKey: String {
+        general ? "ai.told.general.\(provider.rawValue)" : "ai.told.\(provider.rawValue)"
+    }
+
     /// Where it ran, for the foot of every answer.
     var place: String {
         provider == .thisMac ? "on this Mac · \(model)"
@@ -75,16 +92,18 @@ final class Assistant: ObservableObject, Identifiable {
     }
 
     func submit() {
+        guard canSubmit else { return }
         let question = draft.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !question.isEmpty, !busy, notice == nil, read != nil else { return }
         draft = ""
         ask(.question(String(question.prefix(2000))))
     }
 
     private func ask(_ ask: AIPage.Ask) {
-        if !provider.isLocal, !Store.settings.bool(forKey: "ai.told.\(provider.rawValue)") {
+        if !provider.isLocal, !Store.settings.bool(forKey: consentKey) {
             waiting = ask
-            notice = AIAssist.notice(for: provider)
+            notice = general
+                ? "Moon sends your question and this conversation to \(provider.name). Google’s terms and privacy policy apply."
+                : AIAssist.notice(for: provider)
             return
         }
         send(ask)
@@ -92,39 +111,42 @@ final class Assistant: ObservableObject, Identifiable {
 
     /// The notice read and agreed to: what was asked goes.
     func agree() {
-        Store.settings.set(true, forKey: "ai.told.\(provider.rawValue)")
+        guard let waiting else { return }
+        Store.settings.set(true, forKey: consentKey)
         notice = nil
-        if let waiting { send(waiting) }
-        waiting = nil
+        self.waiting = nil
+        send(waiting)
     }
 
     private func send(_ ask: AIPage.Ask) {
-        guard let read else { return }
         switch ask {
         case .summary:
+            guard let read else { return }
             messages = [AIMessage(role: .user, text: AIPage.opening(read, .summary, fence: fence))]
             turns.append(Turn(question: nil))
         case .question(let question):
-            messages.append(AIMessage(role: .user, text: messages.isEmpty ? AIPage.opening(read, ask, fence: fence) : question))
+            let text = messages.isEmpty ? read.map { AIPage.opening($0, ask, fence: fence) } ?? question : question
+            messages.append(AIMessage(role: .user, text: text))
             turns.append(Turn(question: question))
         }
+        let system = general ? "Answer the user's question clearly and concisely." : AIPage.system(fence: fence)
         // The key, read now and let go with the request.
         let key = provider.isLocal ? nil : AIKeys.key(for: provider)
         let stream = provider == .thisMac
-            ? AIEngine.shared.stream(system: AIPage.system(fence: fence), messages: messages)
-            : AIClient.shared.stream(provider, model: model, system: AIPage.system(fence: fence), messages: messages, key: key)
+            ? AIEngine.shared.stream(system: system, messages: messages)
+            : AIClient.shared.stream(provider, model: model, system: system, messages: messages, key: key)
         task = Task { @MainActor [weak self] in
             do {
                 for try await piece in stream {
-                    guard let self, !self.turns.isEmpty else { return }
+                    guard let self, !Task.isCancelled, !self.turns.isEmpty else { return }
                     self.turns[self.turns.count - 1].answer += piece
                     // Longer than any answer about a page needs: a model
                     // talked into writing on and on is stopped.
                     if self.turns[self.turns.count - 1].answer.count > Assistant.longest { break }
                 }
-                self?.finish(nil)
+                if !Task.isCancelled { self?.finish(nil) }
             } catch {
-                self?.finish(error.localizedDescription)
+                if !Task.isCancelled { self?.finish(error.localizedDescription) }
             }
         }
     }
@@ -132,18 +154,20 @@ final class Assistant: ObservableObject, Identifiable {
     static let longest = 16_000
 
     private func finish(_ failed: String?) {
-        guard !turns.isEmpty, let read else { return }
+        guard !turns.isEmpty else { return }
         var turn = turns[turns.count - 1]
         turn.done = true
         turn.failed = failed
         turns[turns.count - 1] = turn
         // Checked away from the window's thread: a long answer is a long look.
         let id = turn.id, answer = turn.answer
-        Task.detached(priority: .userInitiated) { [weak self] in
-            let strays = AIPage.strays(in: answer, from: read)
-            await MainActor.run {
-                guard let self, let index = self.turns.firstIndex(where: { $0.id == id }) else { return }
-                self.turns[index].strays = strays
+        if let read {
+            Task.detached(priority: .userInitiated) { [weak self] in
+                let strays = AIPage.strays(in: answer, from: read)
+                await MainActor.run {
+                    guard let self, let index = self.turns.firstIndex(where: { $0.id == id }) else { return }
+                    self.turns[index].strays = strays
+                }
             }
         }
         if failed == nil, !turn.answer.isEmpty {
@@ -184,14 +208,16 @@ extension Browser {
     func summarizePage() { startAssistant(summary: true) }
     func askAboutPage() { startAssistant(summary: false) }
 
+    func askAnything() {
+        guard AI.shipped, let tab = active, tab.isBlank, !tab.shy, !ghostWindow else { return }
+        guard let (provider, model) = assistantConfiguration() else { return }
+        if let assisting, assisting.general, assisting.tab == tab.id { return }
+        closeAssistant()
+        assisting = Assistant(tab: tab, provider: provider, model: model, summary: false, general: true)
+    }
+
     private func startAssistant(summary: Bool) {
         guard AI.shipped || Store.testing, let tab = active, tab.isWeb else { return }
-        guard prefs.ai, let provider = prefs.aiProvider else {
-            settingsPage = .ai
-            tuning = true
-            announce(prefs.ai ? "Choose where the AI runs" : "Turn on AI in Settings › AI")
-            return
-        }
         // A web page, nothing else: not a file, not an extension's page.
         guard let scheme = tab.pageAddress?.scheme?.lowercased(), scheme == "https" || scheme == "http" else {
             announce("AI works on web pages")
@@ -199,43 +225,45 @@ extension Browser {
         }
         // A private tab leaves nothing behind anywhere, a provider included.
         let shy = tab.shy || tab.built.map { !$0.configuration.websiteDataStore.isPersistent } == true
-        guard !shy || provider.isLocal else {
+        guard !shy || prefs.aiProvider?.isLocal == true else {
             announce("AI is unavailable in private tabs")
             return
         }
-        if provider == .codex {
-            let workspace = openCodex()
-            let session = workspace.codex ?? CodexSession(browser: self, tab: workspace.id)
-            workspace.codex = session
-            if let address = tab.pageAddress { session.share(tab, origin: address) }
-            session.draft = summary ? "Summarize the shared page and its main points." : ""
-            session.submitWhenReady = summary
-            return
+        guard let (provider, model) = assistantConfiguration() else { return }
+        // Asked again on the page the panel is already about: the same
+        // conversation goes on.
+        if !summary, let open = assisting, !open.general, open.tab == tab.id, open.provider == provider { return }
+        closeAssistant()
+        assisting = Assistant(tab: tab, provider: provider, model: model, summary: summary)
+    }
+
+    private func assistantConfiguration() -> (AIProvider, String)? {
+        guard prefs.ai, let provider = prefs.aiProvider else {
+            settingsPage = .ai
+            tuning = true
+            announce(prefs.ai ? "Choose where the AI runs" : "Turn on AI in Settings › AI")
+            return nil
         }
         if provider == .thisMac, AIEngine.shared.state != .ready {
             settingsPage = .ai
             tuning = true
             announce("The model isn't on this Mac yet")
-            return
+            return nil
         }
         let model = prefs.aiModel(for: provider)
         guard !model.isEmpty else {
             settingsPage = .ai
             tuning = true
             announce("Choose a model for \(provider.name)")
-            return
+            return nil
         }
         guard provider.isLocal || AIKeys.hint(for: provider) != nil else {
             settingsPage = .ai
             tuning = true
             announce("No key for \(provider.name) yet")
-            return
+            return nil
         }
-        // Asked again on the page the panel is already about: the same
-        // conversation goes on.
-        if !summary, let open = assisting, open.tab == tab.id, open.provider == provider { return }
-        assisting?.stop()
-        assisting = Assistant(tab: tab, provider: provider, model: model, summary: summary)
+        return (provider, model)
     }
 
     func closeAssistant() {
@@ -252,7 +280,10 @@ struct AssistantPanel: View {
     /// Drawn off screen, for a picture (bench ai picture): what an image
     /// renderer can't draw — a scroll view, a field — stood in for.
     var drawn = false
+    var width: CGFloat = 380
+    var responseHeight: CGFloat = 420
     @FocusState private var typing: Bool
+    private var placeholder: String { assistant.general ? "Ask anything…" : "Ask about this page…" }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -260,7 +291,7 @@ struct AssistantPanel: View {
                 Image(systemName: "sparkles")
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(Palette.muted)
-                Text(assistant.summary ? "Summary" : "About this page")
+                Text(assistant.general ? "Ask Moon" : assistant.summary ? "Summary" : "About this page")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(Palette.ink)
                 Spacer(minLength: 0)
@@ -272,22 +303,26 @@ struct AssistantPanel: View {
 
             if drawn {
                 conversation.padding(.horizontal, 16).padding(.bottom, 12)
-            } else {
+            } else if !assistant.general || !assistant.turns.isEmpty || assistant.notice != nil {
                 scrolling
             }
 
             Rectangle().fill(Palette.hairline).frame(height: 1)
             HStack(spacing: 8) {
                 if drawn {
-                    Text("Ask about this page…").font(.system(size: 12.5)).foregroundStyle(Palette.faint)
+                    Text(placeholder).font(.system(size: 12.5)).foregroundStyle(Palette.faint)
                 } else {
-                    TextField("", text: $assistant.draft, prompt: Text("Ask about this page…").foregroundStyle(Palette.faint))
+                    TextField(placeholder, text: $assistant.draft, prompt: Text(placeholder).foregroundStyle(Palette.faint))
                         .textFieldStyle(.plain)
                         .font(.system(size: 12.5))
                         .foregroundStyle(Palette.ink)
                         .focused($typing)
                         .onSubmit { assistant.submit() }
                         .disabled(assistant.notice != nil)
+                    if assistant.general {
+                        Door(icon: "arrow.up.circle.fill", help: "Send question") { assistant.submit() }
+                            .disabled(!assistant.canSubmit)
+                    }
                 }
             }
             .padding(.horizontal, 16)
@@ -299,11 +334,14 @@ struct AssistantPanel: View {
                 .padding(.horizontal, 16)
                 .padding(.bottom, 10)
         }
-        .frame(width: 380, alignment: .leading)
+        .frame(width: width, alignment: .leading)
         .background(Palette.ground, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Palette.hairline, lineWidth: 1))
         .shadow(color: .black.opacity(0.14), radius: 24, y: 8)
         .onAppear { if !assistant.summary, !drawn { typing = true } }
+        .onChange(of: assistant.notice) { _, notice in
+            if assistant.general, notice == nil { typing = true }
+        }
     }
 
     private var conversation: some View {
@@ -346,7 +384,7 @@ struct AssistantPanel: View {
                     if let last = assistant.turns.last { scroller.scrollTo(last.id, anchor: .bottom) }
                 }
             }
-            .frame(maxHeight: 420)
+            .frame(maxHeight: responseHeight)
     }
 
     private func noticeCard(_ notice: String) -> some View {
@@ -426,7 +464,7 @@ struct AISettings: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             Card {
-                Line("Use AI on pages", "Summarize a page, or ask about it, from the View menu. Nothing is sent until you ask") {
+                Line("Use AI", "Ask anything from a new tab, or ask about a webpage from the View menu") {
                     Switch(on: $prefs.ai)
                 }
             }
@@ -450,11 +488,7 @@ struct AISettings: View {
                     }
                     if let provider = prefs.aiProvider {
                         Rule()
-                        if provider == .codex {
-                            Line("ChatGPT account", "Codex connects through its local engine. Sign in from a Codex tab; only the tabs you share are available") {
-                                Pill("Open Codex") { browser.openCodex() }
-                            }
-                        } else if provider == .thisMac { onThisMac } else if provider.isLocal { localModel(provider) } else { key(provider); Rule(); cloudModel(provider) }
+                        if provider == .thisMac { onThisMac } else if provider.isLocal { localModel(provider) } else { key(provider); Rule(); cloudModel(provider) }
                     }
                 }
                 .onChange(of: prefs.aiProvider) { _, _ in
@@ -500,7 +534,6 @@ struct AISettings: View {
 
     private var place: String {
         guard let provider = prefs.aiProvider else { return "A provider you have a key with, or an app on this Mac" }
-        if provider == .codex { return "Your ChatGPT account, through the official Codex engine. Shared page text goes to OpenAI" }
         return provider.isLocal
             ? "Nothing leaves this Mac. Also in private tabs"
             : "Your key, kept in this Mac's keychain, sent only to \(provider.host). Never from a private tab"

@@ -21,26 +21,35 @@ struct Omnibox: View {
 
     /// Sized to a pane of a split rather than to the window.
     var fitted = false
+    var paired = false
 
     var body: some View {
-        Group {
-            if fitted {
-                GeometryReader { geometry in
-                    content(width: min(Metrics.fieldWidth, max(0, geometry.size.width - 28)))
-                }
-            } else {
-                content(width: Metrics.fieldWidth)
-            }
+        GeometryReader { geometry in
+            content(width: min(Metrics.fieldWidth, max(0, geometry.size.width - 28)), height: geometry.size.height)
         }
+        .animation(Motion.quick, value: browser.assisting?.id)
         .allowsHitTesting(browser.fieldShowing)
     }
 
-    private func content(width: CGFloat) -> some View {
+    private var homeAssistant: Assistant? {
+        guard !over, let assistant = browser.assisting, assistant.general, assistant.tab == browser.activeID else { return nil }
+        return assistant
+    }
+
+    private var offersHomeAI: Bool {
+        AI.shipped && browser.active?.shy == false && !browser.ghostWindow
+    }
+
+    private var showHomeLinks: Bool {
+        !browser.summoning && browser.typed.isEmpty && browser.offers.isEmpty && browser.siteOffer == nil
+    }
+
+    private func content(width: CGFloat, height: CGFloat) -> some View {
         ZStack {
             // Search #718: keep the stage mounted. The full-page cover fades;
             // only the field and its attached content take the small zoom.
             if browser.fieldShowing {
-                if !over {
+                if !over, homeAssistant == nil {
                     MoonWelcomeShortcuts()
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                         .padding(.bottom, 24)
@@ -53,31 +62,62 @@ struct Omnibox: View {
                         .onTapGesture { browser.dismiss() }
                         .transition(.opacity)
                 }
-                field
-                    .frame(width: width)
-                    .overlay(alignment: .top) {
-                        if !browser.offers.isEmpty || browser.siteOffer != nil {
-                            list.frame(width: width).offset(y: Self.fieldHeight + 8)
+                VStack(alignment: .leading, spacing: 14) {
+                    field
+                        .frame(width: width)
+                        .overlay(alignment: .top) {
+                            if !browser.offers.isEmpty || browser.siteOffer != nil {
+                                list.frame(width: width).offset(y: Self.fieldHeight + 8)
+                            }
                         }
-                    }
-                    .overlay(alignment: .topLeading) {
-                        if !over {
-                            MoonWelcomeHeading(privateMode: browser.active?.shy == true)
-                                .offset(y: -52)
+                        .overlay(alignment: .topLeading) {
+                            if !over {
+                                MoonWelcomeHeading(privateMode: browser.active?.shy == true)
+                                    .offset(y: -52)
+                            }
                         }
+                        .zIndex(1)
+
+                    if let assistant = homeAssistant {
+                        AssistantPanel(browser: browser, assistant: assistant, width: width,
+                                       responseHeight: min(260, max(44, height - 245)))
+                            .transition(.opacity)
+                            .onDisappear {
+                                if browser.assisting?.id == assistant.id { browser.closeAssistant() }
+                            }
+                    } else if !over, offersHomeAI || !paired {
+                        homeLinks
+                            .frame(width: width, alignment: .leading)
+                            .opacity(showHomeLinks ? 1 : 0)
+                            .allowsHitTesting(showHomeLinks)
+                            .accessibilityHidden(!showHomeLinks)
                     }
-                    .overlay(alignment: .bottomLeading) {
-                        if !over, browser.typed.isEmpty, browser.offers.isEmpty {
-                            MoonWelcomeBookmarks(browser: browser).offset(y: 150)
-                        }
-                    }
-                    .padding(.bottom, 60)
+                }
+                    .padding(.top, over ? 0 : 54)
+                    .padding(.bottom, homeAssistant == nil ? (over ? 60 : 42) : 18)
                     .transition(.scale(scale: 0.97).combined(with: .opacity))
                     .animation(Motion.quick, value: browser.offers.isEmpty && browser.siteOffer == nil)
                     .animation(Motion.settle, value: refused)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var homeLinks: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            if offersHomeAI {
+                Button { browser.askAnything() } label: {
+                    Label("Ask anything…", systemImage: "sparkles")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(Palette.ink)
+                        .padding(.horizontal, 13)
+                        .frame(height: 32)
+                        .background(Palette.wash, in: Capsule())
+                }
+                .buttonStyle(.plain)
+            }
+            if !paired { MoonWelcomeBookmarks(browser: browser) }
+        }
     }
 
     private var field: some View {

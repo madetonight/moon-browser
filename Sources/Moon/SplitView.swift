@@ -113,16 +113,16 @@ private struct PaneLayers: View {
             // the stage's.
             Page(tab: tab, holdsPage: false, corner: corner, browser: browser)
 
-            if focused {
-                Omnibox(browser: browser, over: !tab.isBlank, fitted: true)
-            }
-
             // An empty page of a pair: the field, and the tabs already open,
             // to bring one in. Gone while something is typed, when the field's
             // own list is there.
-            if paired, tab.isBlank, browser.typed.isEmpty {
+            if paired, tab.isBlank, browser.typed.isEmpty, browser.assisting?.general != true {
                 OpenTabs(browser: browser, blank: tab)
                     .transition(.opacity)
+            }
+
+            if focused {
+                Omnibox(browser: browser, over: !tab.isBlank, fitted: true, paired: paired)
             }
 
             // What this page asked, over this page alone.
@@ -136,6 +136,12 @@ private struct PaneLayers: View {
         // longer.
         .onChange(of: tab.committed) { _, _ in browser.dropQuestions(for: tab.id) }
         .animation(Motion.quick, value: browser.paneQuestions.map(\.id))
+        .overlay(alignment: .topTrailing) {
+            if focused, let assistant = browser.assisting, !assistant.general, assistant.tab == tab.id {
+                AssistantPanel(browser: browser, assistant: assistant, width: min(380, max(0, width - 20)))
+                    .padding(10)
+            }
+        }
         .overlay {
             // Over the page the link is on, focused or not.
             if browser.prefs.showsLinks {
@@ -230,8 +236,8 @@ private struct OpenTabs: View {
                 .padding(.horizontal, 12)
                 .frame(width: min(Metrics.fieldWidth, max(0, geo.size.width - 28)), alignment: .leading)
                 .frame(maxWidth: .infinity)
-                // Under the field, which stands 60 points above the middle.
-                .offset(y: geo.size.height / 2 + 10)
+                // Below the controls that belong to the blank tab.
+                .offset(y: geo.size.height / 2 + (AI.shipped && !blank.shy && !browser.ghostWindow ? 64 : 42))
             }
         }
     }

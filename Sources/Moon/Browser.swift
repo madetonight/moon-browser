@@ -66,6 +66,7 @@ final class Browser: NSObject, ObservableObject {
                 DispatchQueue.main.async { held.forEach { $0.present() } }
             }
             guard oldValue != activeID else { return }
+            if let assisting, assisting.tab != activeID { closeAssistant() }
             if displayTab?.id == oldValue { cancelDisplay() }
             clearTabSelection()
             // What was found belongs to the page just left; the words typed
@@ -3030,6 +3031,7 @@ final class Browser: NSObject, ObservableObject {
 
     /// Its window closed for good, with others open: every page let go.
     func closeAll() {
+        closeAssistant()
         spacePaging.reset()
         FloatingVideoRequest.cancel(in: self)
         if pictured != nil { unpicture() }
@@ -4959,7 +4961,8 @@ final class Browser: NSObject, ObservableObject {
         for (savedIndex, entry) in saved.tabs.enumerated() {
             // An empty page is never written; the first builds of Split View
             // on main wrote one for an empty half.
-            guard let saved = URL(string: entry.url), entry.url != "about:blank" else { continue }
+            guard let saved = URL(string: entry.url), entry.url != "about:blank",
+                  !InternalPage.isRetired(saved) else { continue }
             // A row read from disk is a browser or window opened afresh: with
             // pins going home, a pin comes back at the page it was pinned at,
             // wherever it had been taken since.
@@ -7297,23 +7300,5 @@ extension Browser {
         tabs = arranged
         writeSession(now: true)
         return ordered.count
-    }
-}
-
-
-extension Browser {
-    @discardableResult
-    func openCodex() -> Tab {
-        if websitePopup { return tabDestination.openCodex() }
-        let tab = Tab(configuration: Web.configuration(space: spaceID))
-        prepare(tab)
-        tabs.insert(tab, at: placeForNew())
-        tab.show(InternalPage(.codex))
-        if launching { dismiss() }
-        editing = false
-        typed = ""
-        select(tab)
-        writeSessionSoon()
-        return tab
     }
 }

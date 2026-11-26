@@ -23,13 +23,13 @@ enum AI {
 enum AIProvider: String, CaseIterable, Identifiable {
     /// The model downloaded to this Mac, run by Moon's own engine (AIEngine).
     case thisMac
-    case anthropic, openAI, gemini, openRouter, codex
+    case anthropic, openAI, gemini, openRouter
     /// Ollama, on this Mac.
     case ollama
     /// LM Studio, on this Mac.
     case lmStudio
 
-    static var allCases: [AIProvider] { [.codex, .gemini] }
+    static var allCases: [AIProvider] { [.gemini] }
 
     var id: String { rawValue }
 
@@ -39,7 +39,6 @@ enum AIProvider: String, CaseIterable, Identifiable {
         case .anthropic: return "Anthropic"
         case .openAI: return "OpenAI"
         case .gemini: return "Gemini"
-        case .codex: return "Codex"
         case .openRouter: return "OpenRouter"
         case .ollama: return "Ollama"
         case .lmStudio: return "LM Studio"
@@ -57,7 +56,7 @@ enum AIProvider: String, CaseIterable, Identifiable {
         // Never asked over the network: the engine is a program of its own.
         case .thisMac: return URL(string: "http://127.0.0.1:1/")!
         case .anthropic: return URL(string: "https://api.anthropic.com/v1/")!
-        case .codex, .openAI: return URL(string: "https://api.openai.com/v1/")!
+        case .openAI: return URL(string: "https://api.openai.com/v1/")!
         case .gemini: return URL(string: "https://generativelanguage.googleapis.com/v1beta/")!
         case .openRouter: return URL(string: "https://openrouter.ai/api/v1/")!
         case .ollama: return URL(string: "http://127.0.0.1:11434/v1/")!
@@ -81,7 +80,7 @@ enum AIProvider: String, CaseIterable, Identifiable {
         case .openAI: return "gpt-5.4-mini"
         case .gemini: return "gemini-3.8-flash"
         case .openRouter: return "google/gemini-3.8-flash"
-        case .codex, .ollama, .lmStudio: return ""
+        case .ollama, .lmStudio: return ""
         }
     }
 
@@ -133,7 +132,7 @@ enum AIKeys {
 
     static func save(_ key: String, for provider: AIProvider) -> Saved {
         let key = key.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !key.isEmpty, !provider.isLocal, provider != .codex else { return .failed }
+        guard !key.isEmpty, !provider.isLocal else { return .failed }
         if Store.testing {
             rehearsal[account(provider)] = key
             return .kept

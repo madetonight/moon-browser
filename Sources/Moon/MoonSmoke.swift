@@ -62,7 +62,7 @@ import WebKit
                 checks["moon_internal_pages"] = InternalPage(url: URL(string: "moon://settings/appearance")!)?.kind == .settings
                 checks["all_settings_ids_unique"] = Set(SettingsIndex.items.map(\.id)).count == SettingsIndex.items.count
                 checks["glass_setting_is_searchable"] = SettingsIndex.item("appearance.glass") != nil
-                checks["browser_ai_providers"] = AIProvider.allCases == [.codex, .gemini]
+                checks["browser_ai_providers"] = AIProvider.allCases == [.gemini]
                 checks["translation_available"] = PageTranslator.available
                 // Actual MV3 worker/content-script/storage/messages through the port's host.
                 tab.go(to: origin.appendingPathComponent("extension"))

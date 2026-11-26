@@ -15,7 +15,7 @@ import SwiftUI
 /// Which of Moon's own pages, and where inside it.
 struct InternalPage: Equatable {
     enum Kind: String, CaseIterable {
-        case settings, history, downloads, bookmarks, passwords, orbit, codex
+        case settings, history, downloads, bookmarks, passwords, orbit
         case importing = "import"
         case notes = "release-notes"
     }
@@ -30,6 +30,11 @@ struct InternalPage: Equatable {
     }
 
     static let scheme = "moon"
+
+    /// Discard saved workspace tabs from releases that had the local engine.
+    static func isRetired(_ url: URL) -> Bool {
+        url.scheme?.lowercased() == scheme && url.host()?.lowercased() == "codex"
+    }
 
     /// moon://settings, moon://settings/privacy, moon://import/Arc.
     init?(url: URL) {
@@ -56,7 +61,6 @@ struct InternalPage: Equatable {
         case .bookmarks: return "Bookmarks"
         case .passwords: return "Passwords"
         case .orbit: return "Orbit"
-        case .codex: return "Codex"
         case .importing: return "Bring Things Over"
         case .notes: return "What's New"
         }
@@ -70,7 +74,6 @@ struct InternalPage: Equatable {
         case .bookmarks: return "book"
         case .passwords: return "key"
         case .orbit: return "sparkles"
-        case .codex: return "terminal"
         case .importing: return "square.and.arrow.down"
         case .notes: return "sparkles"
         }
@@ -154,8 +157,6 @@ struct InternalPageView: View {
             DownloadsPanel(browser: browser, loot: browser.loot)
         case .bookmarks:
             BookmarksPanel(browser: browser, bookmarks: browser.bookmarks)
-        case .codex:
-            CodexWorkspace(browser: browser, tab: tab).id(tab.id)
         case .orbit:
             OrbitWorkspace(orbit: .shared, profile: browser.profileID)
         case .passwords:

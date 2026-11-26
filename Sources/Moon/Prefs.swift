@@ -613,7 +613,7 @@ final class Preferences: ObservableObject {
     /// Where its answers come from. None until you choose.
     @Published var aiProvider: AIProvider? {
         didSet {
-            if let value = aiProvider, !AIProvider.allCases.contains(value) { aiProvider = .codex; return }
+            if let value = aiProvider, !AIProvider.allCases.contains(value) { aiProvider = .gemini; return }
             store.set(aiProvider?.rawValue, forKey: "ai.provider")
         }
     }
@@ -779,7 +779,7 @@ final class Preferences: ObservableObject {
         let keepsSite = home == nil && peek == nil ? true : (home ?? false) || (peek ?? false)
         pinsGoHome = keepsSite
         ai = AI.shipped && store.bool(forKey: "ai")
-        aiProvider = store.string(forKey: "ai.provider").flatMap(AIProvider.init(rawValue:)).flatMap { AIProvider.allCases.contains($0) ? $0 : nil } ?? .codex
+        aiProvider = store.string(forKey: "ai.provider").flatMap(AIProvider.init(rawValue:)).flatMap { AIProvider.allCases.contains($0) ? $0 : nil } ?? .gemini
         aiModels = store.dictionary(forKey: "ai.models") as? [String: String] ?? [:]
         commandBar = store.bool(forKey: "commandbar")
         floatingNewTab = store.bool(forKey: "newtab.floating")

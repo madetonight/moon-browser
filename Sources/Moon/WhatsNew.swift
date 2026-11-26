@@ -140,12 +140,11 @@ enum WhatsNew {
 
     /// Only the current release is shown. Release preparation verifies its version.
     static let notes: [Notes] = [
-        Notes(version: "0.4.19", date: "23 November 2026",
-              headline: "A clearer close-tab prompt and better video playback",
-              new: [],
-              better: ["The close-tab confirmation follows Moon’s design. Close Tab comes first. Return closes the tab and Escape keeps it open."],
-              fixed: ["YouTube’s player can complete its startup requests while Shield is on.",
-                      "Moon’s floating video window follows the new video when a page replaces its player."])
+        Notes(version: "0.4.20", date: "26 November 2026",
+              headline: "Ask Moon from a new tab",
+              new: ["Ask a question or follow up with Gemini below the new-tab address field. Add your Gemini API key in Settings › AI."],
+              better: ["The sidebar keeps its space pager and clears the mini dock. Find Translation and Extensions in View, and Orbit in History."],
+              fixed: ["The Codex workspace and its local helper have been removed."])
     ]
 }
 
